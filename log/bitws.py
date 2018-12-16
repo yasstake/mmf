@@ -4,7 +4,7 @@ import os
 import traceback
 from bitmex_websocket import BitMEXWebsocket
 
-# needs intall
+# needs install
 import websocket
 
 import logging
@@ -59,6 +59,7 @@ def decode(message):
 
     return message
 
+
 def findItemByKeys(table, matchData):
     try:
         for item in table:
@@ -74,6 +75,7 @@ def findItemByKeys(table, matchData):
     logger.debug("Item not found")
     return None
 
+
 class LogLoader:
     def __init__(self):
         self.data = {}
@@ -87,7 +89,6 @@ class LogLoader:
         table = message['table'] if 'table' in message else None
         action = message['action'] if 'action' in message else None
         self.time_stamp = message['TIME'] if 'TIME' in message else None
-
 
         if not action:
             return
@@ -121,7 +122,6 @@ class LogLoader:
             logger.debug('wait for partial')
             pass
 
-
     def get_market_depth(self):
         return self.data
 
@@ -141,21 +141,21 @@ class LogLoader:
 
 class BitWs:
     '''logging utility using bitmex realtime(websockets) API'''
-    def __init__(self):
+
+    def __init__(self, log_file_dir="/tmp"):
         self.last_action = None
         self.log_file_root_name = None
         self.log_file_name = None
         self.ws = None
+        self.log_file_dir = log_file_dir
 
         self.reset()
         self.rotate_file()
 
-
     def __del__(self):
-        #self.dump_message()
+        # self.dump_message()
         self.rotate_file()
         self.remove_terminate_flag()
-
 
     def reset(self):
         self.last_message = None
@@ -163,8 +163,6 @@ class BitWs:
 
     def get_flag_file_name(self):
         return "/tmp/BITWS-FLG"
-
-
 
     def create_terminate_flag(self):
         self.remove_terminate_flag()
@@ -189,7 +187,6 @@ class BitWs:
         if os.path.isfile(file_name):
             os.remove(file_name)
 
-
     def timestamp(self):
         now = datetime.datetime.utcnow()
         return int(now.timestamp())
@@ -205,14 +202,15 @@ class BitWs:
     def time_stamp_string(self):
         time = datetime.datetime.fromtimestamp(self.timestamp())
         return time.isoformat()
-#        return time.strftime('%Y-%m-%d-%H:%M:%S')
+
+    #        return time.strftime('%Y-%m-%d-%H:%M:%S')
 
     def rotate_file(self):
         if self.log_file_name:
             if os.path.isfile(self.log_file_name):
                 os.rename(self.log_file_name, self.log_file_root_name)
 
-        self.log_file_root_name = "./" + self.time_stamp_string() + ".log"
+        self.log_file_root_name = self.log_file_dir + '/' + self.time_stamp_string() + ".log"
         self.log_file_name = self.log_file_root_name + ".current"
 
     def dump_message(self):
@@ -232,8 +230,8 @@ class BitWs:
         message = json.loads(message)
         action = message['action'] if 'action' in message else None
 
-        if(action == 'partial'):
-            logger.debug ("partial")
+        if (action == 'partial'):
+            logger.debug("partial")
             self.rotate_file()
             self.create_terminate_flag()
 
@@ -252,10 +250,9 @@ class BitWs:
         self.reset_timestamp()
         self.last_action = action
 
-        if(self.check_terminate_flag()):
+        if (self.check_terminate_flag()):
             self.ws.close()
             logger.debug("terminated")
-
 
     def on_error(self, ws, error):
         logger.debug(error)
@@ -269,10 +266,10 @@ class BitWs:
     def start(self):
         websocket.enableTrace(True)
         self.ws = websocket.WebSocketApp("wss://www.bitmex.com/realtime",
-                                    on_message=self.on_message,
-                                    on_error=self.on_error,
-                                    on_close=self.on_close,
-                                    on_open=self.on_open)
+                                         on_message=self.on_message,
+                                         on_error=self.on_error,
+                                         on_close=self.on_close,
+                                         on_open=self.on_open)
 
         self.ws.run_forever(ping_interval=70, ping_timeout=10)
 

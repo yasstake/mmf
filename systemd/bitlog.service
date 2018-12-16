@@ -1,0 +1,8 @@
+[Unit]
+Description=daily foo
+RefuseManualStart=no
+RefuseManualStop=yes
+
+[Service]
+Type=oneshot
+ExecStart=/home/<user>/scripts/foo.sh
