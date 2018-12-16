@@ -134,7 +134,7 @@ class LogLoader:
                 self.on_message(line)
                 order_book = self.get_market_depth()
 
-                if tick:
+                if tick and self.ready:
                     tick(self.time_stamp, order_book)
         pass
 
