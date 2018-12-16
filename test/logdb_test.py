@@ -21,6 +21,13 @@ class LogDbTest(unittest.TestCase):
         log_db.insert(100, order_book)
         log_db.insert(100, order_book)
 
+    def test_message_to_list(self):
+        log_db = logdb.LogDb()
+
+        message = json.loads(data.order_book_depth_05)
+        list = log_db.message_to_list(message)
+        print(list)
+
 
 if __name__ == '__main__':
     unittest.main()

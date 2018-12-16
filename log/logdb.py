@@ -14,8 +14,6 @@ class LogDb:
         self.db_name = db_name
         self.connection = None
         self.last_time = 0
-        self.sell_min = 99999999
-        self.buy_max = 0
 
         pass
 
@@ -42,22 +40,80 @@ class LogDb:
             self.connection.close()
             self.connection = None
 
-    def insert(self, time, message):
-        print(time)
-
+    def message_to_list(self, message):
+        sell_min = 99999999
+        sell = {}
+        buy_max = 0
+        buy = {}
 
         for item in message:
             volume = item['size']
             price = item['price']
 
-            if(item['side'] == 'Sell'):
+            if (item['side'] == 'Sell'):
                 side = 0
-                if (price < self.sell_min):
-                    self.sell_min = price
+                sell[price] = volume
+                if (price < sell_min):
+                    sell_min = price
             else:
                 side = 1
-                if(self.buy_max < price ):
-                    self.buy_max = price
+                buy[price] = volume
+                if (buy_max < price):
+                    buy_max = price
+
+        buy_list = []
+        for i in range(1000):
+            index = buy_max - i * 0.5
+            if index in buy:
+                buy_list.append(buy[index])
+            else:
+                break
+
+        sell_list = []
+        for i in range(1000):
+            index = sell_min + i * 0.5
+            if index in sell:
+                sell_list.append(sell[index])
+            else:
+                break
+
+        return sell_min, sell_list, buy_max, buy_list
+
+    #        print(sell, sell)
+
+    def insert(self, time, message):
+        sell_min = 99999999
+        sell = {}
+        buy_max = 0
+        buy = {}
+
+        for item in message:
+            volume = item['size']
+            price = item['price']
+
+            if (item['side'] == 'Sell'):
+                side = 0
+                sell[price] = volume
+                if (price < sell_min):
+                    sell_min = price
+            else:
+                side = 1
+                buy[price] = volume
+                if (buy_max < price):
+                    buy_max = price
+
+        buy_list = {}
+        for i in {0: 1000}:
+            index = buy_max + i * 0.5
+            if (i in buy):
+                buy_list += buy[i]
+            else:
+                break
+
+        print(time, " ", sell_min, " ", buy_max)
+        print("buy", buy_max, buy_list)
+
+    #        print(sell, sell)
 
     def indert_db(self):
         cursor = self.connection.cursor()

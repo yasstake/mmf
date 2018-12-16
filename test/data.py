@@ -63,3 +63,16 @@ insert_message = """
 order_book_depth = """
 [{"symbol": "XBTUSD", "id": 17999992000, "side": "Sell", "size": 100, "price": 80}, {"symbol": "XBTUSD", "id": 17999993000, "side": "Sell", "size": 20, "price": 70}, {"symbol": "XBTUSD", "id": 17999994000, "side": "Sell", "size": 10, "price": 60}, {"symbol": "XBTUSD", "id": 17999995000, "side": "Buy", "size": 10, "price": 50}, {"symbol": "XBTUSD", "id": 17999996000, "side": "Buy", "size": 20, "price": 40}, {"symbol": "XBTUSD", "id": 17999997000, "side": "Buy", "size": 100, "price": 30}]
 """
+
+order_book_depth_05 = """
+[{"symbol": "XBTUSD", "id": 17999992000, "side": "Sell", "size": 100, "price": 80}, 
+{"symbol": "XBTUSD", "id": 17999993000, "side": "Sell", "size": 20, "price": 79.5}, 
+{"symbol": "XBTUSD", "id": 17999994000, "side": "Sell", "size": 10, "price": 80.5}, 
+{"symbol": "XBTUSD", "id": 17999994000, "side": "Sell", "size": 10, "price": 100}, 
+{"symbol": "XBTUSD", "id": 17999994000, "side": "Sell", "size": 10, "price": 81}, 
+{"symbol": "XBTUSD", "id": 17999995000, "side": "Buy", "size": 10, "price": 50}, 
+{"symbol": "XBTUSD", "id": 17999996000, "side": "Buy", "size": 20, "price": 49.5}, 
+{"symbol": "XBTUSD", "id": 17999997000, "side": "Buy", "size": 100, "price": 51},
+{"symbol": "XBTUSD", "id": 17999997000, "side": "Buy", "size": 95, "price": 50.5},
+{"symbol": "XBTUSD", "id": 17999997000, "side": "Buy", "size": 98, "price": 10}]
+"""
