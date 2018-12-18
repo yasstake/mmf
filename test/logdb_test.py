@@ -28,6 +28,25 @@ class LogDbTest(unittest.TestCase):
         list = log_db.message_to_list(message)
         print(list)
 
+    def test_message_to_list_zip(self):
+        log_db = logdb.LogDb()
+
+        message = [1000,2,3,400]
+
+        m2 = log_db.list_to_zip_string(message)
+
+        m3 = log_db.zip_string_to_list(m2)
+        print (m2)
+        print ('\n')
+        print (m3)
+        assert(message == m3)
+
+
+
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
