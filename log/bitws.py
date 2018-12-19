@@ -87,6 +87,11 @@ class LogLoader:
         message = json.loads(message)
 
         table = message['table'] if 'table' in message else None
+
+        if(table == 'funding'):
+            print ("funding")
+            pass
+
         action = message['action'] if 'action' in message else None
         self.time_stamp = message['TIME'] if 'TIME' in message else None
 
@@ -122,6 +127,9 @@ class LogLoader:
             logger.debug('wait for partial')
             pass
 
+        return table
+
+
     def get_market_depth(self):
         return self.data
 
@@ -131,11 +139,12 @@ class LogLoader:
             for line in file:
                 line = decode(line)
 
-                self.on_message(line)
-                order_book = self.get_market_depth()
+                table = self.on_message(line)
 
-                if tick and self.ready:
-                    tick(self.time_stamp, order_book)
+                if table == 'orderBookL2':
+                    order_book = self.get_market_depth()
+                    if tick and self.ready:
+                        tick(self.time_stamp, order_book)
         pass
 
 
@@ -262,6 +271,7 @@ class BitWs:
 
     def on_open(self, ws):
         ws.send('{"op": "subscribe", "args": ["orderBookL2:XBTUSD"]}')
+        ws.send('{"op": "subscribe", "args": ["funding"]}')
 
     def start(self):
         websocket.enableTrace(True)

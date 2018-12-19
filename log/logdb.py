@@ -74,7 +74,7 @@ class LogDb:
                     buy_vol = volume
 
         buy_list = []
-        for i in range(500):
+        for i in range(256):
             index = buy_max - i * 0.5
             if index in buy:
                 buy_list.append(buy[index])
@@ -82,7 +82,7 @@ class LogDb:
                 break
 
         sell_list = []
-        for i in range(500):
+        for i in range(256):
             index = sell_min + i * 0.5
             if index in sell:
                 sell_list.append(sell[index])
