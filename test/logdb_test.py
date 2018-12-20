@@ -28,6 +28,8 @@ class LogDbTest(unittest.TestCase):
         list = log_db.message_to_list(message)
         print(list)
 
+
+
     def test_message_to_list_zip(self):
         log_db = logdb.LogDb()
 

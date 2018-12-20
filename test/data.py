@@ -76,3 +76,40 @@ order_book_depth_05 = """
 {"symbol": "XBTUSD", "id": 17999997000, "side": "Buy", "size": 95, "price": 50.5},
 {"symbol": "XBTUSD", "id": 17999997000, "side": "Buy", "size": 98, "price": 10}]
 """
+
+funding_data = """
+{
+  "table": "funding",
+  "action": "partial",
+  "keys": [
+    "timestamp",
+    "symbol"
+  ],
+  "types": {
+    "timestamp": "timestamp",
+    "symbol": "symbol",
+    "fundingInterval": "timespan",
+    "fundingRate": "float",
+    "fundingRateDaily": "float"
+  },
+  "foreignKeys": {
+    "symbol": "instrument"
+  },
+  "attributes": {
+    "timestamp": "sorted",
+    "symbol": "grouped"
+  },
+  "filter": {
+    "symbol": "XBTUSD"
+  },
+  "data": [
+    {
+      "timestamp": "2018-12-20T12:00:00.000Z",
+      "symbol": "XBTUSD",
+      "fundingInterval": "2000-01-01T08:00:00.000Z",
+      "fundingRate": -0.000964,
+      "fundingRateDaily": -0.002892
+    }
+  ]
+}
+"""

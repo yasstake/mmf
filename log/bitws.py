@@ -270,8 +270,7 @@ class BitWs:
         logger.debug("### closed ###")
 
     def on_open(self, ws):
-        ws.send('{"op": "subscribe", "args": ["orderBookL2:XBTUSD"]}')
-        ws.send('{"op": "subscribe", "args": ["funding"]}')
+        ws.send('{"op": "subscribe", "args": ["funding:XBTUSD", "orderBookL2:XBTUSD"]}')
 
     def start(self):
         websocket.enableTrace(True)
