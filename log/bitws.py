@@ -89,10 +89,10 @@ class LogLoader:
 
         if table == 'funding':
             print ("funding")
-            pass
-
-        return self.on_order_book_message(message)
-
+            return table
+        elif table == 'orderBookL2':
+            self.on_order_book_message(message)
+            return table
 
     def on_order_book_message(self, message):
         action = message['action'] if 'action' in message else None
