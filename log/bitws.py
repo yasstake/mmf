@@ -85,13 +85,16 @@ class LogLoader:
 
     def on_message(self, message):
         message = json.loads(message)
-
         table = message['table'] if 'table' in message else None
 
-        if(table == 'funding'):
+        if table == 'funding':
             print ("funding")
             pass
 
+        return self.on_order_book_message(message)
+
+
+    def on_order_book_message(self, message):
         action = message['action'] if 'action' in message else None
         self.time_stamp = message['TIME'] if 'TIME' in message else None
 
@@ -126,9 +129,6 @@ class LogLoader:
         else:
             logger.debug('wait for partial')
             pass
-
-        return table
-
 
     def get_market_depth(self):
         return self.data
