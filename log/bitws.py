@@ -89,10 +89,26 @@ class LogLoader:
 
         if table == 'funding':
             print ("funding")
-            return table
+            self.on_funding_message(message)
         elif table == 'orderBookL2':
             self.on_order_book_message(message)
-            return table
+        elif table == 'trade':
+            logger.debug("--trade--")
+        return table
+
+    def on_funding_message(self, message):
+        action = message['action'] if 'action' in message else None
+        self.time_stamp = message['TIME'] if 'TIME' in message else None
+
+        if action == 'partial':
+            data = message['data'][0]
+
+            timestamp = data['timestamp']
+            funding_rate = data['fundingRate']
+
+            print(timestamp)
+            print(funding_rate)
+            pass
 
     def on_order_book_message(self, message):
         action = message['action'] if 'action' in message else None
@@ -225,21 +241,43 @@ class BitWs:
     def dump_message(self):
         if self.last_message is None:
             return
-
-        self.last_message['TIME'] = self.last_time
-
-        with open(self.log_file_name, "a") as file:
-            json_string = json.dumps(self.last_message, separators=(',', ':'))
-            file.write(encode(json_string))
-            file.write('\n')
-
+        #self.last_message['TIME'] = self.last_time
+        self.dump_message_line(self.last_message)
         self.reset()
+
+    def dump_message_line(self, message):
+        message['TIME'] = self.last_time
+        with open(self.log_file_name, "a") as file:
+            json_string = json.dumps(message, separators=(',', ':'))
+            #file.write(encode(json_string))
+            file.write(json_string)
+            file.write('\n')
 
     def on_message(self, ws, message):
         message = json.loads(message)
+        table = message['table'] if 'table' in message else None
+
+        if table == "orderBookL2":
+            self.on_order_book_message(ws, message)
+        elif table == "funding":
+            self.on_funding_message(ws, message)
+        elif table == "trade":
+            self.on_trade_message(ws, message)
+
+    def on_trade_message(self, ws, message):
+        logger.debug("trade")
+        self.dump_message_line(message)
+        pass
+
+    def on_funding_message(self, ws, message):
+        logger.debug("funding")
+        self.dump_message_line(message)
+        pass
+
+    def on_order_book_message(self, ws, message):
         action = message['action'] if 'action' in message else None
 
-        if (action == 'partial'):
+        if action == 'partial':
             logger.debug("partial")
             self.rotate_file()
             self.create_terminate_flag()
@@ -259,7 +297,7 @@ class BitWs:
         self.reset_timestamp()
         self.last_action = action
 
-        if (self.check_terminate_flag()):
+        if self.check_terminate_flag():
             self.ws.close()
             logger.debug("terminated")
 
@@ -270,7 +308,7 @@ class BitWs:
         logger.debug("### closed ###")
 
     def on_open(self, ws):
-        ws.send('{"op": "subscribe", "args": ["funding:XBTUSD", "orderBookL2:XBTUSD"]}')
+        ws.send('{"op": "subscribe", "args": ["funding:XBTUSD", "orderBookL2:XBTUSD", "trade:XBTUSD"]}')
 
     def start(self):
         websocket.enableTrace(True)

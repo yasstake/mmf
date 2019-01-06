@@ -113,3 +113,37 @@ funding_data = """
   ]
 }
 """
+
+
+trade_data="""
+{"table":"trade","action":"insert","data":[{"timestamp":"2019-01-05T23:01:25.263Z","symbol":"XBTUSD","side":"Sell","size":30,"price":3801.5,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}
+"""
+
+trade_data_long="""
+{"table":"trade","action":"insert","data":[{"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":6122,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"44e1d575-393e-10a6-af45-085fc7b1f5d7","grossValue":161253480,"homeNotional":1.6125348,"foreignNotional":6122},{"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":15,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"530b1899-c46c-aac4-5c98-16a09fe2f677","grossValue":395100,"homeNotional":0.003951,"foreignNotional":15},{"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":2261,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"887534ee-be28-ff36-a8cf-f684b0dfec07","grossValue":59554740,"homeNotional":0.5955474,"foreignNotional":2261},{"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":15118,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"0840cd4a-f06f-8d02-96ac-07869e114fea","grossValue":398208120,"homeNotional":3.9820812,"foreignNotional":15118},{"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":90,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"c7e401d6-06ed-95da-b5f4-d5efa937aaa9","grossValue":2370600,"homeNotional":0.023706,"foreignNotional":90},{"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":150,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"06de04be-2915-598f-cb0f-b146407776df","grossValue":3951000,"homeNotional":0.03951,"foreignNotional":150},{"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":3954,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"56c8462f-a03f-c441-06d9-0f545987400f","grossValue":104148360,"homeNotional":1.0414836,"foreignNotional":3954}]}
+"""
+
+trade_data_long2="""
+{
+    "table":"trade",
+    "action":"insert",
+    "data":[
+    {"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":6122,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"44e1d575-393e-10a6-af45-085fc7b1f5d7","grossValue":161253480,"homeNotional":1.6125348,"foreignNotional":6122},
+    {"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":15,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"530b1899-c46c-aac4-5c98-16a09fe2f677","grossValue":395100,"homeNotional":0.003951,"foreignNotional":15},
+    {"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":2261,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"887534ee-be28-ff36-a8cf-f684b0dfec07","grossValue":59554740,"homeNotional":0.5955474,"foreignNotional":2261},
+    {"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":15118,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"0840cd4a-f06f-8d02-96ac-07869e114fea","grossValue":398208120,"homeNotional":3.9820812,"foreignNotional":15118},
+    {"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":90,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"c7e401d6-06ed-95da-b5f4-d5efa937aaa9","grossValue":2370600,"homeNotional":0.023706,"foreignNotional":90},
+    {"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":150,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"06de04be-2915-598f-cb0f-b146407776df","grossValue":3951000,"homeNotional":0.03951,"foreignNotional":150},
+    {"timestamp":"2019-01-05T23:29:14.521Z","symbol":"XBTUSD","side":"Sell","size":3954,"price":3796.5,"tickDirection":"ZeroMinusTick","trdMatchID":"56c8462f-a03f-c441-06d9-0f545987400f","grossValue":104148360,"homeNotional":1.0414836,"foreignNotional":3954}]
+}
+"""
+
+trade_data_buy_partial="""
+{"table":"trade","action":"partial","keys":[],"types":{"timestamp":"timestamp","symbol":"symbol","side":"symbol","size":"long","price":"float","tickDirection":"symbol","trdMatchID":"guid","grossValue":"long","homeNotional":"float","foreignNotional":"float"},"foreignKeys":{"symbol":"instrument","side":"side"},"attributes":{"timestamp":"sorted","symbol":"grouped"},"filter":{"symbol":"XBTUSD"},
+"data":[{"timestamp":"2019-01-05T23:51:45.711Z","symbol":"XBTUSD","side":"Buy","size":800,"price":3795.5,"tickDirection":"PlusTick","trdMatchID":"dd487e49-9744-cd26-33cd-8a63c6247d89","grossValue":21077600,"homeNotional":0.210776,"foreignNotional":800}
+],"TIME":1546699911}
+"""
+
+trade_data_buy="""
+{"table":"trade","action":"insert","data":[{"timestamp":"2019-01-05T23:51:54.204Z","symbol":"XBTUSD","side":"Buy","size":994,"price":3795.5,"tickDirection":"ZeroPlusTick","trdMatchID":"b7957bd9-1d12-ba95-2fc0-f883a9ed2ef5","grossValue":26188918,"homeNotional":0.26188918,"foreignNotional":994},{"timestamp":"2019-01-05T23:51:54.204Z","symbol":"XBTUSD","side":"Buy","size":2000,"price":3795.5,"tickDirection":"ZeroPlusTick","trdMatchID":"98af4fba-c6b0-b564-1a92-5687adf4151b","grossValue":52694000,"homeNotional":0.52694,"foreignNotional":2000},{"timestamp":"2019-01-05T23:51:54.204Z","symbol":"XBTUSD","side":"Buy","size":2000,"price":3795.5,"tickDirection":"ZeroPlusTick","trdMatchID":"30ecf537-3332-c4d2-cfe2-f4d17988f8d3","grossValue":52694000,"homeNotional":0.52694,"foreignNotional":2000},{"timestamp":"2019-01-05T23:51:54.204Z","symbol":"XBTUSD","side":"Buy","size":6,"price":3795.5,"tickDirection":"ZeroPlusTick","trdMatchID":"1bfa27e7-ebaf-9136-2180-de73a140d684","grossValue":158082,"homeNotional":0.00158082,"foreignNotional":6}],"TIME":1546699914}
+"""
