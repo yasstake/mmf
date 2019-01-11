@@ -1,6 +1,7 @@
 import unittest
 from log import bitws
 import test.data as data
+import json
 
 
 class MyTestCase(unittest.TestCase):
@@ -174,6 +175,13 @@ class MyTestCase(unittest.TestCase):
         loader.on_message(delete_message)
 
 
+    def test_strip_message(self):
+        bitmex = bitws.BitWs()
+
+        d = json.loads(data.trade_data_long)
+
+        result = bitmex.strip_trade_message(d)
+        print(result)
 
 
 

@@ -25,8 +25,6 @@ import time
 
 def encode(message):
     message = message.replace('"price"', '"p"')
-    message = message.replace('"symbol"', '"S"')
-    message = message.replace('"XBTUSD"', '"B"')
     message = message.replace('"size"', '"s"')
     message = message.replace('"id"', '"i"')
     message = message.replace('"side"', '"W"')
@@ -43,8 +41,6 @@ def encode(message):
 
 def decode(message):
     message = message.replace('"p"', '"price"')
-    message = message.replace('"S"', '"symbol"')
-    message = message.replace('"B"', '"XBTUSD"')
     message = message.replace('"s"', '"size"')
     message = message.replace('"i"', '"id"')
     message = message.replace('"W"', '"side"')
@@ -94,7 +90,14 @@ class LogLoader:
             self.on_order_book_message(message)
         elif table == 'trade':
             logger.debug("--trade--")
+            self.on_trade_message(message)
         return table
+
+
+    def on_trade_message(self, message):
+        action = message['action'] if 'action' in message else None
+        self.time_stamp = message['TIME'] if 'TIME' in message else None
+
 
     def on_funding_message(self, message):
         action = message['action'] if 'action' in message else None
@@ -241,7 +244,6 @@ class BitWs:
     def dump_message(self):
         if self.last_message is None:
             return
-        #self.last_message['TIME'] = self.last_time
         self.dump_message_line(self.last_message)
         self.reset()
 
@@ -249,25 +251,57 @@ class BitWs:
         message['TIME'] = self.last_time
         with open(self.log_file_name, "a") as file:
             json_string = json.dumps(message, separators=(',', ':'))
-            #file.write(encode(json_string))
-            file.write(json_string)
+            file.write(encode(json_string))
             file.write('\n')
+
+    def remove_symbol(self, message):
+        for m in message['data']:
+            del (m['symbol'])
 
     def on_message(self, ws, message):
         message = json.loads(message)
         table = message['table'] if 'table' in message else None
 
+
         if table == "orderBookL2":
+            self.remove_symbol(message)
             self.on_order_book_message(ws, message)
         elif table == "funding":
+            self.remove_symbol(message)
             self.on_funding_message(ws, message)
         elif table == "trade":
+            self.remove_symbol(message)
             self.on_trade_message(ws, message)
 
     def on_trade_message(self, ws, message):
         logger.debug("trade")
-        self.dump_message_line(message)
-        pass
+        self.dump_message_line(self.strip_trade_message(message))
+
+
+    def strip_trade_message(self, message):
+        data = message['data']
+        side = None
+        price = 0
+        size = 0
+
+        last_time_stamp = data[0]['timestamp']
+        for d in data:
+            if last_time_stamp != d['timestamp']:
+                break
+
+            side =  d['side']
+            price = d['price']
+            size += d['size']
+
+        del(data[1:])
+
+        data[0]['side'] = side
+        data[0]['price'] = price
+        data[0]['size'] = size
+        del(data[0]['grossValue'], data[0]['homeNotional'], data[0]['trdMatchID'], data[0]['foreignNotional'])
+
+        return message
+
 
     def on_funding_message(self, ws, message):
         logger.debug("funding")
