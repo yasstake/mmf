@@ -37,6 +37,12 @@ class MyTestCase(unittest.TestCase):
         encodeline = bitws.encode(data.line)
         decodeline = bitws.decode(encodeline)
 
+        print(encodeline)
+
+        print("\n")
+
+        print(decodeline)
+
         self.assertEqual(data.line, decodeline, "decode error")
 
     def test_ws_mesage_append(self):

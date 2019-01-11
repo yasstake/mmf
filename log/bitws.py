@@ -24,10 +24,10 @@ import time
 
 
 def encode(message):
-    message = message.replace('"price"', '"p"')
-    message = message.replace('"size"', '"s"')
-    message = message.replace('"id"', '"i"')
-    message = message.replace('"side"', '"W"')
+    message = message.replace(',"price":', ',p:')
+    message = message.replace(',"size":', ',s:')
+    message = message.replace('"id":', 'i:')
+    message = message.replace('"side"', '"S"')
     message = message.replace('"types"', '"T"')
     message = message.replace('"table"', '"t"')
     message = message.replace('"Sell"', '"H"')
@@ -40,10 +40,10 @@ def encode(message):
 
 
 def decode(message):
-    message = message.replace('"p"', '"price"')
-    message = message.replace('"s"', '"size"')
-    message = message.replace('"i"', '"id"')
-    message = message.replace('"W"', '"side"')
+    message = message.replace(',p:', ',"price":')
+    message = message.replace(',s:', ',"size":')
+    message = message.replace('i:', '"id":')
+    message = message.replace('"S"', '"side"')
     message = message.replace('"T"', '"types"')
     message = message.replace('"t"', '"table"')
     message = message.replace('"H"', '"Sell"')
