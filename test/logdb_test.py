@@ -18,8 +18,8 @@ class LogDbTest(unittest.TestCase):
         log_db.create()
 
         order_book = json.loads(data.order_book_depth)
-        log_db.insert(100, order_book)
-        log_db.insert(100, order_book)
+        log_db.insert_order_book(100, order_book)
+        log_db.insert_order_book(100, order_book)
 
     def test_message_to_list(self):
         log_db = logdb.LogDb()
