@@ -110,7 +110,7 @@ class LogDb:
 
         return message
 
-    def insert(self, time, message):
+    def insert_order_book(self, time, message):
         sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list = self.message_to_list(message)
 
         sell_blob = sqlite3.Binary(self.list_to_zip_string(sell_list))
@@ -123,7 +123,7 @@ class LogDb:
 
     def tick(self, time_stamp, order_book):
         if self.last_time != time_stamp:
-            self.insert(time_stamp, order_book)
+            self.insert_order_book(time_stamp, order_book)
         self.last_time = time_stamp
 
     def load_file(self, file):
