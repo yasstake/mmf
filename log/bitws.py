@@ -1,4 +1,5 @@
 import datetime
+
 import json
 import os
 import traceback
@@ -74,10 +75,20 @@ def findItemByKeys(table, matchData):
 
 class LogLoader:
     def __init__(self):
+        # order book
         self.data = {}
         self.keys = {}
         self.time_stamp = 0
         self.ready = False
+
+        # funding
+        self.funding_time = None
+        self.funding_rate = None
+
+        #trade infomation
+        self.trade_time = None
+        self.trade_sell = {}
+        self.trade_buy  = {}
 
     def on_message(self, message):
         message = json.loads(message)
@@ -98,6 +109,33 @@ class LogLoader:
         action = message['action'] if 'action' in message else None
         self.time_stamp = message['TIME'] if 'TIME' in message else None
 
+        for data in message['data']:
+            time = data['timestamp']
+
+            if self.trade_time and self.trade_time != time:
+                #new Tick
+                self.trade_time = time
+                self.trade_buy = {}
+                self.trade_sell = {}
+            else:
+                price = data['price']
+                size  = data['size']
+
+                if data['side'] == "Buy":
+                    if price in self.trade_buy:
+                        self.trade_buy[price] += price
+                    else:
+                        self.trade_buy[price] = price
+                    print("buy")
+                elif data['side'] == "Sell":
+                    if price in self.trade_sell:
+                        self.trade_sell[price] += price
+                    else:
+                        self.trade_sell[price] = price
+                    print("Sell")
+                else:
+                    print("Error")
+
 
     def on_funding_message(self, message):
         action = message['action'] if 'action' in message else None
@@ -105,13 +143,8 @@ class LogLoader:
 
         if action == 'partial':
             data = message['data'][0]
-
-            timestamp = data['timestamp']
-            funding_rate = data['fundingRate']
-
-            print(timestamp)
-            print(funding_rate)
-            pass
+            self.funding_time = data['timestamp']
+            self.funding_rate = data['fundingRate']
 
     def on_order_book_message(self, message):
         action = message['action'] if 'action' in message else None
@@ -233,6 +266,10 @@ class BitWs:
 
     #        return time.strftime('%Y-%m-%d-%H:%M:%S')
 
+    def time_sec(self, iso_time):
+        sec = datetime.datetime.strptime(iso_time, "%Y-%m-%dT%H:%M:%S.%f%z")
+        return int(sec.timestamp())
+
     def rotate_file(self):
         if self.log_file_name:
             if os.path.isfile(self.log_file_name):
@@ -251,7 +288,8 @@ class BitWs:
         message['TIME'] = self.last_time
         with open(self.log_file_name, "a") as file:
             json_string = json.dumps(message, separators=(',', ':'))
-            file.write(encode(json_string))
+            #            file.write(encode(json_string))
+            file.write(json_string)
             file.write('\n')
 
     def remove_symbol(self, message):

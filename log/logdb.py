@@ -16,6 +16,8 @@ class LogDb:
         self.connection = None
         self.last_time = 0
 
+
+
         pass
 
     def __del__(self):
