@@ -67,19 +67,16 @@ class LogLoader:
         for data in message['data']:
             time = time_sec(data['timestamp'])
 
-            print("trade->" + str(time))
             price = data['price']
             size = data['size']
 
             if data['side'] == "Buy":
-                print("--------->buy")
                 if price in self.trade_buy:
                     self.trade_buy[price] += size
                 else:
                     self.trade_buy[price] = size
 
             elif data['side'] == "Sell":
-                print("Sell------>")
                 if price in self.trade_sell:
                     self.trade_sell[price] += size
                 else:
@@ -103,7 +100,6 @@ class LogLoader:
 
         if self.funding_tick:
             self.funding_tick(funding_time, funding_rate)
-
 
     def on_order_book_message(self, message):
         action = message['action'] if 'action' in message else None
