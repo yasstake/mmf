@@ -6,7 +6,6 @@ import sqlite3
 import log.bitws
 import zlib
 
-
 DB_NAME = ":memory:"
 
 
@@ -16,9 +15,6 @@ class LogDb:
         self.connection = None
         self.last_time = 0
 
-
-
-        pass
 
     def __del__(self):
         self.close()
@@ -123,35 +119,4 @@ class LogDb:
         cursor.execute(sql, [time, sell_min, sell_vol, sell_blob, buy_max, buy_vol, buy_blob])
         self.connection.commit()
 
-    def tick(self, time_stamp, order_book):
-        if self.last_time != time_stamp:
-            self.insert_order_book(time_stamp, order_book)
-        self.last_time = time_stamp
-
-    def load_file(self, file):
-        log_loader = log.bitws.LogLoader()
-        log_loader.load(self.tick, file)
-
-
-if __name__ == '__main__':
-    log_dir = '/tmp'
-    db_file = '/tmp/bitlog.db'
-
-    if len(sys.argv) == 2:
-        log_dir = sys.argv[0]
-        db_file = sys.argv[1]
-
-    print (log_dir, db_file)
-
-    log_db = LogDb(db_file)
-    log_db.connect()
-    log_db.create()
-
-    log_files = glob.glob(log_dir + '/' + '*.log')
-
-    for file in log_files:
-        print (file)
-        log_db.load_file(file)
-
-    log_db.close()
 

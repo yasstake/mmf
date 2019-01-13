@@ -1,5 +1,6 @@
 import unittest
 from log import bitws
+from log import encoder
 import test.data as data
 import json
 
@@ -34,8 +35,8 @@ class MyTestCase(unittest.TestCase):
     def test_ws_decode_encode(self):
         bitmex = bitws.BitWs()
 
-        encodeline = bitws.encode(data.line)
-        decodeline = bitws.decode(encodeline)
+        encodeline = encoder.encode(data.line)
+        decodeline = encoder.decode(encodeline)
 
         print(encodeline)
 
@@ -79,60 +80,6 @@ class MyTestCase(unittest.TestCase):
 
         print(bitmex.timestamp())
 
-    def dummy(self, time, message):
-#        print (time)
-        pass
-
-    def test_loader(self):
-        loader = bitws.LogLoader()
-        loader.load(self.dummy, "./test/test.log")
-
-    def test_loader_message(self):
-        loader = bitws.LogLoader()
-        loader.on_message(data.line)
-
-    def test_loader_message_partial(self):
-        loader = bitws.LogLoader()
-        loader.on_message(data.partial_message)
-
-    def test_loader_message_update(self):
-        loader = bitws.LogLoader()
-        loader.on_message(data.partial_message)
-        loader.on_message(data.update_message)
-
-    def test_loader_message_delete(self):
-        loader = bitws.LogLoader()
-        loader.on_message(data.partial_message)
-        loader.on_message(data.delete_message)
-
-    def test_loader_message_indert(self):
-        loader = bitws.LogLoader()
-        loader.on_message(data.partial_message)
-        loader.on_message(data.insert_message)
-
-    def test_loader_message_insert2(self):
-        print()
-        loader = bitws.LogLoader()
-        loader.on_message(data.partial_message)
-        loader.on_message(data.insert_message)
-        loader.on_message(data.insert_message)
-        loader.on_message(data.partial_message)
-        print(loader.get_market_depth())
-
-    def test_loader_message_insert4(self):
-        print('insert')
-        loader = bitws.LogLoader()
-        loader.on_message(data.partial_message)
-        loader.on_message(data.insert_message)
-        print(loader.get_market_depth())
-
-    def test_loader_message_delete1(self):
-        print('delete')
-        loader = bitws.LogLoader()
-        loader.on_message(data.partial_message)
-        loader.on_message(data.insert_message)
-        loader.on_message(data.delete_message)
-        print(loader.get_market_depth())
 
 
     def test_loader_message_insert3(self):
@@ -189,7 +136,15 @@ class MyTestCase(unittest.TestCase):
         result = bitmex.strip_trade_message(d)
         print(result)
 
+    def test_time_sec(self):
+        bitmex = bitws.BitWs()
+        iso_string = "2019-01-12T15:12:51.313Z"
+        sec = bitmex.time_sec(iso_string)
 
+        iso_string2 = "2019-01-12T15:12:01.313Z"
+        sec2 = bitmex.time_sec(iso_string2)
+
+        assert(sec == sec2 + 50)
 
 
 if __name__ == '__main__':

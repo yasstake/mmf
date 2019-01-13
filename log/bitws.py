@@ -7,8 +7,8 @@ from bitmex_websocket import BitMEXWebsocket
 
 # needs install
 import websocket
-
 import logging
+from log.timeutil import *
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -17,187 +17,13 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
+import log.encoder
+
 try:
     import thread
 except ImportError:
     import _thread as thread
 import time
-
-
-def encode(message):
-    message = message.replace(',"price":', ',p:')
-    message = message.replace(',"size":', ',s:')
-    message = message.replace('"id":', 'i:')
-    message = message.replace('"side"', '"S"')
-    message = message.replace('"types"', '"T"')
-    message = message.replace('"table"', '"t"')
-    message = message.replace('"Sell"', '"H"')
-    message = message.replace('"Buy"', '"L"')
-    message = message.replace('"orderBookL2"', '"O"')
-    message = message.replace('"action"', '"A"')
-    message = message.replace('"update"', '"U"')
-    message = message.replace('"data"', '"d"')
-    return message
-
-
-def decode(message):
-    message = message.replace(',p:', ',"price":')
-    message = message.replace(',s:', ',"size":')
-    message = message.replace('i:', '"id":')
-    message = message.replace('"S"', '"side"')
-    message = message.replace('"T"', '"types"')
-    message = message.replace('"t"', '"table"')
-    message = message.replace('"H"', '"Sell"')
-    message = message.replace('"L"', '"Buy"')
-    message = message.replace('"O"', '"orderBookL2"')
-    message = message.replace('"A"', '"action"')
-    message = message.replace('"U"', '"update"')
-    message = message.replace('"d"', '"data"')
-
-    return message
-
-
-def findItemByKeys(table, matchData):
-    try:
-        for item in table:
-            if item['id'] == matchData['id']:
-                return item
-    except:
-        logger.debug("findItemByKeys Error")
-        logger.debug(item)
-        logger.debug(matchData)
-    finally:
-        pass
-
-    logger.debug("Item not found")
-    return None
-
-
-class LogLoader:
-    def __init__(self):
-        # order book
-        self.data = {}
-        self.keys = {}
-        self.time_stamp = 0
-        self.ready = False
-
-        # funding
-        self.funding_time = None
-        self.funding_rate = None
-
-        #trade infomation
-        self.trade_time = None
-        self.trade_sell = {}
-        self.trade_buy  = {}
-
-    def on_message(self, message):
-        message = json.loads(message)
-        table = message['table'] if 'table' in message else None
-
-        if table == 'funding':
-            print ("funding")
-            self.on_funding_message(message)
-        elif table == 'orderBookL2':
-            self.on_order_book_message(message)
-        elif table == 'trade':
-            logger.debug("--trade--")
-            self.on_trade_message(message)
-        return table
-
-
-    def on_trade_message(self, message):
-        action = message['action'] if 'action' in message else None
-        self.time_stamp = message['TIME'] if 'TIME' in message else None
-
-        for data in message['data']:
-            time = data['timestamp']
-
-            if self.trade_time and self.trade_time != time:
-                #new Tick
-                self.trade_time = time
-                self.trade_buy = {}
-                self.trade_sell = {}
-            else:
-                price = data['price']
-                size  = data['size']
-
-                if data['side'] == "Buy":
-                    if price in self.trade_buy:
-                        self.trade_buy[price] += price
-                    else:
-                        self.trade_buy[price] = price
-                    print("buy")
-                elif data['side'] == "Sell":
-                    if price in self.trade_sell:
-                        self.trade_sell[price] += price
-                    else:
-                        self.trade_sell[price] = price
-                    print("Sell")
-                else:
-                    print("Error")
-
-
-    def on_funding_message(self, message):
-        action = message['action'] if 'action' in message else None
-        self.time_stamp = message['TIME'] if 'TIME' in message else None
-
-        if action == 'partial':
-            data = message['data'][0]
-            self.funding_time = data['timestamp']
-            self.funding_rate = data['fundingRate']
-
-    def on_order_book_message(self, message):
-        action = message['action'] if 'action' in message else None
-        self.time_stamp = message['TIME'] if 'TIME' in message else None
-
-        if not action:
-            return
-
-        if action == 'partial':
-            logger.debug('partial')
-            self.ready = True
-            self.data = message['data']
-        elif action == 'insert' and self.ready:
-            logger.debug('insert')
-            self.data += message['data']
-            pass
-        elif action == 'update' and self.ready:
-            for updateData in message['data']:
-                item = findItemByKeys(self.data, updateData)
-                if not item:
-                    return  # No item found to update. Could happen before push
-                item.update(updateData)
-            pass
-        elif action == 'delete' and self.ready:
-            logger.debug('delete')
-
-            # Locate the item in the collection and remove it.
-            for deleteData in message['data']:
-                item = findItemByKeys(self.data, deleteData)
-                if not item:
-                    return
-                self.data.remove(item)
-            pass
-        else:
-            logger.debug('wait for partial')
-            pass
-
-    def get_market_depth(self):
-        return self.data
-
-    def load(self, tick, file_name):
-
-        with open(file_name, "r") as file:
-            for line in file:
-                line = decode(line)
-
-                table = self.on_message(line)
-
-                if table == 'orderBookL2':
-                    order_book = self.get_market_depth()
-                    if tick and self.ready:
-                        tick(self.time_stamp, order_book)
-        pass
 
 
 class BitWs:
@@ -209,6 +35,7 @@ class BitWs:
         self.log_file_name = None
         self.ws = None
         self.log_file_dir = log_file_dir
+        self.last_time = 0
 
         self.reset()
         self.rotate_file()
@@ -221,6 +48,9 @@ class BitWs:
     def reset(self):
         self.last_message = None
         self.reset_timestamp()
+
+    def reset_timestamp(self):
+        self.last_time = timestamp()
 
     def get_flag_file_name(self):
         return "/tmp/BITWS-FLG"
@@ -248,34 +78,13 @@ class BitWs:
         if os.path.isfile(file_name):
             os.remove(file_name)
 
-    def timestamp(self):
-        now = datetime.datetime.utcnow()
-        return int(now.timestamp())
-
-    def reset_timestamp(self):
-        self.last_time = self.timestamp()
-
-    def date_string(self):
-        time = datetime.datetime.fromtimestamp(self.timestamp())
-
-        return time.strftime('%Y-%m-%d')
-
-    def time_stamp_string(self):
-        time = datetime.datetime.fromtimestamp(self.timestamp())
-        return time.isoformat()
-
-    #        return time.strftime('%Y-%m-%d-%H:%M:%S')
-
-    def time_sec(self, iso_time):
-        sec = datetime.datetime.strptime(iso_time, "%Y-%m-%dT%H:%M:%S.%f%z")
-        return int(sec.timestamp())
 
     def rotate_file(self):
         if self.log_file_name:
             if os.path.isfile(self.log_file_name):
                 os.rename(self.log_file_name, self.log_file_root_name)
 
-        self.log_file_root_name = self.log_file_dir + '/' + self.time_stamp_string() + ".log"
+        self.log_file_root_name = self.log_file_dir + '/' + time_stamp_string() + ".log"
         self.log_file_name = self.log_file_root_name + ".current"
 
     def dump_message(self):
@@ -354,7 +163,7 @@ class BitWs:
             self.rotate_file()
             self.create_terminate_flag()
 
-        current_time = self.timestamp()
+        current_time = timestamp()
 
         if current_time == self.last_time and self.last_action == action and action != None:
             if self.last_message != None:
@@ -391,9 +200,6 @@ class BitWs:
                                          on_open=self.on_open)
 
         self.ws.run_forever(ping_interval=70, ping_timeout=10)
-
-    def load_log(self, file_name):
-        pass
 
 
 if __name__ == "__main__":
