@@ -31,18 +31,15 @@ class DbLoader:
         self.book_last_time = time_stamp
 
     def funding_tick(self, time_stamp, funding):
-        print("----funding----")
-        print(time_stamp)
-        print(funding)
-        print("<----funding----")
-
+        print("funding", time_stamp, funding)
+        self.log_db.insert_funding(time_stamp, funding)
 
     def trade_tick(self, time_stamp, buy_trade, sell_trade):
-        print("=---trade----")
-        print(time_stamp)
-        print(buy_trade)
-        print(sell_trade)
-        print("<---trade----")
+        for price in buy_trade.keys():
+            self.log_db.insert_buy_trade(time_stamp, price, buy_trade[price])
+
+        for price in sell_trade.keys():
+            self.log_db.insert_sell_trade(time_stamp, price, sell_trade[price])
 
 if __name__ == '__main__':
     log_dir = '/tmp'

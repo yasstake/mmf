@@ -98,11 +98,12 @@ class LogLoader:
 
     def on_funding_message(self, message):
         data = message['data'][0]
-        funding_time = data['timestamp']
+
+        time = time_sec(data['timestamp'])
         funding_rate = data['fundingRate']
 
         if self.funding_tick:
-            self.funding_tick(funding_time, funding_rate)
+            self.funding_tick(time, funding_rate)
 
     def on_order_book_message(self, message):
         action = message['action'] if 'action' in message else None

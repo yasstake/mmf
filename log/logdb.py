@@ -35,6 +35,39 @@ class LogDb:
                     ) 
             ''')
 
+        cursor.execute(
+            '''
+            create table if not exists sell_trade
+                    (time integer,
+                     price real,
+                     volume integer,
+                     primary key(time, price)
+                    ) 
+            ''')
+
+        cursor.execute(
+            '''
+            create table if not exists buy_trade
+                    (time integer,
+                     price real,
+                     volume integer,
+                     primary key(time, price)
+                    ) 
+            ''')
+
+        cursor.execute(
+            '''
+            create table if not exists funding
+                    (time integer primary key, 
+                     funding real
+                     )
+            ''')
+
+
+
+
+
+
         self.connection.commit()
 
     def close(self):
@@ -119,4 +152,23 @@ class LogDb:
         cursor.execute(sql, [time, sell_min, sell_vol, sell_blob, buy_max, buy_vol, buy_blob])
         self.connection.commit()
 
+    def insert_sell_trade(self, time, price, size):
+        sql = 'INSERT or REPLACE into sell_trade (time, price, volume) values(?, ?, ?)'
+        cursor = self.connection.cursor()
+        cursor.execute(sql, [time, price, size])
+        self.connection.commit()
+
+
+    def insert_buy_trade(self, time, price, size):
+        sql = 'INSERT or REPLACE into buy_trade (time, price, volume) values(?, ?, ?)'
+        cursor = self.connection.cursor()
+        cursor.execute(sql, [time, price, size])
+        self.connection.commit()
+
+
+    def insert_funding(self, time, funding):
+        sql = 'INSERT or REPLACE into funding (time, funding) values(?, ?)'
+        cursor = self.connection.cursor()
+        cursor.execute(sql, [time, funding])
+        self.connection.commit()
 
