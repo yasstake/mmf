@@ -58,7 +58,6 @@ class LogLoader:
         elif table == 'orderBookL2':
             self.on_order_book_message(message)
         elif table == 'trade':
-            logger.debug("--trade--")
             self.on_trade_message(message)
         return table
 
@@ -69,14 +68,23 @@ class LogLoader:
 
             price = data['price']
             size = data['size']
+            side = data['side']
 
-            if data['side'] == "Buy":
+            print("--trade->"+ str(time) + " " + str(price) + " " + str(size) + " " + side)
+
+            if self.trade_time and self.trade_time != time:
+                self.trade_tick(self.trade_time, self.trade_buy, self.trade_sell)
+
+                self.trade_buy = {}
+                self.trade_sell = {}
+
+            if side == "Buy":
                 if price in self.trade_buy:
                     self.trade_buy[price] += size
                 else:
                     self.trade_buy[price] = size
 
-            elif data['side'] == "Sell":
+            elif side == "Sell":
                 if price in self.trade_sell:
                     self.trade_sell[price] += size
                 else:
@@ -84,11 +92,6 @@ class LogLoader:
             else:
                 print("Error")
 
-            if self.trade_time and self.trade_time != time:
-                self.trade_tick(self.trade_time, self.trade_buy, self.trade_sell)
-
-                self.trade_buy = {}
-                self.trade_sell = {}
 
             self.trade_time = time
 
