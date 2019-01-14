@@ -172,3 +172,47 @@ class LogDb:
         cursor.execute(sql, [time, funding])
         self.connection.commit()
 
+    def select_center_price(self, time):
+        """
+        :param time:
+        :return: high_price, low_price
+        """
+        sql = "select time, sell_min, buy_max from order_book where time = ?"
+        cursor = self.connection.cursor()
+#        sql = "select time, sell_min, buy_max from order_book"
+#        cursor = self.connection.cursor()
+        cursor.execute(sql, (time,))
+
+#        rows = cursor
+#        row = rows[0]
+
+        return row["time"], row["sell_min"], row["buy_max"]
+
+
+    def select_order_book(self, time):
+        """
+        :param time:
+        :return: sell_min, buy_max, sell_list, buy_list
+        """
+        pass
+
+    def select_sell_trade(self, time):
+        """
+        :param time:
+        :return: sell_trade_list
+        """
+        pass
+
+    def select_buy_trade(self, time):
+        """
+        :param time:
+        :return: buy_trade list
+        """
+        pass
+
+    def select_funding(self, time):
+        """
+        :param time:
+        :return: time_to_remain, funding_rate
+        """
+        pass

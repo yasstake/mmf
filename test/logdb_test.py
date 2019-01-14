@@ -43,6 +43,13 @@ class LogDbTest(unittest.TestCase):
         print (m3)
         assert(message == m3)
 
+    def test_select_center_price(self):
+        db = logdb.LogDb()
+        db.connect()
+        db.create()
+
+        print(db.select_center_price(1000))
+
 
 
 
