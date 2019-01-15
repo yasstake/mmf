@@ -19,6 +19,12 @@ class DbLoader:
     def close_db(self):
         self.log_db.close()
 
+    def get_db(self):
+        return self.log_db
+
+    def load_line(self, line):
+        self.log_loader.load_line(line)
+
     def load_file(self, log_file):
         self.log_loader.load(log_file)
 

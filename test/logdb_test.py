@@ -1,5 +1,7 @@
 import unittest
-from log import logdb
+from log.logdb import LogDb
+from log.dbloader import DbLoader
+
 import test.data as data
 import json
 
@@ -7,13 +9,13 @@ import json
 class LogDbTest(unittest.TestCase):
 
     def test_create(self):
-        log_db = logdb.LogDb()
+        log_db = LogDb()
 
         log_db.connect()
         log_db.create()
 
     def test_load(self):
-        log_db = logdb.LogDb()
+        log_db = LogDb()
         log_db.connect()
         log_db.create()
 
@@ -22,7 +24,7 @@ class LogDbTest(unittest.TestCase):
         log_db.insert_order_book(100, order_book)
 
     def test_message_to_list(self):
-        log_db = logdb.LogDb()
+        log_db = LogDb()
 
         message = json.loads(data.order_book_depth_05)
         list = log_db.message_to_list(message)
@@ -31,7 +33,7 @@ class LogDbTest(unittest.TestCase):
 
 
     def test_message_to_list_zip(self):
-        log_db = logdb.LogDb()
+        log_db = LogDb()
 
         message = [1000,2,3,400]
 
@@ -43,11 +45,34 @@ class LogDbTest(unittest.TestCase):
         print (m3)
         assert(message == m3)
 
-    def test_select_center_price(self):
-        db = logdb.LogDb()
-        db.connect()
-        db.create()
 
+    def test_select_center_price(self):
+        partial_message = """
+        {
+              "table":"orderBookL2",
+              "keys":["symbol","id","side"],
+              "types":{"id":"long","price":"float","side":"symbol","size":"long","symbol":"symbol"},
+              "foreignKeys":{"side":"side","symbol":"instrument"},
+              "attributes":{"id":"sorted","symbol":"grouped"},
+              "action":"partial",
+              "TIME": 1000,
+              "data":[
+                {"symbol":"XBTUSD","id":17999992000,"side":"Sell","size":100,"price":1000},
+                {"symbol":"XBTUSD","id":17999993000,"side":"Sell","size":20,"price":70},
+                {"symbol":"XBTUSD","id":17999994000,"side":"Sell","size":10,"price":60},
+                {"symbol":"XBTUSD","id":17999995000,"side":"Buy","size":10,"price":50},
+                {"symbol":"XBTUSD","id":17999996000,"side":"Buy","size":20,"price":40},
+                {"symbol":"XBTUSD","id":17999997000,"side":"Buy","size":100,"price":30}
+              ]
+        }
+        """
+
+        db_loader = DbLoader()
+
+        db_loader.open_db(':memory:')
+        db_loader.load_line(partial_message)
+
+        db = db_loader.get_db()
         print(db.select_center_price(1000))
 
 

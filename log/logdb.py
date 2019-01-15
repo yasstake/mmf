@@ -179,14 +179,11 @@ class LogDb:
         """
         sql = "select time, sell_min, buy_max from order_book where time = ?"
         cursor = self.connection.cursor()
-#        sql = "select time, sell_min, buy_max from order_book"
-#        cursor = self.connection.cursor()
         cursor.execute(sql, (time,))
 
-#        rows = cursor
-#        row = rows[0]
+        row = cursor.fetchone()
 
-        return row["time"], row["sell_min"], row["buy_max"]
+        return row[0], row[1], row[2]
 
 
     def select_order_book(self, time):
