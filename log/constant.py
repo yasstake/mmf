@@ -1,4 +1,5 @@
 
 
 PRICE_UNIT=0.5
+BOOK_DEPTH = 256
 
