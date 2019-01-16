@@ -173,6 +173,13 @@ class LogDb:
         cursor.execute(sql, [time, funding])
         self.connection.commit()
 
+    def calc_center_price(self, min, max):
+        diff = max - min
+        if diff == constant.PRICE_UNIT:
+            return max
+        else:
+            return min + (int((diff + constant.PRICE_UNIT)))/2
+
     def select_center_price(self, time):
         """
         :param time:
@@ -182,45 +189,44 @@ class LogDb:
         cursor = self.connection.cursor()
         cursor.execute(sql, (time,))
 
-        row = cursor.fetchone()
+        time, sell_min, buy_max = cursor.fetchone()
 
-        sell_min = row[1]
-        buy_max = row[2]
-
-        diff = sell_min - buy_max
-        if diff == constant.PRICE_UNIT:
-            return time, sell_min
-        else:
-            return time, buy_max + (int((diff + constant.PRICE_UNIT)))/2
+        return time, self.calc_center_price(buy_max, sell_min)
 
 
-def select_order_book(self, time):
-    """
-    :param time:
-    :return: sell_min, buy_max, sell_list, buy_list
-    """
-    pass
+    def select_order_book(self, time):
+        """
+        :param time:
+        :return: time, sell_list, buy_list
+        """
+        sql = "select time, sell_list, buy_list from order_book where time = ?"
+        cursor = self.connection.cursor()
+        cursor.execute(sql, (time,))
+
+        time, sell_list, buy_list = cursor.fetchone()
+
+        return time, self.zip_string_to_list(sell_list), self.zip_string_to_list(buy_list)
 
 
-def select_sell_trade(self, time):
-    """
-    :param time:
-    :return: sell_trade_list
-    """
-    pass
+    def select_sell_trade(self, time):
+        """
+        :param time:
+        :return: sell_trade_list
+        """
+        pass
 
 
-def select_buy_trade(self, time):
-    """
-    :param time:
-    :return: buy_trade list
-    """
-    pass
+    def select_buy_trade(self, time):
+        """
+        :param time:
+        :return: buy_trade list
+        """
+        pass
 
 
-def select_funding(self, time):
-    """
-    :param time:
-    :return: time_to_remain, funding_rate
-    """
-    pass
+    def select_funding(self, time):
+        """
+        :param time:
+        :return: time_to_remain, funding_rate
+        """
+        pass

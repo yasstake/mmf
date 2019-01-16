@@ -82,12 +82,34 @@ class LogDbTest(unittest.TestCase):
         message = [1000,2,3,400]
 
         m2 = log_db.list_to_zip_string(message)
+        print("zip->", m2)
 
         m3 = log_db.zip_string_to_list(m2)
-        print (m2)
+        print ("unzip->", m3)
         print ('\n')
         print (m3)
         assert(message == m3)
+
+
+
+
+
+    def test_calc_center_price(self):
+        db = LogDbTest.connect()
+
+        price = db.calc_center_price(100, 100.5)
+        assert(price == 100.5)
+
+        price = db.calc_center_price(100, 101)
+        assert(price == 100.5)
+
+        price = db.calc_center_price(100, 101.5)
+        assert(price == 101)
+
+        price = db.calc_center_price(100, 102)
+        assert(price == 101)
+
+
 
     @staticmethod
     def test_select_center_price():
@@ -106,9 +128,13 @@ class LogDbTest(unittest.TestCase):
         assert(center_price == 99.5)
 
 
+
     @staticmethod
     def test_select_order_book():
         db = LogDbTest.connect()
+
+        print(db.select_order_book(1000))
+        print(db.select_order_book(1001))
 
     pass
 
