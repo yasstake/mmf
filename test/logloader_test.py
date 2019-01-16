@@ -3,10 +3,6 @@ import test.data as data
 from log.loader import LogLoader
 
 class MyTestCase(unittest.TestCase):
-    def test_loader(self):
-        loader = LogLoader()
-        loader.load("./test/test.log")
-
     def test_loader_message(self):
         loader = LogLoader()
         loader.on_message(data.line)

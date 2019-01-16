@@ -5,6 +5,7 @@ import glob
 import sqlite3
 import log.bitws
 import zlib
+from log import constant
 
 DB_NAME = ":memory:"
 
@@ -106,7 +107,7 @@ class LogDb:
 
         buy_list = []
         for i in range(256):
-            index = buy_max - i * 0.5
+            index = buy_max - i * constant.PRICE_UNIT
             if index in buy:
                 buy_list.append(buy[index])
             else:
@@ -114,7 +115,7 @@ class LogDb:
 
         sell_list = []
         for i in range(256):
-            index = sell_min + i * 0.5
+            index = sell_min + i * constant.PRICE_UNIT
             if index in sell:
                 sell_list.append(sell[index])
             else:
@@ -175,7 +176,7 @@ class LogDb:
     def select_center_price(self, time):
         """
         :param time:
-        :return: high_price, low_price
+        :return: time, high_price, low_price
         """
         sql = "select time, sell_min, buy_max from order_book where time = ?"
         cursor = self.connection.cursor()

@@ -3,7 +3,8 @@ from log import bitws
 from log import encoder
 import test.data as data
 import json
-
+from log import loader
+from log.timeutil import *
 
 class MyTestCase(unittest.TestCase):
     def test_ws_create_flag(self):
@@ -23,14 +24,6 @@ class MyTestCase(unittest.TestCase):
         if(bitmex.check_terminate_flag()):
             print("terminate flag ok")
 
-
-    def test_ws_timestamp(self):
-        bitmex = bitws.BitWs()
-        print(bitmex.time_stamp_string())
-
-    def test_ws_datestring(self):
-        bitmex = bitws.BitWs()
-        print(bitmex.date_string())
 
     def test_ws_decode_encode(self):
         bitmex = bitws.BitWs()
@@ -75,13 +68,6 @@ class MyTestCase(unittest.TestCase):
 
         pass
 
-    def test_timestamp(self):
-        bitmex = bitws.BitWs()
-
-        print(bitmex.timestamp())
-
-
-
     def test_loader_message_insert3(self):
         insert_message = """
         {
@@ -113,19 +99,18 @@ class MyTestCase(unittest.TestCase):
         }
         """
 
+        load = loader.LogLoader()
+        load.on_message(data.partial_message)
 
-        loader = bitws.LogLoader()
-        loader.on_message(data.partial_message)
+        load.on_message(insert_message)
+        load.on_message(update_message)
+        load.on_message(delete_message)
 
-        loader.on_message(insert_message)
-        loader.on_message(update_message)
-        loader.on_message(delete_message)
-
-        loader.on_message(data.partial_message)
-        loader.on_message(insert_message)
-        loader.on_message(update_message)
-        loader.on_message(update_message)
-        loader.on_message(delete_message)
+        load.on_message(data.partial_message)
+        load.on_message(insert_message)
+        load.on_message(update_message)
+        load.on_message(update_message)
+        load.on_message(delete_message)
 
 
     def test_strip_message(self):
@@ -139,10 +124,10 @@ class MyTestCase(unittest.TestCase):
     def test_time_sec(self):
         bitmex = bitws.BitWs()
         iso_string = "2019-01-12T15:12:51.313Z"
-        sec = bitmex.time_sec(iso_string)
+        sec = time_sec(iso_string)
 
         iso_string2 = "2019-01-12T15:12:01.313Z"
-        sec2 = bitmex.time_sec(iso_string2)
+        sec2 = time_sec(iso_string2)
 
         assert(sec == sec2 + 50)
 

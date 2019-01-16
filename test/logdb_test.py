@@ -45,8 +45,8 @@ class LogDbTest(unittest.TestCase):
         print (m3)
         assert(message == m3)
 
-
-    def test_select_center_price(self):
+    @staticmethod
+    def test_select_center_price():
         partial_message = """
         {
               "table":"orderBookL2",
