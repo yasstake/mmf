@@ -36,7 +36,7 @@ class DbLoader:
 
     def order_book_tick(self, time_stamp, order_book):
         if self.book_last_time != time_stamp:
-            self.log_db.insert_order_book(time_stamp, order_book)
+            self.log_db.insert_order_book_message(time_stamp, order_book)
         self.book_last_time = time_stamp
 
     def funding_tick(self, time_stamp, funding):

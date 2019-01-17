@@ -142,9 +142,11 @@ class LogDb:
 
         return message
 
-    def insert_order_book(self, time, message):
+    def insert_order_book_message(self, time, message):
         sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list = self.message_to_list(message)
+        self.insert_order_book(time, sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list)
 
+    def insert_order_book(self, time, sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list):
         sell_blob = sqlite3.Binary(self.list_to_zip_string(sell_list))
         buy_blob = sqlite3.Binary(self.list_to_zip_string(buy_list))
 
@@ -213,15 +215,21 @@ class LogDb:
         :param time:
         :return: sell_trade_list
         """
-        pass
+        sql = "select time, price, volume from sell_trade where ? < time and time <= ? order by price"
+        cursor = self.connection.cursor()
 
+        return cursor.execute(sql,(time -1, time)).fetchall()
 
     def select_buy_trade(self, time):
         """
         :param time:
         :return: buy_trade list
         """
-        pass
+        sql = "select time, price, volume from buy_trade where ? < time and time <= ? order by price desc"
+        cursor = self.connection.cursor()
+
+        return cursor.execute(sql,(time -1, time)).fetchall()
+
 
 
     def select_funding(self, time):
@@ -229,4 +237,9 @@ class LogDb:
         :param time:
         :return: time_to_remain, funding_rate
         """
-        pass
+        sql = "select time, funding from funding where time <= ? order by time"
+        cursor = self.connection.cursor()
+
+        return cursor.execute(sql,(time,)).fetchone()
+
+

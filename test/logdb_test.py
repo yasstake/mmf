@@ -20,8 +20,8 @@ class LogDbTest(unittest.TestCase):
         log_db.create()
 
         order_book = json.loads(data.order_book_depth)
-        log_db.insert_order_book(100, order_book)
-        log_db.insert_order_book(100, order_book)
+        log_db.insert_order_book_message(100, order_book)
+        log_db.insert_order_book_message(100, order_book)
 
     def test_message_to_list(self):
         log_db = LogDb()
@@ -67,11 +67,21 @@ class LogDbTest(unittest.TestCase):
         }
         """
 
+        sell_trade_data = """
+        {"table":"trade","action":"insert","data":[{"timestamp":"2019-01-05T23:01:25.263Z","symbol":"XBTUSD","side":"Sell","size":30,"price":3801.5,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}
+        """
+
+        sell_trade_data2 = """
+        {"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:00:1.000Z","symbol":"XBTUSD","side":"Sell","size":30,"price":3801.5,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}
+        """
+
         db_loader = DbLoader()
 
         db_loader.open_db(':memory:')
         db_loader.load_line(partial_message)
         db_loader.load_line(update_message)
+        db_loader.load_line(sell_trade_data)
+        db_loader.load_line(sell_trade_data2)
 
         return db_loader.get_db()
 
@@ -82,12 +92,9 @@ class LogDbTest(unittest.TestCase):
         message = [1000,2,3,400]
 
         m2 = log_db.list_to_zip_string(message)
-        print("zip->", m2)
-
         m3 = log_db.zip_string_to_list(m2)
-        print ("unzip->", m3)
-        print ('\n')
-        print (m3)
+
+        print ("row->", message, "zip->", m2, "unzip->", m3)
         assert(message == m3)
 
 
@@ -141,6 +148,9 @@ class LogDbTest(unittest.TestCase):
     @staticmethod
     def test_select_sell_trade():
         db = LogDbTest.connect()
+        db.insert_sell_trade(1, 500, 1)
+
+        print("selltrade->", db.select_sell_trade(1))
         pass
 
     @staticmethod
@@ -150,7 +160,7 @@ class LogDbTest(unittest.TestCase):
         :return: buy_trade list
         """
         db = LogDbTest.connect()
-        pass
+        print("buy_trade->", db.select_buy_trade(1))
 
     @staticmethod
     def test_select_funding():
@@ -159,7 +169,7 @@ class LogDbTest(unittest.TestCase):
         :return: time_to_remain, funding_rate
         """
         db = LogDbTest.connect()
-        pass
+        print("funding->", db.select_funding(1))
 
 
 
