@@ -230,8 +230,6 @@ class LogDb:
 
         return cursor.execute(sql,(time -1, time)).fetchall()
 
-
-
     def select_funding(self, time):
         """
         :param time:
@@ -240,6 +238,15 @@ class LogDb:
         sql = "select time, funding from funding where time <= ? order by time"
         cursor = self.connection.cursor()
 
-        return cursor.execute(sql,(time,)).fetchone()
+        t, funding = cursor.execute(sql, (time,)).fetchone()
 
+        if t:
+            return None
+
+        ttr = time - t
+
+        if ttr <= 8 * 60 * 60:
+            return ttr
+
+        return None
 

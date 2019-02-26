@@ -75,6 +75,7 @@ class LogDbTest(unittest.TestCase):
         {"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:00:1.000Z","symbol":"XBTUSD","side":"Sell","size":30,"price":3801.5,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}
         """
 
+
         db_loader = DbLoader()
 
         db_loader.open_db(':memory:')
@@ -82,6 +83,7 @@ class LogDbTest(unittest.TestCase):
         db_loader.load_line(update_message)
         db_loader.load_line(sell_trade_data)
         db_loader.load_line(sell_trade_data2)
+        db_loader.load_line(data.funding_data)
 
         return db_loader.get_db()
 
