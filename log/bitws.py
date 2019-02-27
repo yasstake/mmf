@@ -1,9 +1,6 @@
-import datetime
-
 import json
 import os
-import traceback
-from bitmex_websocket import BitMEXWebsocket
+import atexit
 
 # needs install
 import websocket
@@ -78,8 +75,8 @@ class BitWs:
         if os.path.isfile(file_name):
             os.remove(file_name)
 
-
     def rotate_file(self):
+        print("---- roate file ----")
         if self.log_file_name:
             if os.path.isfile(self.log_file_name):
                 os.rename(self.log_file_name, self.log_file_root_name)
@@ -180,6 +177,7 @@ class BitWs:
 
         if self.check_terminate_flag():
             self.ws.close()
+            self.rotate_file()
             logger.debug("terminated")
 
     def on_error(self, ws, error):
@@ -199,9 +197,10 @@ class BitWs:
                                          on_close=self.on_close,
                                          on_open=self.on_open)
 
-        self.ws.run_forever(ping_interval=70, ping_timeout=10)
+        self.ws.run_forever(ping_interval=70, ping_timeout=30)
 
 
 if __name__ == "__main__":
     bitmex = BitWs()
+    atexit.register(bitmex.rotate_file)
     bitmex.start()

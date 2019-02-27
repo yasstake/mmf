@@ -1,14 +1,7 @@
 import unittest
-from log.price import PriceLine
 from log.price import PriceBoard
 
 class MyTestCase(unittest.TestCase):
-    def set_hash(self):
-        line = PriceLine()
-
-        hash = {10:10, 12:11, 13:9}
-        line.sethash(hash)
-        print (line.getline())
 
     def test_set_center_price(self):
         PRICE = 4000.5
@@ -43,6 +36,9 @@ class MyTestCase(unittest.TestCase):
         board = PriceBoard()
 
         board.save("/tmp/boarddump.npz")
+
+    def test_load_from_db(self):
+        board = PriceBoard.load_from_db(1551190278)
 
 if __name__ == '__main__':
     unittest.main()

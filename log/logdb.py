@@ -63,12 +63,6 @@ class LogDb:
                      funding real
                      )
             ''')
-
-
-
-
-
-
         self.connection.commit()
 
     def close(self):
@@ -187,13 +181,17 @@ class LogDb:
         :param time:
         :return: time, center_price
         """
-        sql = "select time, sell_min, buy_max from order_book where time = ?"
+        sql = "select sell_min, buy_max from order_book where time = ?"
         cursor = self.connection.cursor()
         cursor.execute(sql, (time,))
 
-        time, sell_min, buy_max = cursor.fetchone()
+        prices = cursor.fetchone()
 
-        return time, self.calc_center_price(buy_max, sell_min)
+        if prices:
+            sell_min, buy_max = prices
+            return self.calc_center_price(buy_max, sell_min)
+        else:
+            return None
 
 
     def select_order_book(self, time):
@@ -238,15 +236,15 @@ class LogDb:
         sql = "select time, funding from funding where time <= ? order by time"
         cursor = self.connection.cursor()
 
-        t, funding = cursor.execute(sql, (time,)).fetchone()
+        rec = cursor.execute(sql, (time,)).fetchone()
 
-        if t:
+        if not rec:
             return None
 
+        t, funding = rec
         ttr = time - t
 
         if ttr <= 8 * 60 * 60:
-            return ttr
+            return ttr, funding
 
         return None
-

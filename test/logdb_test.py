@@ -118,6 +118,9 @@ class LogDbTest(unittest.TestCase):
         price = db.calc_center_price(100, 102)
         assert(price == 101)
 
+        price = db.calc_center_price(50, 51)
+        assert(price == 50.5)
+
 
 
     @staticmethod
@@ -126,15 +129,17 @@ class LogDbTest(unittest.TestCase):
 
         time_org = 1000
 
-        time, center_price = db.select_center_price(time_org)
+        center_price = db.select_center_price(time_org)
 
-        assert(time == time_org)
-        print(center_price)
+        print("CenterPrice->", center_price)
         assert(center_price == 50.5)
 
-        time, center_price = db.select_center_price(1001)
+        center_price = db.select_center_price(1001)
         print(center_price)
         assert(center_price == 99.5)
+
+        center_price = db.select_center_price(100000) #not exist in db
+        print(center_price)
 
 
 
@@ -171,7 +176,14 @@ class LogDbTest(unittest.TestCase):
         :return: time_to_remain, funding_rate
         """
         db = LogDbTest.connect()
-        print("funding->", db.select_funding(1))
+
+        rec = db.select_funding(1)
+
+        if rec:
+            ttl, funding = rec
+            print("funding->", ttl, funding)
+        else:
+            print("funding -none")
 
 
 

@@ -1,5 +1,6 @@
 import numpy as np
 from log.constant import *
+import log.logdb as logdb;
 
 
 TIME_WITH = 256
@@ -57,23 +58,16 @@ class PriceBoard():
     def save(self, filename):
         np.savez_compressed(filename, self.data)
 
+    @staticmethod
+    def load_from_db(time, db_name = "/tmp/bitlog.db"):
+        db = logdb.LogDb(db_name)
+        db.connect()
+
+        center_price = db.select_center_price(time)
+        print(center_price)
+
+        board = PriceBoard()
+        board.set_center_price(center_price)
+        board.set_origin_time(time)
 
 
-
-
-
-class PriceLine():
-    def __init__(self):
-        self.price = 0
-        self.accent = True
-        self.line = {}
-        pass
-
-    def set(self, hash):
-
-        pass
-
-    def getline(self):
-        return self.line
-
-    pass
