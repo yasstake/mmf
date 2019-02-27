@@ -118,7 +118,7 @@ class BitWs:
             self.on_trade_message(ws, message)
 
     def on_trade_message(self, ws, message):
-        logger.debug("trade")
+#        logger.debug("trade")
         self.dump_message_line(self.strip_trade_message(message))
 
 

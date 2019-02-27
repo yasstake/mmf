@@ -149,6 +149,7 @@ class LogDbTest(unittest.TestCase):
 
         print(db.select_order_book(1000))
         print(db.select_order_book(1001))
+        print(db.select_order_book(1))
 
     pass
 
@@ -158,6 +159,7 @@ class LogDbTest(unittest.TestCase):
         db.insert_sell_trade(1, 500, 1)
 
         print("selltrade->", db.select_sell_trade(1))
+        print("selltrade->", db.select_sell_trade(2))
         pass
 
     @staticmethod

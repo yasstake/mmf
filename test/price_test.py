@@ -8,13 +8,13 @@ class MyTestCase(unittest.TestCase):
         board = PriceBoard()
         board.set_center_price(PRICE)
         price = board.get_center_price()
-        assert(price == PRICE)
+        self.assertEqual(price, PRICE)
 
     def test_current_time(self):
         board = PriceBoard()
         board.set_origin_time(1000)
         time = board.get_origin_time()
-        assert(1000 == time)
+        self.assertEqual(1000, time)
 
     def test_get_positoin(self):
         board = PriceBoard()
@@ -22,10 +22,12 @@ class MyTestCase(unittest.TestCase):
         board.set_center_price(1000)
 
         x, y = board.get_position(999, 1000.5)
-        print(x, y)
+        self.assertEqual(x, 1)
+        self.assertEqual(y, 129)
 
         x, y = board.get_position(1000, 1000)
-        print(x, y)
+        self.assertEqual(x,0)
+        self.assertEqual(y, 128)
 
 
     def test_price_board_init(self):

@@ -162,7 +162,6 @@ class LogDb:
         cursor.execute(sql, [time, price, size])
         self.connection.commit()
 
-
     def insert_funding(self, time, funding):
         sql = 'INSERT or REPLACE into funding (time, funding) values(?, ?)'
         cursor = self.connection.cursor()
@@ -187,11 +186,11 @@ class LogDb:
 
         prices = cursor.fetchone()
 
-        if prices:
-            sell_min, buy_max = prices
-            return self.calc_center_price(buy_max, sell_min)
-        else:
+        if not prices:
             return None
+
+        sell_min, buy_max = prices
+        return self.calc_center_price(buy_max, sell_min)
 
 
     def select_order_book(self, time):
@@ -203,7 +202,12 @@ class LogDb:
         cursor = self.connection.cursor()
         cursor.execute(sql, (time,))
 
-        time, sell_list, buy_list = cursor.fetchone()
+        rec = cursor.fetchone()
+
+        if not rec:
+            return None
+
+        time, sell_list, buy_list = rec
 
         return time, self.zip_string_to_list(sell_list), self.zip_string_to_list(buy_list)
 
