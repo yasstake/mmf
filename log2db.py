@@ -1,9 +1,10 @@
 import sys
+import os
 from log.dbloader import DbLoader
 
 if __name__ == '__main__':
-    log_dir = '/tmp'
-    db_file = '/tmp/bitlog.db'
+    log_dir =  os.sep + 'tmp'
+    db_file = os.sep + 'tmp'+ os.sep + 'bitlog.db'
 
     if len(sys.argv) == 2:
         log_dir = sys.argv[0]
