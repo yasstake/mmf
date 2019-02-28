@@ -101,8 +101,6 @@ class LogDbTest(unittest.TestCase):
 
 
 
-
-
     def test_calc_center_price(self):
         db = LogDbTest.connect()
 
@@ -142,16 +140,19 @@ class LogDbTest(unittest.TestCase):
         print(center_price)
 
 
-
     @staticmethod
     def test_select_order_book():
+
         db = LogDbTest.connect()
 
+        print("select order book->")
+        print("1000->")
         print(db.select_order_book(1000))
+        print("1001->")
         print(db.select_order_book(1001))
+        print("1->")
         print(db.select_order_book(1))
 
-    pass
 
     @staticmethod
     def test_select_sell_trade():

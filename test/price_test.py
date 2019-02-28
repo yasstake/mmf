@@ -40,7 +40,8 @@ class MyTestCase(unittest.TestCase):
         board.save("/tmp/boarddump.npz")
 
     def test_load_from_db(self):
-        board = PriceBoard.load_from_db(1551190278)
+        board = PriceBoard.load_from_db(1551187602)
+        print(board)
 
 if __name__ == '__main__':
     unittest.main()

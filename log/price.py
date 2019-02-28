@@ -62,12 +62,28 @@ class PriceBoard():
     def load_from_db(time, db_name = "/tmp/bitlog.db"):
         db = logdb.LogDb(db_name)
         db.connect()
+        board = PriceBoard()
+
+        board.set_origin_time(time)
+        print("origin->", board.get_origin_time())
 
         center_price = db.select_center_price(time)
-        print(center_price)
-
-        board = PriceBoard()
         board.set_center_price(center_price)
-        board.set_origin_time(time)
+        print("centerPrice->", board.get_center_price())
 
+        #load sell order
+        for time, price, volume in db.select_sell_trade(time):
+            print(time, price, volume)
+
+        for time, price, volume in db.select_buy_trade(time):
+            print(time, price, volume)
+
+        #load buy order
+
+
+        #load sell board
+
+        #load buy board
+
+        return board
 

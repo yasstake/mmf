@@ -88,15 +88,12 @@ class LogDb:
                 sell[price] = volume
                 if price < sell_min:
                     sell_min = price
-                if sell_vol < volume:
                     sell_vol = volume
             else:
                 side = 1
                 buy[price] = volume
                 if buy_max < price:
                     buy_max = price
-
-                if buy_vol < volume:
                     buy_vol = volume
 
         buy_list = []

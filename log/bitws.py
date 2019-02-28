@@ -106,7 +106,6 @@ class BitWs:
         message = json.loads(message)
         table = message['table'] if 'table' in message else None
 
-
         if table == "orderBookL2":
             self.remove_symbol(message)
             self.on_order_book_message(ws, message)
