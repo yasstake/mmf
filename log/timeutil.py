@@ -12,8 +12,9 @@ def date_string(time = timestamp()):
 
 def time_stamp_string(time = timestamp()):
     time = datetime.datetime.utcfromtimestamp(time)
-    time = time.replace(tzinfo=datetime.timezone.utc)
-    return time.isoformat()
+    time.replace(tzinfo=datetime.timezone.utc)
+
+    return time.isoformat() + 'Z'
 
 def time_sec(iso_time):
     sec = datetime.datetime.strptime(iso_time, "%Y-%m-%dT%H:%M:%S.%f%z")

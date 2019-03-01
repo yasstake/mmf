@@ -54,7 +54,7 @@ class MyTestCase(unittest.TestCase):
         tsec2 = time_sec(sec_string2)
         print(tsec, "/", tsec2)
         print(sec_string, '/', sec_string2)
-        self.assertEqual(sec_string, sec_string2)
+        self.assertEqual(tsec, tsec2)
 
         #       {"table": "trade", "action": "insert", "data": [
         #    {"timestamp": "2019-02-28T23:03:04.818Z", "side": "Buy", "size": 4000, "price": 3794,

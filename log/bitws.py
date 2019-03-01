@@ -81,7 +81,7 @@ class BitWs:
             if os.path.isfile(self.log_file_name):
                 os.rename(self.log_file_name, self.log_file_root_name)
 
-        timestring = time_stamp_string().replace(":", "-")
+        timestring = time_stamp_string().replace(":", "-").replace('+', '-')
 
         self.log_file_root_name = self.log_file_dir + os.sep + timestring + ".log"
         self.log_file_name = self.log_file_root_name + ".current"
