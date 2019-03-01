@@ -2,6 +2,7 @@ import sys
 import glob
 from log.logdb import LogDb
 from log.loader import LogLoader
+from log.timeutil import *
 
 class DbLoader:
     def __init__(self):
@@ -36,7 +37,7 @@ class DbLoader:
 
     def order_book_tick(self, time_stamp, order_book):
         if self.book_last_time != time_stamp:
-            print("[" + str(time_stamp) + "]", end="")
+            print("[O" + str(time_stamp) + "]", end="")
             self.log_db.insert_order_book_message(time_stamp, order_book)
         self.book_last_time = time_stamp
 
@@ -45,6 +46,7 @@ class DbLoader:
         self.log_db.insert_funding(time_stamp, funding)
 
     def trade_tick(self, time_stamp, buy_trade, sell_trade):
+        print("[T"+ date_string(time_stamp) + '/' + str(time_stamp) + "]", end="")
         for price in buy_trade.keys():
             self.log_db.insert_buy_trade(time_stamp, price, buy_trade[price])
 

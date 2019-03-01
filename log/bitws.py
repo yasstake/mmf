@@ -94,6 +94,7 @@ class BitWs:
 
     def dump_message_line(self, message):
         message['TIME'] = self.last_time
+
         with open(self.log_file_name, "a") as file:
             json_string = json.dumps(message, separators=(',', ':'))
             #            file.write(encode(json_string))
