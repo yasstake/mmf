@@ -1,0 +1,1 @@
+./pip3 install websocket-client==0.47

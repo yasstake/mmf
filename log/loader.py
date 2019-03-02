@@ -70,9 +70,10 @@ class LogLoader:
             size = data['size']
             side = data['side']
 
-#            print("--trade->"+ str(time) + " " + str(price) + " " + str(size) + " " + side)
+            print("--trade->"+ date_string(time) + '/' + str(time) + " " + str(price) + " " + str(size) + " " + side)
 
             if self.trade_time and self.trade_time != time:
+
                 self.trade_tick(self.trade_time, self.trade_buy, self.trade_sell)
 
                 self.trade_buy = {}
