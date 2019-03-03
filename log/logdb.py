@@ -172,7 +172,7 @@ class LogDb:
         else:
             return min + (int((diff + constant.PRICE_UNIT)))/2
 
-    def select_center_price(self, time):
+    def select_board_price(self, time):
         """
         :param time:
         :return: time, center_price
@@ -183,11 +183,19 @@ class LogDb:
 
         prices = cursor.fetchone()
 
-        if not prices:
+        if prices:
+            return prices
+        else:
             return None
 
-        sell_min, buy_max = prices
-        return self.calc_center_price(buy_max, sell_min)
+    def select_center_price(self, time):
+        prices = self.select_board_price(time)
+
+        if prices:
+            sell_min, buy_max = prices
+            return self.calc_center_price(buy_max, sell_min)
+        else:
+            return None
 
 
     def select_order_book(self, time):
@@ -195,7 +203,7 @@ class LogDb:
         :param time:
         :return: time, sell_list, buy_list
         """
-        sql = "select time, sell_list, buy_list from order_book where time = ?"
+        sql = "select time, sell_min, sell_list, buy_max, buy_list from order_book where time = ?"
         cursor = self.connection.cursor()
         cursor.execute(sql, (time,))
 
@@ -204,12 +212,12 @@ class LogDb:
         if not rec:
             return None
 
-        time, sell_list, buy_list = rec
+        time, sell_min, sell_list, buy_max, buy_list = rec
 
-        return time, self.zip_string_to_list(sell_list), self.zip_string_to_list(buy_list)
+        return time, sell_min, self.zip_string_to_list(sell_list), buy_max, self.zip_string_to_list(buy_list)
 
 
-    def select_sell_trade(self, time):
+    def select_sell_trade(self, time, window = 1):
         """
         :param time:
         :return: sell_trade_list
@@ -217,9 +225,9 @@ class LogDb:
         sql = "select time, price, volume from sell_trade where ? < time and time <= ? order by price"
         cursor = self.connection.cursor()
 
-        return cursor.execute(sql,(time -1, time)).fetchall()
+        return cursor.execute(sql,(time - window, time)).fetchall()
 
-    def select_buy_trade(self, time):
+    def select_buy_trade(self, time, window = 1):
         """
         :param time:
         :return: buy_trade list
@@ -227,7 +235,7 @@ class LogDb:
         sql = "select time, price, volume from buy_trade where ? < time and time <= ? order by price desc"
         cursor = self.connection.cursor()
 
-        return cursor.execute(sql,(time -1, time)).fetchall()
+        return cursor.execute(sql,(time - window, time)).fetchall()
 
     def select_funding(self, time):
         """

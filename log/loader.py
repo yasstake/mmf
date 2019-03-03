@@ -70,8 +70,6 @@ class LogLoader:
             size = data['size']
             side = data['side']
 
-            print("--trade->"+ date_string(time) + '/' + str(time) + " " + str(price) + " " + str(size) + " " + side)
-
             if self.trade_time and self.trade_time != time:
 
                 self.trade_tick(self.trade_time, self.trade_buy, self.trade_sell)
@@ -118,7 +116,6 @@ class LogLoader:
             self.ready = True
             self.data = message['data']
         elif action == 'insert' and self.ready:
-            logger.debug('insert')
             self.data += message['data']
             pass
         elif action == 'update' and self.ready:
@@ -129,8 +126,6 @@ class LogLoader:
                 item.update(updateData)
             pass
         elif action == 'delete' and self.ready:
-            logger.debug('delete')
-
             # Locate the item in the collection and remove it.
             for deleteData in message['data']:
                 item = findItemByKeys(self.data, deleteData)
@@ -146,6 +141,7 @@ class LogLoader:
         return self.data
 
     def load_line(self, line):
+        print("x", end = '')
         table = self.on_message(line)
 
         if table == 'orderBookL2':

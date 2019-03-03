@@ -40,9 +40,12 @@ class MyTestCase(unittest.TestCase):
         board.save("/tmp/boarddump.npz")
 
     def test_load_from_db(self):
-        t = 1551394936
+        t = 1551594701
         board = PriceBoard.load_from_db(t)
         print(board)
+
+        print(board.get_center_price())
+        print(board.get_origin_time())
 
 if __name__ == '__main__':
     unittest.main()

@@ -33,6 +33,7 @@ class BitWs:
         self.ws = None
         self.log_file_dir = log_file_dir
         self.last_time = 0
+        self.compress = True
 
         self.reset()
         self.rotate_file()
@@ -100,8 +101,11 @@ class BitWs:
 
         with open(self.log_file_name, "a") as file:
             json_string = json.dumps(message, separators=(',', ':'))
-            #            file.write(encode(json_string))
-            file.write(json_string)
+
+            if self.compress:
+                file.write(log.encoder.encode(json_string))
+            else:
+                file.write(json_string)
             file.write('\n')
 
     def remove_symbol(self, message):

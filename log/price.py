@@ -39,21 +39,48 @@ class PriceBoard():
         t = self.current_time - time
         p = int((price - self.center_price) / PRICE_UNIT + PRICE_HEIGHT / 2)
 
+        if p < 0 or PRICE_HEIGHT <= p:
+            return None
+
         return t, p
 
 
     def set_sell_order_book(self, time, price, line):
-        pass
+        print("sell_orderbook", time, " ", price, " ", line)
+        for vol in line:
+            pos = self.get_position(time, price)
+            if not pos:
+                return
+
+            t, p = pos
+
+            self.data[t, p, 0] = vol
+            print("sell", t, " ", p, " ", vol)
+            price += PRICE_UNIT
 
     def set_buy_order_book(self, time, price, line):
-        pass
+        print("buy_orderbook", time, " ", price, " ", line)
+        for vol in line:
+            pos = self.get_position(time, price)
+            if not pos:
+                return
 
-    def set_buy_trade(self, time, price, volume):
-        pass
+            t, p = pos
 
-    def set_sell_trade(self, time, price, volume):
-        pass
+            self.data[t, p, 1] = vol
 
+            print("buy", t, " ", p, " ", vol)
+            price -= PRICE_UNIT
+
+    def add_buy_trade(self, time, price, volume):
+        print("buy-trade", time, price, volume)
+
+
+    def add_sell_trade(self, time, price, volume):
+        print("sell-trade", time, price, volume)
+
+    def set_funding(self, ttl, funding):
+        print("fundig->", ttl, funding)
 
     def save(self, filename):
         np.savez_compressed(filename, self.data)
@@ -71,19 +98,32 @@ class PriceBoard():
         board.set_center_price(center_price)
         print("centerPrice->", board.get_center_price())
 
-        #load sell order
-        for time, price, volume in db.select_sell_trade(time):
-            print(time, price, volume)
+        #load funding
+        funding = db.select_funding(time)
 
-        for time, price, volume in db.select_buy_trade(time):
-            print(time, price, volume)
+        if funding:
+            t, p = funding
+            board.set_funding(t, p)
 
-        #load buy order
-
-
-        #load sell board
-
-        #load buy board
+        PriceBoard.load_from_db_time(db, board, time)
 
         return board
 
+    @staticmethod
+    def load_from_db_time(db, board, time):
+        #load sell order
+        for time, price, volume in db.select_sell_trade(time):
+            board.add_sell_order(time, price, volume)
+
+        #load buy order
+        for time, price, volume in db.select_buy_trade(time):
+            board.add_buy_order(time, price, volume)
+
+        #load order book
+        order_book = db.select_order_book(time)
+
+        if order_book:
+            time, sell_min, sell_book, buy_max, buy_book = order_book
+
+            board.set_sell_order_book(time, sell_min, sell_book)
+            board.set_buy_order_book(time, buy_max, buy_book)
