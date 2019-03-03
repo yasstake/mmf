@@ -37,16 +37,13 @@ class DbLoader:
 
     def order_book_tick(self, time_stamp, order_book):
         if self.book_last_time != time_stamp:
-            print("[O" + str(time_stamp) + "]", end="")
             self.log_db.insert_order_book_message(time_stamp, order_book)
         self.book_last_time = time_stamp
 
     def funding_tick(self, time_stamp, funding):
-        print("funding", time_stamp, funding)
         self.log_db.insert_funding(time_stamp, funding)
 
     def trade_tick(self, time_stamp, buy_trade, sell_trade):
-        print("[T"+ date_string(time_stamp) + '/' + str(time_stamp) + "]", end="")
         for price in buy_trade.keys():
             self.log_db.insert_buy_trade(time_stamp, price, buy_trade[price])
 

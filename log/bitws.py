@@ -76,15 +76,18 @@ class BitWs:
             os.remove(file_name)
 
     def rotate_file(self):
-        print("---- roate file ----")
+
         if self.log_file_name:
             if os.path.isfile(self.log_file_name):
                 os.rename(self.log_file_name, self.log_file_root_name)
+                print("---- roate file ----", self.log_file_name, self.log_file_root_name)
 
         timestring = time_stamp_string().replace(":", "-").replace('+', '-')
 
         self.log_file_root_name = self.log_file_dir + os.sep + timestring + ".log"
         self.log_file_name = self.log_file_root_name + ".current"
+
+
 
     def dump_message(self):
         if self.last_message is None:
