@@ -51,6 +51,7 @@ class PriceBoard():
 
 
     def set_sell_order_book(self, time, price, line):
+        width = 0
         for vol in line:
             pos = self.get_position(time, price)
             if not pos:
@@ -59,8 +60,12 @@ class PriceBoard():
             t, p = pos
             self.sell_order[t, p] = vol
             price += PRICE_UNIT
+            width += 1
+            if ORDER_BOOK_DATA_LIMIT < width:
+                return
 
     def set_buy_order_book(self, time, price, line):
+        width = 0
         for vol in line:
             pos = self.get_position(time, price)
             if not pos:
@@ -69,6 +74,10 @@ class PriceBoard():
             t, p = pos
             self.buy_order[t, p] = vol
             price -= PRICE_UNIT
+            width += 1
+            if ORDER_BOOK_DATA_LIMIT < width:
+                return
+
 
     def add_buy_trade(self, time, price, volume, window = 1):
         pos = self.get_position(time, price)
@@ -111,16 +120,14 @@ class PriceBoard():
             board.set_funding(t, p)
 
         for offset in range(0,TIME_WITH):
-            PriceBoard.load_from_db_time(db, board, time, offset)
-
-#            if offset < 60:
-
-#            elif offset < 120:
- #               PriceBoard.load_from_db_time(db, board, time, offset*2, 2)
-#            elif offset < 180:
-#n                PriceBoard.load_from_db_time(db, board, time, offset*4, 4)
-#            else:
-#                PriceBoard.load_from_db_time(db, board, time, offset*8, 8)
+            if offset < 60:
+                PriceBoard.load_from_db_time(db, board, time, offset)
+            elif offset < 120:
+                PriceBoard.load_from_db_time(db, board, time, offset, 8)
+            elif offset < 180:
+                PriceBoard.load_from_db_time(db, board, time, offset, 16)
+            else:
+                PriceBoard.load_from_db_time(db, board, time, offset, 32)
 
         return board
 
@@ -128,24 +135,29 @@ class PriceBoard():
 
     @staticmethod
     def load_from_db_time(db, board, time_origin, offset = 0, magnifier = 1):
+        query_time = time_origin - offset * magnifier
         #load sell order
-        for t, price, volume in db.select_sell_trade(time_origin - offset, magnifier):
+        for t, price, volume in db.select_sell_trade(query_time, magnifier):
             board.add_sell_trade(time_origin - offset, price, volume)
 
         #load buy order
-        for t, price, volume in db.select_buy_trade(time_origin - offset, magnifier):
+        for t, price, volume in db.select_buy_trade(query_time, magnifier):
             board.add_buy_trade(time_origin - offset, price, volume)
 
         #load order book
         order_book = None
-        retry = 3
+
+        retry = 100
+        if magnifier < retry:
+            retry = magnifier + 20
+
         while(not order_book and retry):
-            order_book = db.select_order_book(time_origin - retry - offset)
+            order_book = db.select_order_book(query_time - retry )
             retry = retry - 1
 
         if order_book:
-            print("--order-book")
             t, sell_min, sell_book, buy_max, buy_book = order_book
             board.set_sell_order_book(time_origin - offset, sell_min, sell_book)
             board.set_buy_order_book(time_origin - offset, buy_max, buy_book)
-
+        else:
+            print('---missing order book---', time_origin, query_time, retry)

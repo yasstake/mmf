@@ -51,8 +51,8 @@ class MyTestCase(unittest.TestCase):
 
         print(board.sell_order)
 
-#        plt.matshow(board.sell_order)
-        plt.matshow(board.buy_order)
+        plt.matshow(board.sell_order)
+#        plt.matshow(board.buy_order)
 #        plt.imshow(board.sell_trade)
 #        print(board.sell_trade)
 #        np.save("/tmp/sell.np", board.sell_trade)
