@@ -1,4 +1,6 @@
 import unittest
+from matplotlib import pylab as plt
+import numpy as np
 from log.price import PriceBoard
 
 class MyTestCase(unittest.TestCase):
@@ -46,6 +48,16 @@ class MyTestCase(unittest.TestCase):
 
         print(board.get_center_price())
         print(board.get_origin_time())
+
+        board.save("/tmp/boarddump2.npz")
+
+        plt.matshow(board.sell_order)
+#        plt.matshow(board.buy_order)
+#        plt.imshow(board.sell_trade)
+#        print(board.sell_trade)
+#        np.save("/tmp/sell.np", board.sell_trade)
+#        plt.matshow(board.buy_trade)
+        plt.show()
 
 if __name__ == '__main__':
     unittest.main()
