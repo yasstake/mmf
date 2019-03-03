@@ -38,12 +38,33 @@ class MyTestCase(unittest.TestCase):
         return int(sec.timestamp())
         """
         print("TIMESEC->", time_sec("1970-01-01T00:00:01.00Z"))
-        print("TIMESEC->", time_sec("1976-01-01T00:00:00.000Z"))
-        print("TIMESEC->", time_sec("2019-03-01T01:00:00.000Z"))
+        self.assertEqual(time_sec("1970-01-01T00:00:01.00Z"), 1)
+
+        print("TIMESEC->", time_sec("1970-01-01T00:00:01.00+00:00"))
+        self.assertEqual(time_sec("1970-01-01T00:00:01.00+00:00"), 1)
+
+        print("TIMESEC->", time_sec("1970-01-01T00:00:01.00+09:00"))
+        self.assertEqual(time_sec("1970-01-01T00:00:01.00+09:00"), -32399)
 
     def test_timestamp2(self):
-        print('TIME->', time_stamp_string(1551362541))
-        print('tran time->', time_stamp_string(1551362533))
+            t0 = time_stamp_string(0)
+            t1 = time_stamp_string(1)
+
+            print(t0)
+            print(t1)
+
+
+    def test_timestamp2_1(self):
+        t0 = time_stamp_string(0.1)
+        t1 = time_sec(t0)
+
+        print(t1)
+
+
+    def test_timestamp2_2(self):
+        print(timestamp())
+        print("TIMESEC->", time_sec("2019-03-03T10:49:01.00+09:00"))
+        print("TIMESEC->", time_sec("2019-03-03T10:40:01.00+00:00"))
 
     def test_timestamp3(self):
         print("TIME3->", time_stamp_string(1551362584))
@@ -61,7 +82,33 @@ class MyTestCase(unittest.TestCase):
         #     "tickDirection": "ZeroPlusTick"}], "TIME": 1551362584}
 
 
+    def test_timestemp3_1(self):
+        time1 = "2019-03-03T01:50:34.0Z"
+        time2 = 1551577834
+        tsec1 = time_sec(time1)
 
+        self.assertEqual(tsec1, time2)
+
+
+
+    def test_timestemp4(self):
+        time1 = "2019-03-02T14:55:16.855Z"
+        time2 = 1551506117
+        print("TIME4->")
+        print(time_stamp_string(time2))
+
+
+    def test_timestemp4(self):
+        print(timestamp())
+
+    def test_timestamp5(self):
+        t = time_stamp_string()
+        print(t)
+
+        unixtime = timestamp()
+        unixtime2 = time_sec(t)
+
+        self.assertEqual(int(unixtime/10), int(unixtime2/10))
 
 
 

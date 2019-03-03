@@ -47,7 +47,7 @@ class BitWs:
         self.reset_timestamp()
 
     def reset_timestamp(self):
-        self.last_time = timestamp()
+        self.last_time = int(timestamp())
 
     def get_flag_file_name(self):
         return os.sep + "tmp" + os.sep + "BITWS-FLG"
@@ -162,7 +162,7 @@ class BitWs:
             self.rotate_file()
             self.create_terminate_flag()
 
-        current_time = timestamp()
+        current_time = int(timestamp())
 
         if current_time == self.last_time and self.last_action == action and action != None:
             if self.last_message != None:

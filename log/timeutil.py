@@ -1,9 +1,21 @@
+import re
 import datetime
+
+
+
+
+def time_sec(iso_time):
+    if (re.match('\d$', iso_time)):
+        iso_time = iso_time + "+00:00"
+    sec = datetime.datetime.strptime(iso_time, "%Y-%m-%dT%H:%M:%S.%f%z")
+
+    return sec.timestamp()
+
 
 def timestamp():
     now = datetime.datetime.utcnow()
-    return int(now.timestamp())
 
+    return time_sec(now.isoformat() + "+00:00")
 
 def date_string(time = timestamp()):
     time = datetime.datetime.fromtimestamp(time)
@@ -12,14 +24,5 @@ def date_string(time = timestamp()):
 
 def time_stamp_string(time = timestamp()):
     time = datetime.datetime.utcfromtimestamp(time)
-    time.replace(tzinfo=datetime.timezone.utc)
 
     return time.isoformat() + 'Z'
-
-def time_sec(iso_time):
-    sec = datetime.datetime.strptime(iso_time, "%Y-%m-%dT%H:%M:%S.%f%z")
-    print("sec->", sec)
-    sec = sec.replace(tzinfo=datetime.timezone.utc)
-    print("sec2->", sec)
-
-    return sec.timestamp()
