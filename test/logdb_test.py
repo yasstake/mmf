@@ -67,13 +67,26 @@ class LogDbTest(unittest.TestCase):
         }
         """
 
-        sell_trade_data = """
-        {"table":"trade","action":"insert","data":[{"timestamp":"2019-01-05T23:01:25.263Z","symbol":"XBTUSD","side":"Sell","size":30,"price":3801.5,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}
-        """
+        sell_trade_data = """{"table":"trade","action":"insert","data":[{"timestamp":"2019-01-05T23:01:25.263Z","symbol":"XBTUSD","side":"Sell","size":30,"price":3801.5,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
 
         sell_trade_data2 = """
         {"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:00:1.000Z","symbol":"XBTUSD","side":"Sell","size":30,"price":3801.5,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}
         """
+        sell_trade_data01 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:49.00Z","symbol":"XBTUSD","side":"Sell","size":5,"price":99.5,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data02 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:50.00Z","symbol":"XBTUSD","side":"Sell","size":5,"price":99.5,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data03 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:51.00Z","symbol":"XBTUSD","side":"Sell","size":5,"price":99.5,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data04 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:52.00Z","symbol":"XBTUSD","side":"Sell","size":1,"price":99,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data05 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:53.00Z","symbol":"XBTUSD","side":"Sell","size":30,"price":99,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data06 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:49.00Z","symbol":"XBTUSD","side":"Buy","size":5,"price":99.5,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data07 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:50.00Z","symbol":"XBTUSD","side":"Buy","size":5,"price":99,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data08 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:51.00Z","symbol":"XBTUSD","side":"Buy","size":5,"price":99,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data09 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:52.00Z","symbol":"XBTUSD","side":"Buy","size":5,"price":97,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data10 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:53.00Z","symbol":"XBTUSD","side":"Buy","size":5,"price":96,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data11 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:54.00Z","symbol":"XBTUSD","side":"Buy","size":6,"price":95,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data12 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:49.00Z","symbol":"XBTUSD","side":"Buy","size":30,"price":94,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data13 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:49.00Z","symbol":"XBTUSD","side":"Buy","size":30,"price":94,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+        sell_trade_data14 = """{"table":"trade","action":"insert","data":[{"timestamp":"1970-01-01T00:16:49.00Z","symbol":"XBTUSD","side":"Buy","size":30,"price":94,"tickDirection":"ZeroMinusTick","trdMatchID":"73960db4-5580-dc30-e281-cd2fdf85a506","grossValue":789150,"homeNotional":0.0078915,"foreignNotional":30}]}"""
+
 
 
         db_loader = DbLoader()
@@ -84,6 +97,24 @@ class LogDbTest(unittest.TestCase):
         db_loader.load_line(sell_trade_data)
         db_loader.load_line(sell_trade_data2)
         db_loader.load_line(data.funding_data)
+        db_loader.load_line(sell_trade_data01)
+        db_loader.load_line(sell_trade_data02)
+        db_loader.load_line(sell_trade_data03)
+        db_loader.load_line(sell_trade_data04)
+        db_loader.load_line(sell_trade_data05)
+        db_loader.load_line(sell_trade_data06)
+        db_loader.load_line(sell_trade_data07)
+        db_loader.load_line(sell_trade_data08)
+        db_loader.load_line(sell_trade_data09)
+        db_loader.load_line(sell_trade_data10)
+        db_loader.load_line(sell_trade_data11)
+        db_loader.load_line(sell_trade_data12)
+        db_loader.load_line(sell_trade_data13)
+        db_loader.load_line(sell_trade_data14)
+#        db_loader.load_line(sell_trade_data15)
+#        db_loader.load_line(sell_trade_data16)
+
+
 
         return db_loader.get_db()
 
@@ -188,6 +219,110 @@ class LogDbTest(unittest.TestCase):
         else:
             print("funding -none")
 
+
+    def test_order_book_price(self):
+        db = LogDbTest.connect()
+        rec = db.select_order_book_price(1000)
+
+        sell_min, sell_volume, buy_max, buy_volume = rec
+
+        self.assertEqual(sell_min, 51)
+        self.assertEqual(sell_volume, 10)
+        self.assertEqual(buy_max, 50)
+        self.assertEqual(buy_volume, 10)
+
+    def test_calc_market_buy_price(self):
+        db = LogDbTest.connect()
+
+        price = db.calc_market_buy_price(1000, 1)  # enough small
+        self.assertEqual(price, 51)
+
+        price = db.calc_market_buy_price(1000, 1000)  # too big, rise the price PRICE_UNIT * 2
+        self.assertEqual(price, 52)
+
+
+    def test_calc_market_sell_price(self):
+        db = LogDbTest.connect()
+
+        price = db.calc_market_sell_price(1000, 1)  # enough small
+        self.assertEqual(price, 50)
+
+        price = db.calc_market_sell_price(1000, 1000)  # too big, rise the price PRICE_UNIT * 2
+        self.assertEqual(price, 49)
+
+    def test_is_suceess_fixed_order_sell(self):
+        db = LogDbTest.connect()
+
+        result = db.is_suceess_fixed_order_sell(1000, 99, 1)
+        self.assertEqual(result, True)
+
+        result = db.is_suceess_fixed_order_sell(1000, 99, 100)
+        self.assertEqual(result, False)
+
+        result = db.is_suceess_fixed_order_sell(1000, 100, 1)
+        self.assertEqual(result, False)
+
+
+    def test_is_suceess_fixed_order_buy(self):
+        db = LogDbTest.connect()
+
+        result = db.is_suceess_fixed_order_buy(1000, 98, 1)
+        self.assertEqual(result, False)
+
+        result = db.is_suceess_fixed_order_buy(1000, 99, 1)
+        self.assertEqual(result, True)
+
+        result = db.is_suceess_fixed_order_buy(1000, 99.5, 1)
+        self.assertEqual(result, True)
+
+        result = db.is_suceess_fixed_order_buy(1000, 99.5, 100)
+        self.assertEqual(result, False)
+
+    def test_calc_fixed_buy_order_price(self):
+        db = LogDbTest.connect()
+
+        price = db._calc_fixed_order_buy_price(1000)
+        self.assertEqual(50, price)
+
+        price = db._calc_fixed_order_buy_price(1001)
+        self.assertEqual(99, price)
+
+
+    def test_calc_fixed_sell_order_price(self):
+        db = LogDbTest.connect()
+
+        result = db._calc_fixed_order_sell_price(1000)
+        self.assertEqual(result, 51)
+
+        result = db._calc_fixed_order_sell_price(1001)
+        self.assertEqual(result, 99.5)
+
+
+    def test_calc_fixed_order_sell(self):
+        db = LogDbTest.connect()
+
+        board_price = db._calc_fixed_order_sell_price(1001)
+        print(board_price)
+
+        price = db.calc_fixed_order_sell(1001, 1)
+        self.assertEqual(price, 99.5)
+
+        price = db.calc_fixed_order_sell(1001, 1000)
+        self.assertEqual(price, None)
+
+
+
+    def test_calc_fixed_order_buy(self):
+        db = LogDbTest.connect()
+
+        board_price = db._calc_fixed_order_buy_price(1001)
+        print(board_price)
+
+        price = db.calc_fixed_order_buy(1001, 1)
+        self.assertEqual(price, 99)
+
+        price = db.calc_fixed_order_buy(1001, 1000)
+        self.assertEqual(price, None)
 
 
 

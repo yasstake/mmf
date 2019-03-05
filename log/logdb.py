@@ -31,8 +31,12 @@ class LogDb:
             '''
             create table if not exists order_book
                     (time integer primary key, 
-                    sell_min integer, sell_vol integer, sell_list BLOB,
-                    buy_max  integer, buy_vol  integer, buy_list BLOB
+                    sell_min integer, sell_volume integer, sell_list BLOB,
+                    buy_max  integer, buy_volume  integer, buy_list BLOB,
+                    market_order_sell integer,
+                    market_order_buy integer,
+                    fix_order_sell integer,
+                    fix_order_buy integer
                     ) 
             ''')
 
@@ -141,7 +145,7 @@ class LogDb:
         sell_blob = sqlite3.Binary(self.list_to_zip_string(sell_list))
         buy_blob = sqlite3.Binary(self.list_to_zip_string(buy_list))
 
-        sql = 'INSERT or REPLACE into order_book (time, sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list) values(?, ?, ?, ?, ?, ?, ?)'
+        sql = 'INSERT or REPLACE into order_book (time, sell_min, sell_volume, sell_list, buy_max, buy_volume, buy_list) values(?, ?, ?, ?, ?, ?, ?)'
         cursor = self.connection.cursor()
         cursor.execute(sql, [time, sell_min, sell_vol, sell_blob, buy_max, buy_vol, buy_blob])
         self.connection.commit()
@@ -257,3 +261,137 @@ class LogDb:
             return ttr, funding
 
         return None
+
+    def select_order_book_price(self, time):
+        """
+        :return: sell_min, sell_volume, buy_max, buy_volume
+        """
+        sql_select_sell_price = "select sell_min, sell_volume, buy_max, buy_volume from order_book where time = ?"
+        cursor = self.connection.cursor()
+        cursor.execute(sql_select_sell_price, (time,))
+
+        return cursor.fetchone()
+
+    def select_order_book_price_with_retry(self, time, retry = 30):
+        rec = None
+
+        while retry != 0 and rec is None:
+            rec = self.select_order_book_price(time)
+            time = time + 1
+
+        return rec
+
+
+    def calc_market_buy_price(self, time, order_volume):
+        """
+        calc market buy price
+        basically the price will be the top edge of the order book if there is enough volume on the board.
+        if there is not enough volume, the price will be slip two tick.
+        :return: the target price. return None: if not found the data.
+        """
+        rec = self.select_order_book_price_with_retry(time)
+        if rec is None:
+            return None
+
+        sell_min, sell_volume, buy_max, buy_volume = rec
+
+        if order_volume * 2 < sell_volume: # 2 means enough margin
+            return sell_min
+        else:
+            return sell_min + constant.PRICE_UNIT * 2
+
+
+    def calc_market_sell_price(self, time, order_volume):
+        """
+        calc market buy price
+        basically the price will be the bottom edge of the order book if there is enough volume on the board.
+        if there is not enough volume, the price will be slip two tick.
+        :return: the target price. return None: if not found the data.
+        """
+        rec = self.select_order_book_price_with_retry(time)
+        if rec is None:
+            return None
+
+        sell_min, sell_volume, buy_max, buy_volume = rec
+
+        if order_volume * 2 < buy_volume: # 2 means enough margin
+            return buy_max
+        else:
+            return buy_max - constant.PRICE_UNIT * 2
+
+
+    def is_suceess_fixed_order_sell(self, time, price, volume, time_width = 600):
+
+        sql_count_sell_trade  = 'select sum(volume) from buy_trade where  ? <= time and time < ? and ? <= price'
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql_count_sell_trade, (time, time + time_width, price))
+
+        amount = cursor.fetchone()
+
+
+        if amount[0] is None:
+            return False
+
+        if volume * 2 < amount[0]: # 2 is enough margin
+            return True
+        else:
+            return False
+
+    def _calc_fixed_order_sell_price(self, time):
+        rec = self.select_order_book_price_with_retry(time)
+        if rec is None:
+            return None
+
+        sell_min, sell_volume, buy_max, buy_volume = rec
+        return sell_min
+
+    def calc_fixed_order_sell(self, time, volume, time_width=600):
+        """
+
+        :param time: unix time at the order
+        :param price: order price
+        :param volume: order volume
+        :param time_width: wait to order (sec)
+        :return: price to be executed
+        """
+        price = self._calc_fixed_order_sell_price(time)
+
+        if self.is_suceess_fixed_order_sell(time, price, volume):
+            return price
+        else:
+            return None
+
+
+    def is_suceess_fixed_order_buy(self, time, price, volume, time_width = 600):
+        sql_count_sell_trade  = 'select sum(volume) from sell_trade where  ? <= time and time < ? and price <= ?'
+
+        cursor = self.connection.cursor()
+        cursor.execute(sql_count_sell_trade, (time, time + time_width, price))
+
+        amount = cursor.fetchone()
+
+        if amount[0] is None:
+            return False
+
+        if volume * 2 < amount[0]: # 2 is enough margin
+            return True
+        else:
+            return False
+
+    def _calc_fixed_order_buy_price(self, time):
+        rec = self.select_order_book_price_with_retry(time)
+        if rec is None:
+            return None
+
+        sell_min, sell_volume, buy_max, buy_volume = rec
+        return buy_max
+
+    def calc_fixed_order_buy(self, time, volume, time_width = 600):
+        sell_min = self._calc_fixed_order_buy_price(time)
+
+        if self.is_suceess_fixed_order_buy(time, sell_min, volume):
+            return sell_min
+        else:
+            return None
+

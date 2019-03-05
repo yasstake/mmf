@@ -48,10 +48,14 @@ class MyTestCase(unittest.TestCase):
 
     def test_timestamp2(self):
             t0 = time_stamp_string(0)
-            t1 = time_stamp_string(1)
-
             print(t0)
+
+            t1 = time_stamp_string(1)
             print(t1)
+
+            t1000 = time_stamp_string(1000)
+            print(t1000)
+
 
 
     def test_timestamp2_1(self):

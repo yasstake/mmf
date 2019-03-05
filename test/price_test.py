@@ -49,11 +49,12 @@ class MyTestCase(unittest.TestCase):
         print(board.get_center_price())
         print(board.get_origin_time())
 
-        print(board.sell_order)
-
-        plt.matshow(board.sell_order)
+        print(board.sell_trade)
+        plt.figure()
+        plt.imshow(board.buy_order, vmin=0, vmax=1000000)
+#        plt.matshow(board.sell_trade)
+#        plt.matshow(board.sell_order)
 #        plt.matshow(board.buy_order)
-#        plt.imshow(board.sell_trade)
 #        print(board.sell_trade)
 #        np.save("/tmp/sell.np", board.sell_trade)
 #        plt.matshow(board.buy_trade)

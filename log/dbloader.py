@@ -26,6 +26,11 @@ class DbLoader:
     def load_line(self, line):
         self.log_loader.load_line(line)
 
+    def load_lines(self, lines):
+        for line in lines:
+            self.log_loader.load_line(line)
+
+
     def load_file(self, log_file):
         self.log_loader.load(log_file)
 

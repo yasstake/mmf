@@ -84,12 +84,14 @@ class PriceBoard():
         if pos:
             t, p = pos
             self.buy_trade[t][p] = self.buy_trade[t][p] + volume / window
+            print(t, p, self.buy_trade[t][p])
 
     def add_sell_trade(self, time, price, volume, window = 1):
         pos = self.get_position(time, price)
         if pos:
             t, p = pos
             self.sell_trade[t][p] = self.sell_trade[t][p] + volume / window
+            print(t, p, self.sell_trade[t][p])
 
     def set_funding(self, ttl, funding):
         print("fundig->", ttl, funding)
