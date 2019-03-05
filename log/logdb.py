@@ -353,7 +353,7 @@ class LogDb:
         :param price: order price
         :param volume: order volume
         :param time_width: wait to order (sec)
-        :return: price to be executed
+        :return: price to be executed nor None if not excuted.
         """
         price = self._calc_fixed_order_sell_price(time)
 
@@ -388,10 +388,44 @@ class LogDb:
         return buy_max
 
     def calc_fixed_order_buy(self, time, volume, time_width = 600):
+        """
+
+        :param time: time in unix time
+        :param volume: order volume
+        :param time_width: time to execute
+        :return: expected price or None if not executed.
+        """
         sell_min = self._calc_fixed_order_buy_price(time)
 
         if self.is_suceess_fixed_order_buy(time, sell_min, volume):
             return sell_min
         else:
             return None
+
+    def update_all_order_prices(self):
+
+        time_sql = """select time from order_book"""
+        update_sql = """update order_book set market_order_sell = ?, market_order_buy = ?, fix_order_sell = ?, fix_order_buy = ? where time = ?"""
+
+        cursor = self.connection.cursor()
+        cursor.execute(time_sql)
+
+        records = cursor.fetchall()
+
+        for rec in records:
+            time = rec[0]
+            print(time)
+
+            market_order_sell = self.calc_market_sell_price(time, 1)
+            market_order_buy  = self.calc_market_buy_price(time, 1)
+            fix_order_sell = self.calc_fixed_order_sell(time, 1)
+            fix_order_buy  = self.calc_fixed_order_buy(time, 1)
+
+            print(market_order_sell)
+            print(market_order_buy)
+            print(fix_order_sell)
+            print(fix_order_buy)
+
+            cursor.execute(update_sql, (market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, time))
+
 

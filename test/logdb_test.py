@@ -325,6 +325,10 @@ class LogDbTest(unittest.TestCase):
         self.assertEqual(price, None)
 
 
+    def test_select_times(self):
+        db = LogDbTest.connect()
+
+        db.update_all_order_prices()
 
 if __name__ == '__main__':
     unittest.main()
