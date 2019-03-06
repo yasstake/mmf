@@ -33,10 +33,10 @@ class LogDb:
                     (time integer primary key, 
                     sell_min integer, sell_volume integer, sell_list BLOB,
                     buy_max  integer, buy_volume  integer, buy_list BLOB,
-                    market_order_sell integer,
-                    market_order_buy integer,
-                    fix_order_sell integer,
-                    fix_order_buy integer
+                    market_order_sell integer default 0,
+                    market_order_buy integer default 0,
+                    fix_order_sell integer default 0,
+                    fix_order_buy integer default 0
                     ) 
             ''')
 
@@ -282,7 +282,7 @@ class LogDb:
         return rec
 
 
-    def calc_market_buy_price(self, time, order_volume):
+    def calc_market_order_buy(self, time, order_volume):
         """
         calc market buy price
         basically the price will be the top edge of the order book if there is enough volume on the board.
@@ -301,7 +301,7 @@ class LogDb:
             return sell_min + constant.PRICE_UNIT * 2
 
 
-    def calc_market_sell_price(self, time, order_volume):
+    def calc_market_order_sell(self, time, order_volume):
         """
         calc market buy price
         basically the price will be the bottom edge of the order book if there is enough volume on the board.
@@ -338,7 +338,7 @@ class LogDb:
         else:
             return False
 
-    def _calc_fixed_order_sell_price(self, time):
+    def _calc_order_book_price_sell(self, time):
         rec = self.select_order_book_price_with_retry(time)
         if rec is None:
             return None
@@ -355,7 +355,7 @@ class LogDb:
         :param time_width: wait to order (sec)
         :return: price to be executed nor None if not excuted.
         """
-        price = self._calc_fixed_order_sell_price(time)
+        price = self._calc_order_book_price_sell(time)
 
         if self.is_suceess_fixed_order_sell(time, price, volume):
             return price
@@ -379,7 +379,7 @@ class LogDb:
         else:
             return False
 
-    def _calc_fixed_order_buy_price(self, time):
+    def _calc_order_book_price_buy(self, time):
         rec = self.select_order_book_price_with_retry(time)
         if rec is None:
             return None
@@ -395,7 +395,7 @@ class LogDb:
         :param time_width: time to execute
         :return: expected price or None if not executed.
         """
-        sell_min = self._calc_fixed_order_buy_price(time)
+        sell_min = self._calc_order_book_price_buy(time)
 
         if self.is_suceess_fixed_order_buy(time, sell_min, volume):
             return sell_min
@@ -404,27 +404,24 @@ class LogDb:
 
     def update_all_order_prices(self):
 
-        time_sql = """select time from order_book"""
+        time_sql = """select time from order_book where market_order_sell = 0"""
         update_sql = """update order_book set market_order_sell = ?, market_order_buy = ?, fix_order_sell = ?, fix_order_buy = ? where time = ?"""
 
         cursor = self.connection.cursor()
         cursor.execute(time_sql)
 
+        if not cursor:
+            return None
+
         records = cursor.fetchall()
 
         for rec in records:
             time = rec[0]
-            print(time)
 
-            market_order_sell = self.calc_market_sell_price(time, 1)
-            market_order_buy  = self.calc_market_buy_price(time, 1)
+            market_order_sell = self.calc_market_order_sell(time, 1)
+            market_order_buy  = self.calc_market_order_buy(time, 1)
             fix_order_sell = self.calc_fixed_order_sell(time, 1)
             fix_order_buy  = self.calc_fixed_order_buy(time, 1)
-
-            print(market_order_sell)
-            print(market_order_buy)
-            print(fix_order_sell)
-            print(fix_order_buy)
 
             cursor.execute(update_sql, (market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, time))
 

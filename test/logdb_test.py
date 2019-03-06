@@ -234,20 +234,20 @@ class LogDbTest(unittest.TestCase):
     def test_calc_market_buy_price(self):
         db = LogDbTest.connect()
 
-        price = db.calc_market_buy_price(1000, 1)  # enough small
+        price = db.calc_market_order_buy(1000, 1)  # enough small
         self.assertEqual(price, 51)
 
-        price = db.calc_market_buy_price(1000, 1000)  # too big, rise the price PRICE_UNIT * 2
+        price = db.calc_market_order_buy(1000, 1000)  # too big, rise the price PRICE_UNIT * 2
         self.assertEqual(price, 52)
 
 
     def test_calc_market_sell_price(self):
         db = LogDbTest.connect()
 
-        price = db.calc_market_sell_price(1000, 1)  # enough small
+        price = db.calc_market_order_sell(1000, 1)  # enough small
         self.assertEqual(price, 50)
 
-        price = db.calc_market_sell_price(1000, 1000)  # too big, rise the price PRICE_UNIT * 2
+        price = db.calc_market_order_sell(1000, 1000)  # too big, rise the price PRICE_UNIT * 2
         self.assertEqual(price, 49)
 
     def test_is_suceess_fixed_order_sell(self):
@@ -281,27 +281,27 @@ class LogDbTest(unittest.TestCase):
     def test_calc_fixed_buy_order_price(self):
         db = LogDbTest.connect()
 
-        price = db._calc_fixed_order_buy_price(1000)
+        price = db._calc_order_book_price_buy(1000)
         self.assertEqual(50, price)
 
-        price = db._calc_fixed_order_buy_price(1001)
+        price = db._calc_order_book_price_buy(1001)
         self.assertEqual(99, price)
 
 
     def test_calc_fixed_sell_order_price(self):
         db = LogDbTest.connect()
 
-        result = db._calc_fixed_order_sell_price(1000)
+        result = db._calc_order_book_price_sell(1000)
         self.assertEqual(result, 51)
 
-        result = db._calc_fixed_order_sell_price(1001)
+        result = db._calc_order_book_price_sell(1001)
         self.assertEqual(result, 99.5)
 
 
     def test_calc_fixed_order_sell(self):
         db = LogDbTest.connect()
 
-        board_price = db._calc_fixed_order_sell_price(1001)
+        board_price = db._calc_order_book_price_sell(1001)
         print(board_price)
 
         price = db.calc_fixed_order_sell(1001, 1)
@@ -315,7 +315,7 @@ class LogDbTest(unittest.TestCase):
     def test_calc_fixed_order_buy(self):
         db = LogDbTest.connect()
 
-        board_price = db._calc_fixed_order_buy_price(1001)
+        board_price = db._calc_order_book_price_buy(1001)
         print(board_price)
 
         price = db.calc_fixed_order_buy(1001, 1)
@@ -323,6 +323,39 @@ class LogDbTest(unittest.TestCase):
 
         price = db.calc_fixed_order_buy(1001, 1000)
         self.assertEqual(price, None)
+
+
+    def test_calc_fixed_order_sell(self):
+        db = LogDbTest.connect()
+
+        board_price = db._calc_order_book_price_sell(1001)
+        print(board_price)
+
+        price = db.calc_fixed_order_sell(1001, 1)
+        self.assertEqual(price, 99.5)
+
+        price = db.calc_fixed_order_sell(1001, 1000)
+        self.assertEqual(price, None)
+
+    def test_calc_market_order_buy(self):
+        db = LogDbTest.connect()
+
+        price = db.calc_market_order_buy(1001, 1)
+        self.assertEqual(price, 99.5)
+
+        price = db.calc_market_order_buy(1001, 1000)
+        self.assertEqual(price, 100.5) # up 2 tick = 1
+
+    def test_calc_market_order_sell(self):
+        db = LogDbTest.connect()
+
+        price = db.calc_market_order_sell(1001, 1)
+        self.assertEqual(price, 99)
+
+        price = db.calc_market_order_sell(1001, 1000)
+        self.assertEqual(price, 98) # down 2 tick = 1
+
+
 
 
     def test_select_times(self):

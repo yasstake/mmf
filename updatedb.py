@@ -1,8 +1,8 @@
-import sys
+from log.logdb import LogDb
 import os
-from log.dbloader import DbLoader
+import sys
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     log_dir = os.sep + 'tmp'
     db_file = os.sep + 'tmp' + os.sep + 'bitlog.db'
 
@@ -12,7 +12,8 @@ if __name__ == '__main__':
 
     print(log_dir, db_file)
 
-    db_loader = DbLoader()
-    db_loader.open_db()
-    db_loader.load_dir(log_dir)
-    db_loader.close_db()
+    db = LogDb(db_file)
+
+    db.connect()
+    db.update_all_order_prices()
+    db.close()
