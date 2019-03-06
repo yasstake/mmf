@@ -1,8 +1,11 @@
 import json
 import logging
+import re
+import gzip
 
 import log.encoder
 from log.timeutil import *
+
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
@@ -141,7 +144,6 @@ class LogLoader:
         return self.data
 
     def load_line(self, line):
-        print("x", end = '')
         table = self.on_message(line)
 
         if table == 'orderBookL2':
@@ -155,8 +157,22 @@ class LogLoader:
             if self.funding_tick:
                 pass
 
+    def _is_gzipfile(self, filename):
+        if filename.endswith('.gz'):
+            return True
+        else:
+            return False
+
     def load(self, file_name):
-        with open(file_name, "r") as file:
-            for line in file:
-                line = log.encoder.decode(line)
-                self.load_line(line)
+        print("loading", file_name)
+
+        if self._is_gzipfile(file_name):
+            with gzip.open(file_name, "rt") as file:
+                for line in file:
+                    line = log.encoder.decode(line)
+                    self.load_line(line)
+        else:
+            with open(file_name, "r") as file:
+                for line in file:
+                    line = log.encoder.decode(line)
+                    self.load_line(line)

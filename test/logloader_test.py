@@ -50,6 +50,11 @@ class MyTestCase(unittest.TestCase):
         loader.on_message(data.delete_message)
         print(loader.get_market_depth())
 
+    def test_is_gizp(self):
+        loader = LogLoader()
+
+        result = loader._is_gzipfile("absc.log.gz")
+        self.assertEqual(result, True)
 
 if __name__ == '__main__':
     unittest.main()

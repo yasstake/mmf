@@ -36,9 +36,15 @@ class DbLoader:
 
     def load_dir(self, log_dir ='/tmp'):
         log_files = glob.glob(log_dir + '/' + '*.log')
-
         for file in log_files:
             self.load_file(file)
+
+        log_files = glob.glob(log_dir + '/' + '*.log.gz')
+        for file in log_files:
+            self.load_file(file)
+
+
+
 
     def order_book_tick(self, time_stamp, order_book):
         if self.book_last_time != time_stamp:
