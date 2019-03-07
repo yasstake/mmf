@@ -33,10 +33,10 @@ class LogDb:
                     (time integer primary key, 
                     sell_min integer, sell_volume integer, sell_list BLOB,
                     buy_max  integer, buy_volume  integer, buy_list BLOB,
-                    market_order_sell integer default 0,
-                    market_order_buy integer default 0,
-                    fix_order_sell integer default 0,
-                    fix_order_buy integer default 0
+                    market_order_sell integer default NULL,
+                    market_order_buy integer default NULL,
+                    fix_order_sell integer default NULL,
+                    fix_order_buy integer default NULL
                     ) 
             ''')
 
@@ -404,7 +404,7 @@ class LogDb:
 
     def update_all_order_prices(self):
 
-        time_sql = """select time from order_book where market_order_sell = 0"""
+        time_sql = """select time from order_book where market_order_sell is NULL"""
         update_sql = """update order_book set market_order_sell = ?, market_order_buy = ?, fix_order_sell = ?, fix_order_buy = ? where time = ?"""
 
         cursor = self.connection.cursor()
@@ -417,12 +417,14 @@ class LogDb:
 
         for rec in records:
             time = rec[0]
-
             market_order_sell = self.calc_market_order_sell(time, 1)
+            print(market_order_sell)
             market_order_buy  = self.calc_market_order_buy(time, 1)
             fix_order_sell = self.calc_fixed_order_sell(time, 1)
             fix_order_buy  = self.calc_fixed_order_buy(time, 1)
 
             cursor.execute(update_sql, (market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, time))
+            self.connection.commit()
+
 
 

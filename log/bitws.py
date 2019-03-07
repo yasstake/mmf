@@ -34,6 +34,7 @@ class BitWs:
         self.log_file_dir = log_file_dir
         self.last_time = 0
         self.compress = True
+        self.terminate_count = 100
 
         self.reset()
         self.rotate_file()
@@ -68,7 +69,9 @@ class BitWs:
             with open(file_name, "r") as file:
                 id = file.readline()
                 if id != str(os.getpid()):
-                    return True
+                    self.terminate_count = self.terminate_count - 1
+                    if self.terminate_count == 0:
+                        return True
         return False
 
     def remove_terminate_flag(self):
