@@ -11,7 +11,10 @@ class MyTestCase(unittest.TestCase):
         return int(now.timestamp())
         """
         print ("TIMESTAMP1->", timestamp())
+
         print("TIMESTAMP2->", time_stamp_string())
+
+
 
 
     def test_date_string(self):
@@ -45,6 +48,9 @@ class MyTestCase(unittest.TestCase):
 
         print("TIMESEC->", time_sec("1970-01-01T00:00:01.00+09:00"))
         self.assertEqual(time_sec("1970-01-01T00:00:01.00+09:00"), -32399)
+
+        print("TIMESEC->", time_sec("2019-03-07T12:51:05.344823+00:00"))
+
 
     def test_timestamp2(self):
             t0 = time_stamp_string(0)
@@ -114,6 +120,12 @@ class MyTestCase(unittest.TestCase):
 
         self.assertEqual(int(unixtime/10), int(unixtime2/10))
 
+
+    def test_logtime(self):
+        time = time_sec('2019-03-07T22:09:58.00Z')
+        time2 = 1551996598
+        print(time, time2)
+        self.assertEqual(time, time2)
 
 
 #:[{"timestamp":"2019-02-28T23:02:14.807Z","side":"Buy","size":104,"price":3791.5,"tickDirection":"ZeroPlusTick"}],

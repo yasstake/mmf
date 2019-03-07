@@ -1,8 +1,6 @@
 import re
 import datetime
-
-
-
+#from pytz import utc
 
 def time_sec(iso_time):
     if (re.match('\d$', iso_time)):
@@ -13,9 +11,16 @@ def time_sec(iso_time):
 
 
 def timestamp():
-    now = datetime.datetime.utcnow()
+    return _timestamp()
 
-    return time_sec(now.isoformat() + "+00:00")
+#    now = datetime.datetime.utcnow()
+#    now.astimezone(utc)
+#    return time_sec(now.isoformat() + "+00:00")
+
+def _timestamp():
+    now = datetime.datetime.now()
+    return now.timestamp()
+
 
 def date_string(time = None):
     if not time:
