@@ -2,7 +2,7 @@ FROM ubuntu
 
 RUN apt update -y
 
-RUN apt install -y git python3 python3-pip
+RUN apt install -y git python3 python3-pip gzip
 
 RUN pip3 install websocket-client==0.47
 
