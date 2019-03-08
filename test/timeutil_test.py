@@ -1,4 +1,5 @@
 import unittest
+import re
 
 from log.timeutil import *
 
@@ -126,6 +127,13 @@ class MyTestCase(unittest.TestCase):
         time2 = 1551996598
         print(time, time2)
         self.assertEqual(time, time2)
+
+        time2 = time_sec('2019-03-08T13:49:10.740+00:00')
+        time2 = time_sec('2019-03-08T13:49:10.740Z')
+        time2 = time_sec('2019-03-08T13:49:10.740')
+
+    def test_reg(self):
+        print(re.search("\+", '2019-03-08T13:49:10.740+00:00'))
 
 
 #:[{"timestamp":"2019-02-28T23:02:14.807Z","side":"Buy","size":104,"price":3791.5,"tickDirection":"ZeroPlusTick"}],
