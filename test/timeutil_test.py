@@ -132,6 +132,9 @@ class MyTestCase(unittest.TestCase):
         time2 = time_sec('2019-03-08T13:49:10.740Z')
         time2 = time_sec('2019-03-08T13:49:10.740')
 
+        time2 = time_sec('2019-03-08T12:00:00.000+00:00')
+
+
     def test_reg(self):
         print(re.search("\+", '2019-03-08T13:49:10.740+00:00'))
 
