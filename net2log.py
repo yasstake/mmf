@@ -10,5 +10,7 @@ if __name__ == "__main__":
         log_dir = sys.argv[0]
         flag_file = sys.argv[1]
 
+    print("net2log", log_dir, flag_file)
+
     bitmex = BitWs(log_dir, flag_file)
     bitmex.start()
