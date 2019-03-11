@@ -26,7 +26,7 @@ import time
 class BitWs:
     '''logging utility using bitmex realtime(websockets) API'''
 
-    def __init__(self, log_file_dir=os.sep + "tmp"):
+    def __init__(self, log_file_dir=os.sep + "tmp", flag_file_name = os.sep + "tmp" + os.sep + "BITWS-FLG"):
         self.last_action = None
         self.log_file_root_name = None
         self.log_file_name = None
@@ -38,6 +38,8 @@ class BitWs:
 
         self.reset()
         self.rotate_file()
+        self.flag_file_name = flag_file_name
+
 
     def __del__(self):
         # self.dump_message()
@@ -52,7 +54,7 @@ class BitWs:
         self.last_time = int(timestamp())
 
     def get_flag_file_name(self):
-        return os.sep + "tmp" + os.sep + "BITWS-FLG"
+        return self.flag_file_name
 
     def create_terminate_flag(self):
         self.remove_terminate_flag()

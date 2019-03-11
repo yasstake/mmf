@@ -15,5 +15,11 @@ RUN cd /tmp && wget https://bootstrap.pypa.io/get-pip.py && /usr/bin/python3.7 g
 RUN /usr/bin/python3.7 -m pip install websocket-client==0.47
 RUN git clone https://github.com/yasstake/mmf.git
 
+ADD ./net2log.sh /mmf/net2log.sh
+RUN chmod a+x /mmf/net2log.sh
+CMD /mmf/net2log.sh
+
+
+
 
 
