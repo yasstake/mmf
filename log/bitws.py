@@ -26,7 +26,7 @@ import time
 class BitWs:
     '''logging utility using bitmex realtime(websockets) API'''
 
-    def __init__(self, log_file_dir=os.sep + "tmp", flag_file_name = os.sep + "tmp" + os.sep + "BITWS-FLG"):
+    def __init__(self, log_file_dir=os.sep + "tmp", flag_file_name = os.sep + "tmp" + os.sep + "BITWS-FLG", id = None):
         self.last_action = None
         self.log_file_root_name = None
         self.log_file_name = None
@@ -35,6 +35,10 @@ class BitWs:
         self.last_time = 0
         self.compress = True
         self.terminate_count = 100
+        if id:
+            self.pid = id
+        else:
+            self.pid = str(os.getpid())
 
         self.reset()
         self.rotate_file()
@@ -60,7 +64,7 @@ class BitWs:
         self.remove_terminate_flag()
         file_name = self.get_flag_file_name()
         with open(file_name + "tmp", "w") as file:
-            file.write(str(os.getpid()))
+            file.write(self.get_process_id())
             file.close()
             os.rename(file_name + "tmp", file_name)
 
@@ -70,11 +74,14 @@ class BitWs:
         if os.path.isfile(file_name):
             with open(file_name, "r") as file:
                 id = file.readline()
-                if id != str(os.getpid()):
+                if id != self.get_process_id():
                     self.terminate_count = self.terminate_count - 1
                     if self.terminate_count == 0:
                         return True
         return False
+
+    def get_process_id(self):
+        return self.pid
 
     def remove_terminate_flag(self):
         file_name = self.get_flag_file_name()
@@ -82,7 +89,6 @@ class BitWs:
             os.remove(file_name)
 
     def rotate_file(self):
-
         if self.log_file_name:
             if os.path.isfile(self.log_file_name):
                 os.rename(self.log_file_name, self.log_file_root_name)
@@ -90,9 +96,9 @@ class BitWs:
 
         timestring = time_stamp_string().replace(":", "-").replace('+', '-')
 
-        self.log_file_root_name = self.log_file_dir + os.sep + timestring + ".log"
+        self.log_file_root_name = self.log_file_dir + os.sep + self.get_process_id() + '-' + timestring + ".log"
+        #self.log_file_root_name = self.log_file_dir + os.sep + '-' + timestring + ".log"
         self.log_file_name = self.log_file_root_name + ".current"
-
 
 
     def dump_message(self):

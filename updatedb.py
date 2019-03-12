@@ -6,9 +6,9 @@ if __name__ == "__main__":
     log_dir = os.sep + 'tmp'
     db_file = os.sep + 'tmp' + os.sep + 'bitlog.db'
 
-    if len(sys.argv) == 2:
-        log_dir = sys.argv[0]
-        db_file = sys.argv[1]
+    if len(sys.argv) == 3:
+        log_dir = sys.argv[1]
+        db_file = sys.argv[2]
 
     print(log_dir, db_file)
 

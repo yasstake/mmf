@@ -60,7 +60,8 @@ class MyTestCase(unittest.TestCase):
 
         bitmex.dump_message()
 
-
+    def test_ws_process_ID(self):
+        bitmex = bitws.BitWs()
 
     def test_ws_connect(self):
         bitmex = bitws.BitWs()

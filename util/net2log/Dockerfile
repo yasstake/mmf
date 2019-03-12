@@ -13,6 +13,10 @@ RUN export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
 RUN cd /tmp && wget https://bootstrap.pypa.io/get-pip.py && /usr/bin/python3.7 get-pip.py
 
 RUN /usr/bin/python3.7 -m pip install websocket-client==0.47
+RUN /usr/bin/python3.7 -m pip install
+
+RUN echo ""
+
 RUN git clone https://github.com/yasstake/mmf.git
 
 ADD ./net2log.sh /mmf/net2log.sh
