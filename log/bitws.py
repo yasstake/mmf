@@ -96,8 +96,8 @@ class BitWs:
 
         timestring = time_stamp_string().replace(":", "-").replace('+', '-')
 
-        self.log_file_root_name = self.log_file_dir + os.sep + self.get_process_id() + '-' + timestring + ".log"
-        #self.log_file_root_name = self.log_file_dir + os.sep + '-' + timestring + ".log"
+        self.log_file_root_name = self.log_file_dir + os.sep + 'BITLOG' + self.get_process_id() + '-' + timestring + ".log"
+
         self.log_file_name = self.log_file_root_name + ".current"
 
 
