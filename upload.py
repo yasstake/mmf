@@ -1,7 +1,7 @@
 import os, sys, subprocess, glob, re
 from google.cloud import storage
 from log.timeutil import timestamp
-
+from time import sleep
 
 
 def upload(file):
@@ -46,7 +46,7 @@ if __name__ == "__main__":
 
     file_list = glob.glob(log_dir + os.sep + '*.log')
     for file in file_list:
-        subprocess.run(['/usr/bin/gzip', '-9', file])
+        subprocess.run(['/bin/gzip', '-9', file])
 
     file_list = glob.glob(log_dir + '/*.log.gz')
     for file in file_list:
@@ -62,4 +62,5 @@ if __name__ == "__main__":
                 print("delete", file)
 
 
+    sleep(600)
 

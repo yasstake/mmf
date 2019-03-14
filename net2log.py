@@ -8,7 +8,7 @@ if __name__ == "__main__":
     log_dir   = os.sep + 'tmp'
     flag_file = os.sep + 'tmp' + os.sep + 'BITWS-FLG'
     pid = str(os.getpid())
-    sleep_time = 3    #1H
+    sleep_time = 3600   #1H
 
     print(len(sys.argv))
 
