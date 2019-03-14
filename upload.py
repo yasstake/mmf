@@ -23,7 +23,7 @@ def upload(file):
 
     """Uploads a file to the bucket."""
     source_file_name = staging_file
-    destination_blob_name = '/' + year + '/' + month + '/' + day + '/' + f_org
+    destination_blob_name = year + '/' + month + '/' + day + '/' + f_org
 
     bucket_name = 'mmflog'
     storage_client = storage.Client('bitmmf')
@@ -46,7 +46,10 @@ if __name__ == "__main__":
 
     file_list = glob.glob(log_dir + os.sep + '*.log')
     for file in file_list:
-        subprocess.run(['/bin/gzip', '-9', file])
+        if os.path.exists('/bin/gzip'):
+            subprocess.run(['/bin/gzip', '-9', file])
+        else:
+            subprocess.run(['/usr/bin/gzip', '-9', file])
 
     file_list = glob.glob(log_dir + '/*.log.gz')
     for file in file_list:
