@@ -1,5 +1,5 @@
 [Unit]
-Description=Run log hourly
+Description=logging worker process A
 
 [Timer]
 OnCalendar=*-*-* *:00:00

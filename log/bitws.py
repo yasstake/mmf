@@ -34,7 +34,8 @@ class BitWs:
         self.log_file_dir = log_file_dir
         self.last_time = 0
         self.compress = True
-        self.terminate_count = 100
+        self.terminate_count = 200
+        self.terminated_by_peer = False
         if id:
             self.pid = id
         else:
@@ -198,6 +199,7 @@ class BitWs:
         if self.check_terminate_flag():
             self.ws.close()
             self.rotate_file()
+            self.terminated_by_peer = True
             logger.debug("terminated")
 
     def on_error(self, ws, error):
@@ -224,3 +226,7 @@ if __name__ == "__main__":
     bitmex = BitWs()
     atexit.register(bitmex.rotate_file)
     bitmex.start()
+
+    if bitmex.terminated_by_peer:
+        print("teminated by peer")
+

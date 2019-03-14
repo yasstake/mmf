@@ -17,9 +17,7 @@ RUN /usr/bin/python3.7 -m pip install --upgrade google-cloud-storage
 
 RUN git clone https://github.com/yasstake/mmf.git
 
-ADD ./net2log.sh /mmf/net2log.sh
-RUN chmod a+x /mmf/net2log.sh
-CMD /mmf/net2log.sh
+
 
 
 

@@ -1,5 +1,6 @@
 import os, sys, subprocess, glob, re
 from google.cloud import storage
+from log.timeutil import timestamp
 
 
 
@@ -34,6 +35,8 @@ def upload(file):
     os.rename(staging_file, done_file)
 
 
+
+
 if __name__ == "__main__":
 
     log_dir = os.sep + 'tmp'
@@ -49,6 +52,14 @@ if __name__ == "__main__":
     for file in file_list:
         upload(file)
 
+    file_list = glob.glob(log_dir + '/*.log.gz.done')
+    for file in file_list:
+        stat = os.stat(file)
+        if stat:
+            print(file, stat.st_ctime, timestamp())
+            if stat.st_ctime + 24*60*60 * 2 < timestamp():  # 2 days old
+                os.remove(file)
+                print("delete", file)
 
 
 

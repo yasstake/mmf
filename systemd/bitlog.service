@@ -5,4 +5,5 @@ RefuseManualStop=yes
 
 [Service]
 Type=oneshot
-ExecStart=/home/<user>/scripts/foo.sh
+ExecStart=docker run mmf -v /bitlog:/bitlog /usr/bin/python3.7 /mmf/net2log.py /bitlog /bitlog/BITLOG-FLG WORK-A
+
