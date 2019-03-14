@@ -35,6 +35,26 @@ def upload(file):
     os.rename(staging_file, done_file)
 
 
+def recover_file(log_dir, suffix, time):
+    '''
+    recovery file
+    :param log_dir: recovery file dir
+    :param suffix: recovery file suffix e.g, '.current'
+    :param time:   recovery file age(in sec)
+    :return: None
+    '''
+
+    file_list = glob.glob(log_dir + '/*.log.gz' + suffix)
+
+    for file in file_list:
+        stat = os.stat(file)
+        if stat:
+            print(file, stat.st_ctime, timestamp())
+            if stat.st_ctime + time < timestamp():
+                org_file_name = file.replace(suffix, '')
+                print('recovery', org_file_name, file)
+                os.rename(file, org_file_name)
+
 
 
 if __name__ == "__main__":
@@ -55,14 +75,18 @@ if __name__ == "__main__":
     for file in file_list:
         upload(file)
 
-    file_list = glob.glob(log_dir + '/*.log.gz.done')
-    for file in file_list:
-        stat = os.stat(file)
-        if stat:
-            print(file, stat.st_ctime, timestamp())
-            if stat.st_ctime + 24*60*60 * 2 < timestamp():  # 2 days old
-                os.remove(file)
-                print("delete", file)
+        file_list = glob.glob(log_dir + '/*.log.gz.done')
+        for file in file_list:
+            stat = os.stat(file)
+            if stat:
+                print(file, stat.st_ctime, timestamp())
+                if stat.st_ctime + 24 * 60 * 60 * 2 < timestamp():  # 2 days old
+                    os.remove(file)
+                    print("delete", file)
 
+    #recovery staging file
+    recover_file(log_dir, '.stage', 60*60*2)  #2H
 
+    #recovery staging file
+    recover_file(log_dir, '.current', 60*60*6) #6H
 
