@@ -1,8 +1,6 @@
 import os, sys, subprocess, glob, re
 from google.cloud import storage
 from log.timeutil import timestamp
-from time import sleep
-
 
 def upload(file):
     staging_file = file + '.stage'

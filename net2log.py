@@ -1,6 +1,5 @@
 import os
 import sys
-from time import sleep
 
 from log.bitws import BitWs
 
@@ -8,7 +7,6 @@ if __name__ == "__main__":
     log_dir   = os.sep + 'tmp'
     flag_file = os.sep + 'tmp' + os.sep + 'BITWS-FLG'
     pid = str(os.getpid())
-    sleep_time = 3600   #1H
 
     print(len(sys.argv))
 
@@ -25,6 +23,7 @@ if __name__ == "__main__":
     bitmex.start()
 
     if bitmex.terminated_by_peer:
-        print("terminated by peer : sleep->", sleep_time)
-        sleep(sleep_time)
-        print("sleep end")
+        print("---terminated by peer------")
+        sys.exit(0)
+
+    sys.exit(-1)
