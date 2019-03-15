@@ -7,7 +7,7 @@ result=$?
 
 /usr/bin/python3.7 /mmf/upload.py /mexlog
 
-if  [${result} == 0]; then
+if [ $result = 0 ]; then
     echo "sleep 1H"
     sleep 1h
 fi
