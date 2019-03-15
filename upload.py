@@ -28,9 +28,12 @@ def upload(file):
     bucket = storage_client.get_bucket(bucket_name)
     blob = bucket.blob(destination_blob_name)
 
-    blob.upload_from_filename(source_file_name)
+    try:
+        blob.upload_from_filename(source_file_name)
+        os.rename(staging_file, done_file)
+    except:
+        os.rename(staging_file, file)  # rename org file name when error
 
-    os.rename(staging_file, done_file)
 
 
 def recover_file(log_dir, suffix, time):
