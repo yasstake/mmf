@@ -17,6 +17,8 @@ RUN /usr/bin/python3.7 -m pip install --upgrade google-cloud-storage
 
 RUN git clone https://github.com/yasstake/mmf.git
 
+ADD net2log.sh /
+
 CMD /usr/bin/python3.7
 
 
