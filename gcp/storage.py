@@ -66,7 +66,10 @@ class LogStorage:
     def process_blob(self, path, call_back):
         try:
             work_file = self.download_blob(path)
-            call_back(work_file)
+            if call_back:
+                call_back(work_file)
+            else:
+                print('no process for', path)
 
         finally:
             pass

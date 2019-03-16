@@ -2,7 +2,7 @@ import sys
 import glob
 from log.logdb import LogDb
 from log.loader import LogLoader
-from log.timeutil import *
+from gcp.storage import LogStorage
 
 class DbLoader:
     def __init__(self):
@@ -43,7 +43,10 @@ class DbLoader:
         for file in log_files:
             self.load_file(file)
 
+    def load_from_blobs(self, path=''):
+        log_storage = LogStorage()
 
+        log_storage.process_blob_dir(path, self.load_file)
 
 
     def order_book_tick(self, time_stamp, order_book):
