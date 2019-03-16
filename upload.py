@@ -57,8 +57,14 @@ def recover_file(log_dir, suffix, time):
                 os.rename(file, org_file_name)
 
 
-
 if __name__ == "__main__":
+    '''
+    python3 upload.py [dir_to_upload]
+       - compress and upload files
+       - clean up(delete) uploaded (old=2D Old) files
+       - recover *.current file that is not changed for 6H
+       - recover *.stage file that is not changed for 2H
+    '''
 
     log_dir = os.sep + 'tmp'
 
@@ -88,6 +94,6 @@ if __name__ == "__main__":
     #recovery staging file
     recover_file(log_dir, '.stage', 60*60*2)  #2H
 
-    #recovery staging file
+    #recovery current file
     recover_file(log_dir, '.current', 60*60*6) #6H
 

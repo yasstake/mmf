@@ -60,5 +60,28 @@ class MyTestCase(unittest.TestCase):
 #        plt.matshow(board.buy_trade)
         plt.show()
 
+    def test_calc_variance(self):
+        a = np.array([[0, 0, 0, 0, 1],
+                     [0, 0, 1, 0, 2],
+                     [0, 0, 1, 0, 3],
+                     [0, 0, 0, 0, 4]])
+
+        print(a)
+
+        non_zero_count = np.nonzero(a)[0].size
+        sum_a   = np.sum(a)
+
+        print("average", sum_a/non_zero_count, sum_a, non_zero_count)
+
+        b = np.square(a)
+        square_sum_a = np.sum(b)
+
+        print("square average", square_sum_a/non_zero_count, square_sum_a, non_zero_count)
+
+        s = square_sum_a/non_zero_count - (sum_a/non_zero_count)**2
+
+        # standard dev(non zero factor only)
+        print(s**0.5)
+
 if __name__ == '__main__':
     unittest.main()
