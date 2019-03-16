@@ -46,6 +46,8 @@ class MyTestCase(unittest.TestCase):
         print('latest time->', time)
 
 
+
+
     def test_load_from_db(self):
         t = 1552712195
         board = PriceBoard.load_from_db(t)
@@ -53,8 +55,6 @@ class MyTestCase(unittest.TestCase):
         print(board)
 
         print("sttistics")
-
-        board.normalize()
 
         mean, stddev = board.calc_static(board.buy_order+board.sell_order)
 
@@ -66,6 +66,8 @@ class MyTestCase(unittest.TestCase):
         plt.imshow(array, vmin=0, vmax=255)
         plt.figure()
 
+        np.savez_compressed('/tmp/compress_sell_order.npz', array)
+
         mean, stddev = board.calc_static(board.buy_trade + board.sell_trade)
 
         array = board.normalize_array(board.buy_trade, mean + stddev)
@@ -76,6 +78,7 @@ class MyTestCase(unittest.TestCase):
         plt.imshow(array, vmin=0, vmax=100)
         plt.figure()
 
+        np.savez_compressed('/tmp/compress_sell_trade.npz', array)
 
 
 
@@ -86,6 +89,38 @@ class MyTestCase(unittest.TestCase):
 #        np.save("/tmp/sell.np", board.sell_trade)
 #        plt.matshow(board.buy_trade)
         plt.show()
+
+    def test_load_from_db_normalize(self):
+        t = 1552712195
+        board = PriceBoard.load_from_db(t)
+
+        plt.imshow(board.buy_order, vmin=0, vmax=200)
+        plt.figure()
+
+        plt.imshow(board.sell_order, vmin=0, vmax=200)
+        plt.figure()
+
+        plt.imshow(board.buy_trade, vmin=0, vmax=200)
+        plt.figure()
+
+        plt.imshow(board.sell_trade, vmin=0, vmax=200)
+        plt.figure()
+        plt.show()
+
+    def test_load_from_db_normalize2(self):
+        t = 1552712195
+        board = PriceBoard.load_from_db(t)
+
+    def test_load_from_db_normalize3(self):
+        t = 1552712195
+        while True:
+            board = PriceBoard.load_from_db(t)
+            print("time->", t)
+            if not board:
+                break
+            t = t+1
+
+
 
     def test_calc_variance(self):
         a = np.array([[0.1, 0, 0, 0, 1],

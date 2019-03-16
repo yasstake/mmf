@@ -1,6 +1,7 @@
 import numpy as np
 from log.constant import *
 import log.logdb as logdb;
+from math import ceil
 
 
 TIME_WITH = 256
@@ -11,15 +12,13 @@ class PriceBoard():
     """
     represent order book board and its history
 
-    Layer 1   Buy order
-    Layer 2   Sell Order
-    Layer 3   Buy Trade
-    Layer 4   Sell Trade
+    Layer 1   Buy order     (0 edge)
+    Layer 2   Sell Order    (other side)
+    Layer 3   Buy Trade & funding minus (0 edge)
+    Layer 4   Sell Trade & funding plus (other side)
 
     """
     def __init__(self):
-        #        self.data = np.zeros((TIME_WITH, PRICE_HEIGHT,NUMBER_OF_LAYERS))
-
         self.sell_trade = np.zeros((TIME_WITH, BOOK_DEPTH))
         self.buy_trade = np.zeros((TIME_WITH, BOOK_DEPTH))
         self.sell_order = np.zeros((TIME_WITH, BOOK_DEPTH))
@@ -47,7 +46,6 @@ class PriceBoard():
             return None
 
         return t, p
-
 
     def set_sell_order_book(self, time, price, line):
         width = 0
@@ -77,24 +75,28 @@ class PriceBoard():
             if ORDER_BOOK_DATA_LIMIT < width:
                 return
 
-
     def add_buy_trade(self, time, price, volume, window = 1):
         pos = self.get_position(time, price)
         if pos:
             t, p = pos
             self.buy_trade[t][p] = self.buy_trade[t][p] + volume / window
-            print(t, p, self.buy_trade[t][p])
 
     def add_sell_trade(self, time, price, volume, window = 1):
         pos = self.get_position(time, price)
         if pos:
             t, p = pos
             self.sell_trade[t][p] = self.sell_trade[t][p] + volume / window
-            print(t, p, self.sell_trade[t][p])
 
     def set_funding(self, ttl, funding):
-
         print("fundig->", ttl, funding)
+        if TIME_WITH <= ttl or funding == 0: # do nothing
+            return
+
+        for i in range(0, TIME_WITH - ttl):
+            if funding < 0: # sell side
+                self.sell_trade[BOOK_DEPTH - 1, i] = ceil((funding / 0.4) * 256)
+            else:
+                self.buy_trade[0, i] = ceil((funding / 0.4) * 256)
 
     def save(self, filename):
         #todo: not implemented
@@ -117,20 +119,19 @@ class PriceBoard():
 
     def normalize(self):
         order_mean, order_stddev = self.calc_static(self.sell_order + self.buy_order)
-
         trade_mean, trade_stddev = self.calc_static(self.sell_trade + self.buy_trade)
 
-        print('ORDER stat->', order_mean, order_stddev)
-        print('trade stat->', trade_mean, trade_stddev)
+        self.buy_order = self.normalize_array(self.buy_order, order_mean + order_stddev / 2)
+        self.sell_order = self.normalize_array(self.sell_order, order_mean + order_stddev / 2)
+
+        self.buy_trade = self.normalize_array(self.buy_trade, trade_mean + trade_stddev)
+        self.sell_trade = self.normalize_array(self.sell_trade, trade_mean + trade_stddev)
 
     def normalize_array(self, array, max_value):
         float_array = array * (256 / max_value)
         uint8_array = np.ceil(np.clip(float_array, 0, 255)).astype('uint8')
 
-        print(uint8_array)
-
         return uint8_array
-
 
 
     @staticmethod
@@ -140,12 +141,32 @@ class PriceBoard():
         board = PriceBoard()
 
         board.set_origin_time(time)
-        print("origin->", board.get_origin_time())
 
         center_price = db.select_center_price(time)
-        board.set_center_price(center_price)
-        print("centerPrice->", board.get_center_price())
+        if not center_price:
+            print('---DBEND---')
+            return None
 
+        board.set_center_price(center_price)
+
+        error_count = 0
+
+        for offset in range(0,TIME_WITH):
+            #todo need tuning the window size
+            if offset < 300:
+                if not PriceBoard.load_from_db_time(db, board, time, offset):
+                    error_count = error_count + 1
+            elif offset < 120:
+                if not PriceBoard.load_from_db_time(db, board, time, offset, 8):
+                    error_count = error_count + 1
+            elif offset < 180:
+                if not PriceBoard.load_from_db_time(db, board, time, offset, 16):
+                    error_count = error_count + 1
+            else:
+                if not PriceBoard.load_from_db_time(db, board, time, offset, 32):
+                    error_count = error_count + 1
+
+        board.normalize()
         #load funding
         funding = db.select_funding(time)
 
@@ -153,19 +174,10 @@ class PriceBoard():
             t, p = funding
             board.set_funding(t, p)
 
-        for offset in range(0,TIME_WITH):
-            #todo need tuning the window size
-            if offset < 300:
-                PriceBoard.load_from_db_time(db, board, time, offset)
-            elif offset < 120:
-                PriceBoard.load_from_db_time(db, board, time, offset, 8)
-            elif offset < 180:
-                PriceBoard.load_from_db_time(db, board, time, offset, 16)
-            else:
-                PriceBoard.load_from_db_time(db, board, time, offset, 32)
+        if 10 < error_count:
+            return None
 
         return board
-
 
 
     @staticmethod
@@ -194,5 +206,7 @@ class PriceBoard():
             t, sell_min, sell_book, buy_max, buy_book = order_book
             board.set_sell_order_book(time_origin - offset, sell_min, sell_book)
             board.set_buy_order_book(time_origin - offset, buy_max, buy_book)
+
+            return True
         else:
-            print('---missing order book---', time_origin, query_time, retry)
+            return False
