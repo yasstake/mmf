@@ -4,7 +4,6 @@ import log.logdb as logdb;
 
 
 TIME_WITH = 256
-PRICE_HEIGHT = 256
 NUMBER_OF_LAYERS = 4
 
 
@@ -21,10 +20,10 @@ class PriceBoard():
     def __init__(self):
         #        self.data = np.zeros((TIME_WITH, PRICE_HEIGHT,NUMBER_OF_LAYERS))
 
-        self.sell_trade = np.zeros((TIME_WITH, PRICE_HEIGHT))
-        self.buy_trade = np.zeros((TIME_WITH, PRICE_HEIGHT))
-        self.sell_order = np.zeros((TIME_WITH, PRICE_HEIGHT))
-        self.buy_order = np.zeros((TIME_WITH, PRICE_HEIGHT))
+        self.sell_trade = np.zeros((TIME_WITH, BOOK_DEPTH))
+        self.buy_trade = np.zeros((TIME_WITH, BOOK_DEPTH))
+        self.sell_order = np.zeros((TIME_WITH, BOOK_DEPTH))
+        self.buy_order = np.zeros((TIME_WITH, BOOK_DEPTH))
         self.current_time = 0
         self.center_price = 0
 
@@ -42,9 +41,9 @@ class PriceBoard():
 
     def get_position(self, time, price):
         t = int(self.current_time - time)
-        p = int((price - self.center_price) / PRICE_UNIT + PRICE_HEIGHT / 2)
+        p = int((price - self.center_price) / PRICE_UNIT + BOOK_DEPTH / 2)
 
-        if p < 0 or PRICE_HEIGHT <= p:
+        if p < 0 or BOOK_DEPTH <= p:
             return None
 
         return t, p
@@ -94,12 +93,45 @@ class PriceBoard():
             print(t, p, self.sell_trade[t][p])
 
     def set_funding(self, ttl, funding):
+
         print("fundig->", ttl, funding)
 
     def save(self, filename):
         #todo: not implemented
         print("---dummy---")
         #np.savez_compressed(filename, self.data)
+
+    def calc_static(self, a):
+        """
+        calc matrix non zero mean and stddev
+        :param a: matrix to be examine
+        :return: mean, stddev
+        """
+        item_no = np.nonzero(a)[0].size
+        non_zero_sum = np.sum(a)
+        non_zero_sq_sum = np.sum(np.square(a))
+
+        variant = non_zero_sq_sum / item_no - (non_zero_sum / item_no)**2
+
+        return non_zero_sum/item_no, variant**0.5
+
+    def normalize(self):
+        order_mean, order_stddev = self.calc_static(self.sell_order + self.buy_order)
+
+        trade_mean, trade_stddev = self.calc_static(self.sell_trade + self.buy_trade)
+
+        print('ORDER stat->', order_mean, order_stddev)
+        print('trade stat->', trade_mean, trade_stddev)
+
+    def normalize_array(self, array, max_value):
+        float_array = array * (256 / max_value)
+        uint8_array = np.ceil(np.clip(float_array, 0, 255)).astype('uint8')
+
+        print(uint8_array)
+
+        return uint8_array
+
+
 
     @staticmethod
     def load_from_db(time, db_name = "/tmp/bitlog.db"):
@@ -122,7 +154,8 @@ class PriceBoard():
             board.set_funding(t, p)
 
         for offset in range(0,TIME_WITH):
-            if offset < 60:
+            #todo need tuning the window size
+            if offset < 300:
                 PriceBoard.load_from_db_time(db, board, time, offset)
             elif offset < 120:
                 PriceBoard.load_from_db_time(db, board, time, offset, 8)
@@ -151,7 +184,7 @@ class PriceBoard():
 
         retry = 100
         if magnifier < retry:
-            retry = magnifier + 20
+            retry = magnifier + 50
 
         while(not order_book and retry):
             order_book = db.select_order_book(query_time - retry )

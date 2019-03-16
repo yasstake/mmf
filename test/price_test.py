@@ -2,6 +2,7 @@ import unittest
 from matplotlib import pylab as plt
 import numpy as np
 from log.price import PriceBoard
+from log.logdb import LogDb
 
 class MyTestCase(unittest.TestCase):
 
@@ -31,27 +32,53 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(x,0)
         self.assertEqual(y, 128)
 
-
-    def test_price_board_init(self):
-        board = PriceBoard()
-        board.data[1][1][1] = 0
-
     def test_save(self):
         board = PriceBoard()
 
         board.save("/tmp/boarddump.npz")
 
+    def test_latest_time(self):
+        db = LogDb()
+        db.connect()
+
+        time = db.calc_latest_time()
+
+        print('latest time->', time)
+
+
     def test_load_from_db(self):
-        t = 1551594701
+        t = 1552712195
         board = PriceBoard.load_from_db(t)
+
         print(board)
 
-        print(board.get_center_price())
-        print(board.get_origin_time())
+        print("sttistics")
 
-        print(board.sell_trade)
+        board.normalize()
+
+        mean, stddev = board.calc_static(board.buy_order+board.sell_order)
+
+        array = board.normalize_array(board.buy_order, mean + stddev)
+        plt.imshow(array, vmin=0, vmax=255)
         plt.figure()
-        plt.imshow(board.buy_order, vmin=0, vmax=1000000)
+
+        array = board.normalize_array(board.sell_order, mean + stddev)
+        plt.imshow(array, vmin=0, vmax=255)
+        plt.figure()
+
+        mean, stddev = board.calc_static(board.buy_trade + board.sell_trade)
+
+        array = board.normalize_array(board.buy_trade, mean + stddev)
+        plt.imshow(array, vmin=0, vmax=100)
+        plt.figure()
+
+        array = board.normalize_array(board.sell_trade, mean + stddev)
+        plt.imshow(array, vmin=0, vmax=100)
+        plt.figure()
+
+
+
+
 #        plt.matshow(board.sell_trade)
 #        plt.matshow(board.sell_order)
 #        plt.matshow(board.buy_order)
@@ -61,7 +88,7 @@ class MyTestCase(unittest.TestCase):
         plt.show()
 
     def test_calc_variance(self):
-        a = np.array([[0, 0, 0, 0, 1],
+        a = np.array([[0.1, 0, 0, 0, 1],
                      [0, 0, 1, 0, 2],
                      [0, 0, 1, 0, 3],
                      [0, 0, 0, 0, 4]])
@@ -70,6 +97,7 @@ class MyTestCase(unittest.TestCase):
 
         non_zero_count = np.nonzero(a)[0].size
         sum_a   = np.sum(a)
+        mean = sum_a/non_zero_count
 
         print("average", sum_a/non_zero_count, sum_a, non_zero_count)
 
@@ -82,6 +110,26 @@ class MyTestCase(unittest.TestCase):
 
         # standard dev(non zero factor only)
         print(s**0.5)
+
+        board = PriceBoard()
+        mean2, stddev2 = board.calc_static(a)
+        self.assertEqual(mean, mean2)
+        self.assertEqual(s**0.5, stddev2)
+
+        # clipping 3
+        c = np.clip(a, 0, 3)
+        print(c)
+
+        d = np.ceil(a)
+        print(d)
+
+        e = (a / 3)*255
+        f = np.ceil(np.clip(e, 0, 255))
+        print(f)
+
+        g = f.astype('uint8')
+
+        print(g)
 
 if __name__ == '__main__':
     unittest.main()

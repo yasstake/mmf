@@ -427,4 +427,17 @@ class LogDb:
             self.connection.commit()
 
 
+    def calc_latest_time(self):
+        time_sql = """select time from order_book order by time desc"""
+
+        cursor = self.connection.cursor()
+        cursor.execute(time_sql)
+
+        if not cursor:
+            return None
+
+        records = cursor.fetchone()
+
+        return records[0]
+
 
