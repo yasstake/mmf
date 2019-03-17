@@ -17,7 +17,7 @@ if __name__ == "__main__":
     if 4 == len(sys.argv):
         pid = sys.argv[3]
 
-    print("net2log", log_dir, flag_file, pid)
+    print("logging_container", log_dir, flag_file, pid)
 
     bitmex = BitWs(log_dir, flag_file, pid)
     bitmex.start()
