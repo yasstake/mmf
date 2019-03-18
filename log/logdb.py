@@ -24,8 +24,11 @@ class LogDb:
         self.connection = sqlite3.connect(self.db_name)
 
     def create(self):
-        '''create db'''
         cursor = self.connection.cursor()
+        self._create_db(cursor)
+
+    def _create_db(self, cursor):
+        '''create db'''
 
         cursor.execute(
             '''
@@ -439,5 +442,65 @@ class LogDb:
         records = cursor.fetchone()
 
         return records[0]
+
+    def dump_db(self, file='/tmp/bitlog.dump'):
+        dump_sql = '''select * from order_book order by time'''
+
+        cursor = self.connection.cursor()
+        cursor.execute(dump_sql)
+
+        with open(file, "w") as f:
+            for line in cursor.fetchall():
+                f.write(line)
+                f.write('\n')
+
+    def copy_db(self, source, destination, start_time=0, duration=0):
+        conn = sqlite3.connect(destination)
+
+        cu = conn.cursor()
+        self._create_db(cu)
+
+        cu.execute("attach database '" + source + "'as source_db")
+
+        self._create_db(cu)
+
+#        sql = "insert into order_book select * from source_db.order_book where " + str(start_time) + " <= time and time < " + str(start_time + duration)
+        sql = "insert or replace into order_book select * from source_db.order_book where {0} <= time and time < {1}".format(str(start_time), str(start_time+duration))
+        print(sql)
+        cu.execute(sql)
+        conn.commit()
+
+        sql = "insert or replace into sell_trade select * from source_db.sell_trade where {0} <= time and time < {1}".format(str(start_time), str(start_time+duration))
+        print(sql)
+        cu.execute(sql)
+        conn.commit()
+
+
+        sql = "insert or replace into buy_trade select * from source_db.buy_trade where {0} <= time and time < {1}".format(str(start_time), str(start_time+duration))
+        print(sql)
+        cu.execute(sql)
+        conn.commit()
+
+        sql = "insert or replace into funding select * from source_db.funding where {0} <= time and time < {1}".format(str(start_time), str(start_time+duration))
+        print(sql)
+        cu.execute(sql)
+        conn.commit()
+
+        cu.execute("detach database source_db")
+
+
+
+
+        destination = sqlite3.connect(destination)
+
+
+
+
+    def import_db(self, file='/tmp/bitlog.dump'):
+        with open(file) as f:
+            for line in f:
+                self.connection.executescript(line)
+                print(line)
+
 
 
