@@ -29,9 +29,9 @@ class LogDb:
 
     def create(self):
         cursor = self.connection.cursor()
-        self._create_db(cursor)
+        self._create_table(cursor)
 
-    def _create_db(self, cursor):
+    def _create_table(self, cursor):
         '''create db'''
 
         cursor.execute(
@@ -458,11 +458,11 @@ class LogDb:
         conn = sqlite3.connect(destination)
 
         cu = conn.cursor()
-        self._create_db(cu)
+        self._create_table(cu)
 
         cu.execute("attach database '" + source + "'as source_db")
 
-        self._create_db(cu)
+        self._create_table(cu)
 
         where_statement = ""
         if start_time is not None:
@@ -496,18 +496,10 @@ class LogDb:
         cu.execute("detach database source_db")
 
 
-
-
-        destination = sqlite3.connect(destination)
-
-
-
-
     def import_db(self, file='/tmp/bitlog.dump'):
         with open(file) as f:
             for line in f:
                 self.connection.executescript(line)
                 print(line)
-
 
 

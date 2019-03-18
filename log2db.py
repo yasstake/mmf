@@ -15,4 +15,5 @@ if __name__ == '__main__':
     db_loader = DbLoader()
     db_loader.open_db(db_file)
     db_loader.load_dir(log_dir)
+
     db_loader.close_db()

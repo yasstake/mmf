@@ -19,4 +19,5 @@ if __name__ == '__main__':
     db_loader = DbLoader()
     db_loader.open_db()
     db_loader.load_from_blobs(blob_path)
+
     db_loader.close_db()
