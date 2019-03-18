@@ -38,10 +38,12 @@ class DbLoader:
         log_files = sorted(glob.glob(log_dir + '/' + '*.log'))
         for file in log_files:
             self.load_file(file)
+            self.log_db.commit()
 
         log_files = sorted(glob.glob(log_dir + '/' + '*.log.gz'))
         for file in log_files:
             self.load_file(file)
+            self.log_db.commit()
 
     def load_from_blobs(self, path=''):
         log_storage = LogStorage()

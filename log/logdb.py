@@ -23,6 +23,10 @@ class LogDb:
     def connect(self):
         self.connection = sqlite3.connect(self.db_name)
 
+    def commit(self):
+        if self.connection:
+            self.connection.commit()
+
     def create(self):
         cursor = self.connection.cursor()
         self._create_db(cursor)
@@ -70,10 +74,11 @@ class LogDb:
                      funding real
                      )
             ''')
-        self.connection.commit()
+        self.commit()
 
     def close(self):
         if self.connection:
+            self.commit()
             self.connection.close()
             self.connection = None
 
@@ -151,26 +156,22 @@ class LogDb:
         sql = 'INSERT or REPLACE into order_book (time, sell_min, sell_volume, sell_list, buy_max, buy_volume, buy_list) values(?, ?, ?, ?, ?, ?, ?)'
         cursor = self.connection.cursor()
         cursor.execute(sql, [time, sell_min, sell_vol, sell_blob, buy_max, buy_vol, buy_blob])
-        self.connection.commit()
+
 
     def insert_sell_trade(self, time, price, size):
         sql = 'INSERT or REPLACE into sell_trade (time, price, volume) values(?, ?, ?)'
         cursor = self.connection.cursor()
         cursor.execute(sql, [time, price, size])
-        self.connection.commit()
-
 
     def insert_buy_trade(self, time, price, size):
         sql = 'INSERT or REPLACE into buy_trade (time, price, volume) values(?, ?, ?)'
         cursor = self.connection.cursor()
         cursor.execute(sql, [time, price, size])
-        self.connection.commit()
 
     def insert_funding(self, time, funding):
         sql = 'INSERT or REPLACE into funding (time, funding) values(?, ?)'
         cursor = self.connection.cursor()
         cursor.execute(sql, [time, funding])
-        self.connection.commit()
 
     def calc_center_price(self, min, max):
         diff = max - min
@@ -427,7 +428,6 @@ class LogDb:
             fix_order_buy  = self.calc_fixed_order_buy(time, 1)
 
             cursor.execute(update_sql, (market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, time))
-            self.connection.commit()
 
 
     def calc_latest_time(self):
@@ -454,7 +454,7 @@ class LogDb:
                 f.write(line)
                 f.write('\n')
 
-    def copy_db(self, source, destination, start_time=0, duration=0):
+    def copy_db(self, source, destination, start_time=None, duration=None):
         conn = sqlite3.connect(destination)
 
         cu = conn.cursor()
@@ -464,8 +464,15 @@ class LogDb:
 
         self._create_db(cu)
 
+        where_statement = ""
+        if start_time is not None:
+            where_statement = " where {0} <= time".format(str(start_time))
+
+        if duration is not None:
+            where_statement += " and time < {0} ".format(str(start_time + duration))
+
 #        sql = "insert into order_book select * from source_db.order_book where " + str(start_time) + " <= time and time < " + str(start_time + duration)
-        sql = "insert or replace into order_book select * from source_db.order_book where {0} <= time and time < {1}".format(str(start_time), str(start_time+duration))
+        sql = "insert or replace into order_book select * from source_db.order_book" + where_statement
         print(sql)
         cu.execute(sql)
         conn.commit()
