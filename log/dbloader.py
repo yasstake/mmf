@@ -15,6 +15,7 @@ class DbLoader:
     def open_db(self, db_file="/tmp/bitlog.db"):
         self.log_db = LogDb(db_file)
         self.log_db.connect()
+        self.log_db.create_cursor()
         self.log_db.create()
 
     def close_db(self):

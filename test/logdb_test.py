@@ -12,16 +12,23 @@ class LogDbTest(unittest.TestCase):
         log_db = LogDb()
 
         log_db.connect()
+        log_db.create_cursor()
         log_db.create()
+        log_db.commit()
 
     def test_load(self):
         log_db = LogDb()
+
         log_db.connect()
+        log_db.create_cursor()
+
         log_db.create()
 
         order_book = json.loads(data.order_book_depth)
         log_db.insert_order_book_message(100, order_book)
         log_db.insert_order_book_message(100, order_book)
+
+        log_db.commit()
 
     def test_message_to_list(self):
         log_db = LogDb()
@@ -91,7 +98,11 @@ class LogDbTest(unittest.TestCase):
 
         db_loader = DbLoader()
 
-        db_loader.open_db(':memory:')
+        db_loader.open_db()
+        db = db_loader.get_db()
+
+        db.create_cursor()
+
         db_loader.load_line(partial_message)
         db_loader.load_line(update_message)
         db_loader.load_line(sell_trade_data)
@@ -111,10 +122,8 @@ class LogDbTest(unittest.TestCase):
         db_loader.load_line(sell_trade_data12)
         db_loader.load_line(sell_trade_data13)
         db_loader.load_line(sell_trade_data14)
-#        db_loader.load_line(sell_trade_data15)
-#        db_loader.load_line(sell_trade_data16)
 
-
+        db.commit()
 
         return db_loader.get_db()
 
@@ -134,6 +143,7 @@ class LogDbTest(unittest.TestCase):
 
     def test_calc_center_price(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         price = db.calc_center_price(100, 100.5)
         assert(price == 100.5)
@@ -150,11 +160,14 @@ class LogDbTest(unittest.TestCase):
         price = db.calc_center_price(50, 51)
         assert(price == 50.5)
 
+        db.commit()
+
 
 
     @staticmethod
     def test_select_center_price():
         db = LogDbTest.connect()
+        db.create_cursor()
 
         time_org = 1000
 
@@ -170,11 +183,14 @@ class LogDbTest(unittest.TestCase):
         center_price = db.select_center_price(100000) #not exist in db
         print(center_price)
 
+        db.commit()
+
 
     @staticmethod
     def test_select_order_book():
 
         db = LogDbTest.connect()
+        db.create_cursor()
 
         print("select order book->")
         print("1000->")
@@ -184,15 +200,20 @@ class LogDbTest(unittest.TestCase):
         print("1->")
         print(db.select_order_book(1))
 
+        db.commit()
+
 
     @staticmethod
     def test_select_sell_trade():
         db = LogDbTest.connect()
+        db.create_cursor()
+
         db.insert_sell_trade(1, 500, 1)
 
         print("selltrade->", db.select_sell_trade(1))
         print("selltrade->", db.select_sell_trade(2))
-        pass
+
+        db.commit()
 
     @staticmethod
     def test_select_buy_trade():
@@ -201,7 +222,11 @@ class LogDbTest(unittest.TestCase):
         :return: buy_trade list
         """
         db = LogDbTest.connect()
+        db.create_cursor()
+
         print("buy_trade->", db.select_buy_trade(1))
+
+        db.commit()
 
     @staticmethod
     def test_select_funding():
@@ -210,6 +235,7 @@ class LogDbTest(unittest.TestCase):
         :return: time_to_remain, funding_rate
         """
         db = LogDbTest.connect()
+        db.create_cursor()
 
         rec = db.select_funding(1)
 
@@ -219,9 +245,12 @@ class LogDbTest(unittest.TestCase):
         else:
             print("funding -none")
 
+        db.commit()
 
     def test_order_book_price(self):
         db = LogDbTest.connect()
+        db.create_cursor()
+
         rec = db.select_order_book_price(1000)
 
         sell_min, sell_volume, buy_max, buy_volume = rec
@@ -231,8 +260,11 @@ class LogDbTest(unittest.TestCase):
         self.assertEqual(buy_max, 50)
         self.assertEqual(buy_volume, 10)
 
+        db.commit()
+
     def test_calc_market_buy_price(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         price = db.calc_market_order_buy(1000, 1)  # enough small
         self.assertEqual(price, 51)
@@ -240,9 +272,12 @@ class LogDbTest(unittest.TestCase):
         price = db.calc_market_order_buy(1000, 1000)  # too big, rise the price PRICE_UNIT * 2
         self.assertEqual(price, 52)
 
+        db.commit()
+
 
     def test_calc_market_sell_price(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         price = db.calc_market_order_sell(1000, 1)  # enough small
         self.assertEqual(price, 50)
@@ -250,8 +285,11 @@ class LogDbTest(unittest.TestCase):
         price = db.calc_market_order_sell(1000, 1000)  # too big, rise the price PRICE_UNIT * 2
         self.assertEqual(price, 49)
 
+        db.commit()
+
     def test_is_suceess_fixed_order_sell(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         result = db.is_suceess_fixed_order_sell(1000, 99, 1)
         self.assertEqual(result, True)
@@ -262,9 +300,12 @@ class LogDbTest(unittest.TestCase):
         result = db.is_suceess_fixed_order_sell(1000, 100, 1)
         self.assertEqual(result, False)
 
+        db.commit()
+
 
     def test_is_suceess_fixed_order_buy(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         result = db.is_suceess_fixed_order_buy(1000, 98, 1)
         self.assertEqual(result, False)
@@ -278,8 +319,11 @@ class LogDbTest(unittest.TestCase):
         result = db.is_suceess_fixed_order_buy(1000, 99.5, 100)
         self.assertEqual(result, False)
 
+        db.commit()
+
     def test_calc_fixed_buy_order_price(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         price = db._calc_order_book_price_buy(1000)
         self.assertEqual(50, price)
@@ -287,9 +331,12 @@ class LogDbTest(unittest.TestCase):
         price = db._calc_order_book_price_buy(1001)
         self.assertEqual(99, price)
 
+        db.commit()
+
 
     def test_calc_fixed_sell_order_price(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         result = db._calc_order_book_price_sell(1000)
         self.assertEqual(result, 51)
@@ -297,9 +344,11 @@ class LogDbTest(unittest.TestCase):
         result = db._calc_order_book_price_sell(1001)
         self.assertEqual(result, 99.5)
 
+        db.commit()
 
     def test_calc_fixed_order_sell(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         board_price = db._calc_order_book_price_sell(1001)
         print(board_price)
@@ -310,10 +359,12 @@ class LogDbTest(unittest.TestCase):
         price = db.calc_fixed_order_sell(1001, 1000)
         self.assertEqual(price, None)
 
+        db.commit()
 
 
     def test_calc_fixed_order_buy(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         board_price = db._calc_order_book_price_buy(1001)
         print(board_price)
@@ -324,9 +375,12 @@ class LogDbTest(unittest.TestCase):
         price = db.calc_fixed_order_buy(1001, 1000)
         self.assertEqual(price, None)
 
+        db.commit()
+
 
     def test_calc_fixed_order_sell(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         board_price = db._calc_order_book_price_sell(1001)
         print(board_price)
@@ -337,8 +391,11 @@ class LogDbTest(unittest.TestCase):
         price = db.calc_fixed_order_sell(1001, 1000)
         self.assertEqual(price, None)
 
+        db.commit()
+
     def test_calc_market_order_buy(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         price = db.calc_market_order_buy(1001, 1)
         self.assertEqual(price, 99.5)
@@ -346,8 +403,11 @@ class LogDbTest(unittest.TestCase):
         price = db.calc_market_order_buy(1001, 1000)
         self.assertEqual(price, 100.5) # up 2 tick = 1
 
+        db.commit()
+
     def test_calc_market_order_sell(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         price = db.calc_market_order_sell(1001, 1)
         self.assertEqual(price, 99)
@@ -355,17 +415,22 @@ class LogDbTest(unittest.TestCase):
         price = db.calc_market_order_sell(1001, 1000)
         self.assertEqual(price, 98) # down 2 tick = 1
 
-
+        db.commit()
 
 
     def test_select_times(self):
         db = LogDbTest.connect()
+        db.create_cursor()
 
         db.update_all_order_prices()
 
+        db.commit()
+
     def test_load_db(self):
         db = LogDbTest.connect()
+        db.create_cursor()
         db.import_db()
+        db.commit()
 
     def test_copy_db(self):
         db = LogDbTest.connect()

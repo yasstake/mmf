@@ -7,31 +7,46 @@ import log.bitws
 import zlib
 from log import constant
 
-DB_NAME = ":memory:"
+DB_NAME = "file::memory:?cache=shared"
 
 
 class LogDb:
-    def __init__(self, db_name = DB_NAME):
+    def __init__(self, db_name = None):
         self.db_name = db_name
         self.connection = None
         self.last_time = 0
-
+        self.cursor = None
 
     def __del__(self):
         self.close()
 
     def connect(self):
         print("open db name=", self.db_name)
-        self.connection = sqlite3.connect(self.db_name)
+        if self.db_name:
+            self.connection = sqlite3.connect(self.db_name)
+        else:
+            self.connection = sqlite3.connect(DB_NAME, uri=True)
+
+    def create_cursor(self):
+        if self.cursor:
+            self.commit()
+
+        self.cursor = self.connection.cursor()
+
+    def close(self):
+        if self.connection:
+            self.commit()
+            self.connection.close()
+            self.connection = None
 
     def commit(self):
         if self.connection:
             self.connection.commit()
+            self.cursor = None
 
     def create(self):
-        cursor = self.connection.cursor()
-        self._create_table(cursor)
-        self.commit()
+        self._create_table(self.cursor)
+
 
     def _create_table(self, cursor):
         '''create db'''
@@ -79,11 +94,6 @@ class LogDb:
 
 
 
-    def close(self):
-        if self.connection:
-            self.commit()
-            self.connection.close()
-            self.connection = None
 
     def message_to_list(self, message):
         sell_min = 999999999
@@ -157,24 +167,20 @@ class LogDb:
         buy_blob = sqlite3.Binary(self.list_to_zip_string(buy_list))
 
         sql = 'INSERT or REPLACE into order_book (time, sell_min, sell_volume, sell_list, buy_max, buy_volume, buy_list) values(?, ?, ?, ?, ?, ?, ?)'
-        cursor = self.connection.cursor()
-        cursor.execute(sql, [time, sell_min, sell_vol, sell_blob, buy_max, buy_vol, buy_blob])
+        self.cursor.execute(sql, [time, sell_min, sell_vol, sell_blob, buy_max, buy_vol, buy_blob])
 
 
     def insert_sell_trade(self, time, price, size):
         sql = 'INSERT or REPLACE into sell_trade (time, price, volume) values(?, ?, ?)'
-        cursor = self.connection.cursor()
-        cursor.execute(sql, [time, price, size])
+        self.cursor.execute(sql, [time, price, size])
 
     def insert_buy_trade(self, time, price, size):
         sql = 'INSERT or REPLACE into buy_trade (time, price, volume) values(?, ?, ?)'
-        cursor = self.connection.cursor()
-        cursor.execute(sql, [time, price, size])
+        self.cursor.execute(sql, [time, price, size])
 
     def insert_funding(self, time, funding):
         sql = 'INSERT or REPLACE into funding (time, funding) values(?, ?)'
-        cursor = self.connection.cursor()
-        cursor.execute(sql, [time, funding])
+        self.cursor.execute(sql, [time, funding])
 
     def calc_center_price(self, min, max):
         diff = max - min
@@ -189,10 +195,10 @@ class LogDb:
         :return: time, center_price
         """
         sql = "select sell_min, buy_max from order_book where time = ?"
-        cursor = self.connection.cursor()
-        cursor.execute(sql, (time,))
 
-        prices = cursor.fetchone()
+        self.cursor.execute(sql, (time,))
+
+        prices = self.cursor.fetchone()
 
         if prices:
             return prices
@@ -215,10 +221,9 @@ class LogDb:
         :return: time, sell_list, buy_list
         """
         sql = "select time, sell_min, sell_list, buy_max, buy_list from order_book where time = ?"
-        cursor = self.connection.cursor()
-        cursor.execute(sql, (time,))
+        self.cursor.execute(sql, (time,))
 
-        rec = cursor.fetchone()
+        rec = self.cursor.fetchone()
 
         if not rec:
             return None
@@ -234,9 +239,8 @@ class LogDb:
         :return: sell_trade_list
         """
         sql = "select time, price, volume from sell_trade where ? < time and time <= ? order by price"
-        cursor = self.connection.cursor()
 
-        return cursor.execute(sql,(time - window, time)).fetchall()
+        return self.cursor.execute(sql,(time - window, time)).fetchall()
 
     def select_buy_trade(self, time, window = 1):
         """
@@ -244,9 +248,8 @@ class LogDb:
         :return: buy_trade list
         """
         sql = "select time, price, volume from buy_trade where ? < time and time <= ? order by price desc"
-        cursor = self.connection.cursor()
 
-        return cursor.execute(sql,(time - window, time)).fetchall()
+        return self.cursor.execute(sql,(time - window, time)).fetchall()
 
     def select_funding(self, time):
         """
@@ -254,9 +257,8 @@ class LogDb:
         :return: time_to_remain, funding_rate
         """
         sql = "select time, funding from funding where time <= ? order by time"
-        cursor = self.connection.cursor()
 
-        rec = cursor.execute(sql, (time,)).fetchone()
+        rec = self.cursor.execute(sql, (time,)).fetchone()
 
         if not rec:
             return None
@@ -274,10 +276,10 @@ class LogDb:
         :return: sell_min, sell_volume, buy_max, buy_volume
         """
         sql_select_sell_price = "select sell_min, sell_volume, buy_max, buy_volume from order_book where time = ?"
-        cursor = self.connection.cursor()
-        cursor.execute(sql_select_sell_price, (time,))
 
-        return cursor.fetchone()
+        self.cursor.execute(sql_select_sell_price, (time,))
+
+        return self.cursor.fetchone()
 
     def select_order_book_price_with_retry(self, time, retry = 30):
         rec = None
@@ -331,10 +333,9 @@ class LogDb:
 
         sql_count_sell_trade  = 'select sum(volume) from buy_trade where  ? <= time and time < ? and ? <= price'
 
-        cursor = self.connection.cursor()
-        cursor.execute(sql_count_sell_trade, (time, time + time_width, price))
+        self.cursor.execute(sql_count_sell_trade, (time, time + time_width, price))
 
-        amount = cursor.fetchone()
+        amount = self.cursor.fetchone()
 
 
         if amount[0] is None:
@@ -373,10 +374,9 @@ class LogDb:
     def is_suceess_fixed_order_buy(self, time, price, volume, time_width = 600):
         sql_count_sell_trade  = 'select sum(volume) from sell_trade where  ? <= time and time < ? and price <= ?'
 
-        cursor = self.connection.cursor()
-        cursor.execute(sql_count_sell_trade, (time, time + time_width, price))
+        self.cursor.execute(sql_count_sell_trade, (time, time + time_width, price))
 
-        amount = cursor.fetchone()
+        amount = self.cursor.fetchone()
 
         if amount[0] is None:
             return False
@@ -413,13 +413,9 @@ class LogDb:
         time_sql = """select time from order_book where market_order_sell is NULL"""
         update_sql = """update order_book set market_order_sell = ?, market_order_buy = ?, fix_order_sell = ?, fix_order_buy = ? where time = ?"""
 
-        cursor = self.connection.cursor()
-        cursor.execute(time_sql)
+        self.cursor.execute(time_sql)
 
-        if not cursor:
-            return None
-
-        for rec in cursor.fetchall():
+        for rec in self.cursor.fetchall():
             time = rec[0]
             market_order_sell = self.calc_market_order_sell(time, 1)
             if market_order_sell == None:
@@ -438,21 +434,15 @@ class LogDb:
             if fix_order_buy:
                 continue
 
-            cursor.execute(update_sql, (market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, time))
-
-        self.connection.commit()
+            self.cursor.execute(update_sql, (market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, time))
 
 
     def calc_latest_time(self):
         time_sql = """select time from order_book order by time desc"""
 
-        cursor = self.connection.cursor()
-        cursor.execute(time_sql)
+        self.cursor.execute(time_sql)
 
-        if not cursor:
-            return None
-
-        records = cursor.fetchone()
+        records = self.cursor.fetchone()
 
         return records[0]
 
@@ -483,6 +473,7 @@ class LogDb:
         conn.commit()
 
         cu.execute("detach database source_db")
+        conn.commit()
 
 
     def import_db(self, file='/tmp/bitlog.dump'):
