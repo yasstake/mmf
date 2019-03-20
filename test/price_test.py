@@ -91,7 +91,7 @@ class MyTestCase(unittest.TestCase):
         plt.show()
 
     def test_load_from_db_normalize(self):
-        t = 1552712195
+        t = 1552920000
         board = PriceBoard.load_from_db(t)
 
         plt.imshow(board.buy_order, vmin=0, vmax=200)
@@ -107,12 +107,19 @@ class MyTestCase(unittest.TestCase):
         plt.figure()
         plt.show()
 
+    def test_load_from_db_and_save_to_file(self):
+        t = 1552920000
+        board = PriceBoard.load_from_db(t)
+
+        board.save("/tmp/board")
+
+
     def test_load_from_db_normalize2(self):
-        t = 1552712195
+        t = 1552920014
         board = PriceBoard.load_from_db(t)
 
     def test_load_from_db_normalize3(self):
-        t = 1552712195
+        t = 1552920014
         while True:
             board = PriceBoard.load_from_db(t)
             print("time->", t)

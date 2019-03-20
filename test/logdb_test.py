@@ -363,10 +363,6 @@ class LogDbTest(unittest.TestCase):
 
         db.update_all_order_prices()
 
-    def test_dump_db(self):
-        db = LogDbTest.connect()
-        db.dump_db()
-
     def test_load_db(self):
         db = LogDbTest.connect()
         db.import_db()
@@ -376,6 +372,11 @@ class LogDbTest(unittest.TestCase):
         #db.copy_db("/tmp/bitlog.db", "/tmp/export.db", 1552712400, 7)
         db.copy_db("/tmp/bitlog.db", "/tmp/export.db", 0, 1552712400)
 
+    def test_db_info(self):
+        db = LogDb("/tmp/bitlog.db")
+        db.connect()
+
+        db.get_db_info()
 
 if __name__ == '__main__':
     unittest.main()

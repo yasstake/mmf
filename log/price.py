@@ -38,6 +38,7 @@ class PriceBoard():
     def get_center_price(self):
         return self.center_price
 
+
     def get_position(self, time, price):
         t = int(self.current_time - time)
         p = int((price - self.center_price) / PRICE_UNIT + BOOK_DEPTH / 2)
@@ -46,6 +47,7 @@ class PriceBoard():
             return None
 
         return t, p
+
 
     def set_sell_order_book(self, time, price, line):
         width = 0
@@ -101,6 +103,17 @@ class PriceBoard():
     def save(self, filename):
         #todo: not implemented
         print("---dummy---")
+        np.save(filename + "sell_order", self.sell_order)
+        np.save(filename + "buy_order", self.buy_order)
+        np.save(filename + "buy_trade", self.buy_trade)
+        np.save(filename + "sell_trade", self.sell_trade)
+
+
+        np.savez_compressed(filename + "sell_order", self.sell_order)
+        np.savez_compressed(filename + "buy_order", self.buy_order)
+        np.savez_compressed(filename + "buy_trade", self.buy_trade)
+        np.savez_compressed(filename + "sell_trade", self.sell_trade)
+
         #np.savez_compressed(filename, self.data)
 
     def calc_static(self, a):
@@ -201,6 +214,9 @@ class PriceBoard():
         while(not order_book and retry):
             order_book = db.select_order_book(query_time - retry )
             retry = retry - 1
+            if not order_book:
+                # todo: consider time tick to be 2 second, if there is so many retry
+                print("retry order book", query_time - retry)
 
         if order_book:
             t, sell_min, sell_book, buy_max, buy_book = order_book

@@ -21,6 +21,7 @@ class LogDb:
         self.close()
 
     def connect(self):
+        print("open db name=", self.db_name)
         self.connection = sqlite3.connect(self.db_name)
 
     def commit(self):
@@ -30,6 +31,7 @@ class LogDb:
     def create(self):
         cursor = self.connection.cursor()
         self._create_table(cursor)
+        self.commit()
 
     def _create_table(self, cursor):
         '''create db'''
@@ -74,7 +76,8 @@ class LogDb:
                      funding real
                      )
             ''')
-        self.commit()
+
+
 
     def close(self):
         if self.connection:
@@ -407,7 +410,6 @@ class LogDb:
             return None
 
     def update_all_order_prices(self):
-
         time_sql = """select time from order_book where market_order_sell is NULL"""
         update_sql = """update order_book set market_order_sell = ?, market_order_buy = ?, fix_order_sell = ?, fix_order_buy = ? where time = ?"""
 
@@ -417,17 +419,28 @@ class LogDb:
         if not cursor:
             return None
 
-        records = cursor.fetchall()
-
-        for rec in records:
+        for rec in cursor.fetchall():
             time = rec[0]
             market_order_sell = self.calc_market_order_sell(time, 1)
-            print(market_order_sell)
+            if market_order_sell == None:
+                print("cont")
+                continue
+
             market_order_buy  = self.calc_market_order_buy(time, 1)
+            if market_order_buy == None:
+                continue
+
             fix_order_sell = self.calc_fixed_order_sell(time, 1)
+            if fix_order_sell == None:
+                continue
+
             fix_order_buy  = self.calc_fixed_order_buy(time, 1)
+            if fix_order_buy:
+                continue
 
             cursor.execute(update_sql, (market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, time))
+
+        self.connection.commit()
 
 
     def calc_latest_time(self):
@@ -443,53 +456,29 @@ class LogDb:
 
         return records[0]
 
-    def dump_db(self, file='/tmp/bitlog.dump'):
-        dump_sql = '''select * from order_book order by time'''
 
-        cursor = self.connection.cursor()
-        cursor.execute(dump_sql)
+    def copy_db(self, source, destination, start_time=None, end_time=None):
+        self.copy_table('order_book', source, destination, start_time, end_time)
+        self.copy_table('sell_trade', source, destination, start_time, end_time)
+        self.copy_table('buy_trade', source, destination, start_time, end_time)
+        self.copy_table('funding', source, destination, start_time, end_time)
 
-        with open(file, "w") as f:
-            for line in cursor.fetchall():
-                f.write(line)
-                f.write('\n')
 
-    def copy_db(self, source, destination, start_time=None, duration=None):
+    def copy_table(self, table_name, source, destination, start_time, end_time):
         conn = sqlite3.connect(destination)
-
         cu = conn.cursor()
         self._create_table(cu)
-
         cu.execute("attach database '" + source + "'as source_db")
-
-        self._create_table(cu)
 
         where_statement = ""
         if start_time is not None:
             where_statement = " where {0} <= time".format(str(start_time))
 
-        if duration is not None:
-            where_statement += " and time < {0} ".format(str(start_time + duration))
+        if end_time is not None:
+            where_statement += " and time < {0} ".format(str(end_time))
 
-#        sql = "insert into order_book select * from source_db.order_book where " + str(start_time) + " <= time and time < " + str(start_time + duration)
-        sql = "insert or replace into order_book select * from source_db.order_book" + where_statement
-        print(sql)
-        cu.execute(sql)
-        conn.commit()
+        sql = "insert or replace into {0} select * from source_db.{1}".format(table_name, table_name) + where_statement
 
-        sql = "insert or replace into sell_trade select * from source_db.sell_trade where {0} <= time and time < {1}".format(str(start_time), str(start_time+duration))
-        print(sql)
-        cu.execute(sql)
-        conn.commit()
-
-
-        sql = "insert or replace into buy_trade select * from source_db.buy_trade where {0} <= time and time < {1}".format(str(start_time), str(start_time+duration))
-        print(sql)
-        cu.execute(sql)
-        conn.commit()
-
-        sql = "insert or replace into funding select * from source_db.funding where {0} <= time and time < {1}".format(str(start_time), str(start_time+duration))
-        print(sql)
         cu.execute(sql)
         conn.commit()
 
@@ -503,3 +492,11 @@ class LogDb:
                 print(line)
 
 
+    def get_db_info(self):
+        sql = "select time from order_book order by time asc"
+        cur = self.connection.execute(sql)
+        print(cur.fetchone()[0])
+
+        sql = "select time from order_book order by time desc"
+        cur = self.connection.execute(sql)
+        print(cur.fetchone()[0])
