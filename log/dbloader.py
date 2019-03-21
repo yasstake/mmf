@@ -3,6 +3,7 @@ import glob
 from log.logdb import LogDb
 from log.loader import LogLoader
 from gcp.storage import LogStorage
+from log.timeutil import timestamp
 
 class DbLoader:
     def __init__(self):
@@ -33,16 +34,25 @@ class DbLoader:
 
 
     def load_file(self, log_file):
+        print('Processs ' + log_file, end='')
+        start_time = timestamp()
+
         self.log_loader.load(log_file)
+
+        end_time = timestamp()
+        print('Process time =' + str(end_time - start_time))
+
 
     def load_dir(self, log_dir ='/tmp'):
         log_files = sorted(glob.glob(log_dir + '/' + '*.log'))
         for file in log_files:
+            self.log_db.create_cursor()
             self.load_file(file)
             self.log_db.commit()
 
         log_files = sorted(glob.glob(log_dir + '/' + '*.log.gz'))
         for file in log_files:
+            self.log_db.create_cursor()
             self.load_file(file)
             self.log_db.commit()
 

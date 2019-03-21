@@ -15,5 +15,6 @@ if __name__ == "__main__":
     db = LogDb(db_file)
 
     db.connect()
+    db.create_cursor()
     db.update_all_order_prices()
     db.close()
