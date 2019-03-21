@@ -4,7 +4,8 @@ import log.logdb as logdb;
 from math import ceil
 
 
-TIME_WITH = 100
+TIME_WIDTH = 100
+BOARD_TIME_WIDTH = TIME_WIDTH + 1
 NUMBER_OF_LAYERS = 4
 
 
@@ -19,10 +20,11 @@ class PriceBoard:
 
     """
     def __init__(self):
-        self.sell_trade = np.zeros((TIME_WITH, BOOK_DEPTH))
-        self.buy_trade = np.zeros((TIME_WITH, BOOK_DEPTH))
-        self.sell_order = np.zeros((TIME_WITH, BOOK_DEPTH))
-        self.buy_order = np.zeros((TIME_WITH, BOOK_DEPTH))
+
+        self.sell_trade = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
+        self.buy_trade = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
+        self.sell_order = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
+        self.buy_order = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
         self.current_time = 0
         self.center_price = 0
 
@@ -39,7 +41,7 @@ class PriceBoard:
         return self.center_price
 
     def get_position(self, time, price):
-        t = int(self.current_time - time)
+        t = int(self.current_time - time) + 1 # first line[0] is for actual
         p = int((price - self.center_price) / PRICE_UNIT + BOOK_DEPTH / 2)
 
         if p < 0 or BOOK_DEPTH <= p:
@@ -89,10 +91,10 @@ class PriceBoard:
 
     def set_funding(self, ttl, funding):
         print("fundig->", ttl, funding)
-        if TIME_WITH <= ttl or funding == 0: # do nothing
+        if TIME_WIDTH <= ttl or funding == 0: # do nothing
             return
 
-        for i in range(0, TIME_WITH - ttl):
+        for i in range(0, TIME_WIDTH - ttl):
             if funding < 0: # sell side
                 self.sell_trade[BOOK_DEPTH - 1, i] = ceil((funding / 0.4) * 256)
             else:
@@ -143,6 +145,7 @@ class PriceBoard:
 
         return uint8_array
 
+
 class PriceBoardDB(PriceBoard):
     @staticmethod
     def load_from_db(time, db_name = "/tmp/bitlog.db"):
@@ -163,7 +166,7 @@ class PriceBoardDB(PriceBoard):
 
         error_count = 0
 
-        for offset in range(0,TIME_WITH):
+        for offset in range(0, TIME_WIDTH): # first line is for actual buy
             #todo need tuning the window size
             if offset < 300:
                 if not PriceBoardDB.load_from_db_time(db, board, time, offset, 8):

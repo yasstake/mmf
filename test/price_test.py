@@ -25,12 +25,12 @@ class MyTestCase(unittest.TestCase):
         board.set_center_price(1000)
 
         x, y = board.get_position(999, 1000.5)
-        self.assertEqual(x, 1)
-        self.assertEqual(y, 129)
+        self.assertEqual(x, 2)
+        self.assertEqual(y, 51)
 
         x, y = board.get_position(1000, 1000)
-        self.assertEqual(x,0)
-        self.assertEqual(y, 128)
+        self.assertEqual(x,1)
+        self.assertEqual(y, 50)
 
     def test_save(self):
         board = PriceBoardDB()
