@@ -36,6 +36,7 @@ class LogDb:
     def close(self):
         if self.connection:
             self.commit()
+            self.connection.execute("VACUUM")
             self.connection.close()
             self.connection = None
 
