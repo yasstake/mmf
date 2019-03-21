@@ -1,10 +1,20 @@
 import unittest
 from matplotlib import pylab as plt
 import numpy as np
+from log.price import PriceBoard
 from log.price import PriceBoardDB
 from log.logdb import LogDb
 
 class MyTestCase(unittest.TestCase):
+    def test_add_buy_order(self):
+        board = PriceBoard()
+        board.add_buy_order(1000, 1)   # in BTC
+        board.add_buy_order(1000, 1)   # in BTC
+
+    def test_add_sell_order(self):
+        board = PriceBoard()
+        board.add_sell_order(999, 1)   # in BTC
+        board.add_sell_order(999, 1)   # in BTC
 
     def test_set_center_price(self):
         PRICE = 4000.5
@@ -37,6 +47,44 @@ class MyTestCase(unittest.TestCase):
 
         board.save("/tmp/boarddump.npz")
 
+
+    def test_load_from_db_one_rec(self):
+        end_time = self.calc_end_time()
+        self._load_from_db_one_rec_with_time(end_time)
+
+    def test_load_from_db_one_rec_t(self):
+        self._load_from_db_one_rec_with_time(1553099023)
+
+    def _load_from_db_one_rec_with_time(self, time):
+
+        board = PriceBoardDB.load_from_db(time)
+
+        sell_board = board.sell_order
+
+        max_x, max_y = sell_board.shape
+        print(max_x, max_y)
+
+        for x in range(1, max_x):
+            line = False
+            for y in range(1, max_y):
+                if sell_board[x, y]:
+                    line = True
+                    break;
+
+            if line is False:
+                print("error", x, y)
+                self.assertFalse("empty line in order book")
+                break;
+
+        for x in range(0, max_x):
+            print(time - x, ' ', end='')
+            for y in range(0, max_y):
+                if sell_board[x, y]:
+                    print('X', end='')
+                else:
+                    print('.', end='')
+            print('', end='\n')
+        print(board)
 
     def test_load_from_db(self):
         end_time = self.calc_end_time()

@@ -4,7 +4,7 @@ import log.logdb as logdb;
 from math import ceil
 
 
-TIME_WIDTH = 100
+TIME_WIDTH = 300
 BOARD_TIME_WIDTH = TIME_WIDTH + 1
 NUMBER_OF_LAYERS = 4
 
@@ -20,13 +20,38 @@ class PriceBoard:
 
     """
     def __init__(self):
+        self.current_time = 0
+        self.center_price = 0
 
         self.sell_trade = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
         self.buy_trade = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
         self.sell_order = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
         self.buy_order = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
-        self.current_time = 0
-        self.center_price = 0
+
+        self.my_sell_order = {}
+        self.my_buy_order = {}
+
+        self.market_sell_price = None
+        self.market_buy_price = None
+
+        self.fix_sell_price = None
+        self.fix_buy_price = None
+
+        self.funding_ttl = None
+        self.funding = None
+
+
+    def add_sell_order(self, price, size):
+        if price in self.my_sell_order:
+            self.my_sell_order[price] += size
+        else:
+            self.my_sell_order[price] = size
+
+    def add_buy_order(self, price, size):
+        if price in self.buy_order:
+            self.my_buy_order[price] += size
+        else:
+            self.my_buy_order[price] = size
 
     def set_origin_time(self,time):
         self.current_time = time
@@ -51,39 +76,60 @@ class PriceBoard:
 
     def set_sell_order_book(self, time, price, line):
         width = 0
+
+        data_width = 0
         for vol in line:
             pos = self.get_position(time, price)
             if not pos:
-                return
+                break
 
             t, p = pos
             self.sell_order[t, p] = vol
             price += PRICE_UNIT
             width += 1
+
+            data_width = data_width + 1
+
             if ORDER_BOOK_DATA_LIMIT < width:
-                return
+                break
+
+        if(data_width < 10):
+            print('data width->', data_width, line)
+
 
     def set_buy_order_book(self, time, price, line):
         width = 0
+
+        valid_line = False
+
         for vol in line:
             pos = self.get_position(time, price)
+
             if not pos:
-                return
+                # print("error in BUY pos", time, price)
+                break
 
             t, p = pos
             self.buy_order[t, p] = vol
+
+            if vol:
+                valid_line = True
+
             price -= PRICE_UNIT
             width += 1
             if ORDER_BOOK_DATA_LIMIT < width:
-                return
+                break
 
-    def add_buy_trade(self, time, price, volume, window = 1):
+        if valid_line is False:
+            print('INVALIDLINE---->', time, price, line)
+
+    def add_buy_trade(self, time, price, volume, window=1):
         pos = self.get_position(time, price)
         if pos:
             t, p = pos
             self.buy_trade[t][p] = self.buy_trade[t][p] + volume / window
 
-    def add_sell_trade(self, time, price, volume, window = 1):
+    def add_sell_trade(self, time, price, volume, window=1):
         pos = self.get_position(time, price)
         if pos:
             t, p = pos
@@ -91,14 +137,8 @@ class PriceBoard:
 
     def set_funding(self, ttl, funding):
         print("fundig->", ttl, funding)
-        if TIME_WIDTH <= ttl or funding == 0: # do nothing
-            return
-
-        for i in range(0, TIME_WIDTH - ttl):
-            if funding < 0: # sell side
-                self.sell_trade[BOOK_DEPTH - 1, i] = ceil((funding / 0.4) * 256)
-            else:
-                self.buy_trade[0, i] = ceil((funding / 0.4) * 256)
+        self.funding = funding
+        self.funding_ttl = ttl
 
     def save(self, filename):
         #todo: not implemented
@@ -166,10 +206,10 @@ class PriceBoardDB(PriceBoard):
 
         error_count = 0
 
-        for offset in range(0, TIME_WIDTH): # first line is for actual buy
+        for offset in range(0, TIME_WIDTH):
             #todo need tuning the window size
             if offset < 300:
-                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 8):
+                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 1):
                     error_count = error_count + 1
             elif offset < 120:
                 if not PriceBoardDB.load_from_db_time(db, board, time, offset, 8):
@@ -209,13 +249,14 @@ class PriceBoardDB(PriceBoard):
         #load order book
         order_book = None
 
-        retry = 100
-        if magnifier < retry:
-            retry = magnifier + 50
+        max_retry = 100
+        if magnifier < max_retry:
+            max_retry = magnifier + 50
 
-        while(not order_book and retry):
-            order_book = db.select_order_book(query_time - retry )
-            retry = retry - 1
+        retry = 0
+        while(not order_book and retry < max_retry):
+            order_book = db.select_order_book(query_time - retry)
+            retry = retry + 1
             if not order_book:
                 # todo: consider time tick to be 2 second, if there is so many retry
                 print("retry order book", query_time - retry)
@@ -223,8 +264,13 @@ class PriceBoardDB(PriceBoard):
         if order_book:
             t, sell_min, sell_book, buy_max, buy_book = order_book
             board.set_sell_order_book(time_origin - offset, sell_min, sell_book)
+            if(len(sell_book) < 10):
+                print("shot->", time_origin - offset, sell_book)
+
+
             board.set_buy_order_book(time_origin - offset, buy_max, buy_book)
 
             return True
         else:
+            print("NO ORDERBOOK FOUND->", query_time)
             return False

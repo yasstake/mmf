@@ -452,6 +452,30 @@ class LogDbTest(unittest.TestCase):
         print('latest time->', time)
 
 
+    def test_latest_time(self):
+        db = LogDbTest.connect()
+        db.create_cursor()
+        db.update_all_order_prices()
+        print(db.select_expected_price(1000))
+        db.commit()
+
+
+    def test_print_order_book_line(self):
+        db = LogDb('/tmp/bitlog.db')
+        db.connect()
+        db.create_cursor()
+
+        line = db.select_order_book(1553099021)
+        print(line)
+
+        line = db.select_order_book(1553099022)
+        print(line)
+
+        line = db.select_order_book(1553099023)
+        print(line)
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

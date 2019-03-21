@@ -8,7 +8,7 @@ import zlib
 from log import constant
 
 DB_NAME = "file::memory:?cache=shared"
-
+ORDER_TIME_WIDTH = 120
 
 class LogDb:
     def __init__(self, db_name = None):
@@ -108,14 +108,12 @@ class LogDb:
             volume = item['size']
             price = item['price']
 
-            if (item['side'] == 'Sell'):
-                side = 0
+            if item['side'] == 'Sell':
                 sell[price] = volume
                 if price < sell_min:
                     sell_min = price
                     sell_vol = volume
             else:
-                side = 1
                 buy[price] = volume
                 if buy_max < price:
                     buy_max = price
@@ -126,16 +124,12 @@ class LogDb:
             index = buy_max - i * constant.PRICE_UNIT
             if index in buy:
                 buy_list.append(buy[index])
-            else:
-                break
 
         sell_list = []
         for i in range(constant.BOOK_DEPTH):
             index = sell_min + i * constant.PRICE_UNIT
             if index in sell:
                 sell_list.append(sell[index])
-            else:
-                break
 
         return sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list
 
@@ -163,6 +157,9 @@ class LogDb:
         self.insert_order_book(time, sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list)
 
     def insert_order_book(self, time, sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list):
+        if len(sell_list) < 10  or  len(buy_list) < 10:
+            print("TOOSHORT->", time, buy_list, sell_list)
+
         sell_blob = sqlite3.Binary(self.list_to_zip_string(sell_list))
         buy_blob = sqlite3.Binary(self.list_to_zip_string(buy_list))
 
@@ -230,6 +227,9 @@ class LogDb:
 
         time, sell_min, sell_list, buy_max, buy_list = rec
 
+        if len(sell_list) < 30:
+            print('-----short--indb>', time, self.zip_string_to_list(sell_list))
+
         return time, sell_min, self.zip_string_to_list(sell_list), buy_max, self.zip_string_to_list(buy_list)
 
 
@@ -290,6 +290,11 @@ class LogDb:
 
         return rec
 
+    def select_expected_price(self, time):
+        sql = """select market_order_sell, market_order_buy, fix_order_sell, fix_order_buy from order_book where time = ?"""
+
+        self.cursor.execute(sql, (time,))
+        return self.cursor.fetchone()
 
     def calc_market_order_buy(self, time, order_volume):
         """
@@ -309,7 +314,6 @@ class LogDb:
         else:
             return sell_min + constant.PRICE_UNIT * 2
 
-
     def calc_market_order_sell(self, time, order_volume):
         """
         calc market buy price
@@ -328,15 +332,13 @@ class LogDb:
         else:
             return buy_max - constant.PRICE_UNIT * 2
 
-
-    def is_suceess_fixed_order_sell(self, time, price, volume, time_width = 600):
+    def is_suceess_fixed_order_sell(self, time, price, volume, time_width = ORDER_TIME_WIDTH):
 
         sql_count_sell_trade  = 'select sum(volume) from buy_trade where  ? <= time and time < ? and ? <= price'
 
         self.cursor.execute(sql_count_sell_trade, (time, time + time_width, price))
 
         amount = self.cursor.fetchone()
-
 
         if amount[0] is None:
             return False
@@ -354,9 +356,8 @@ class LogDb:
         sell_min, sell_volume, buy_max, buy_volume = rec
         return sell_min
 
-    def calc_fixed_order_sell(self, time, volume, time_width=600):
+    def calc_fixed_order_sell(self, time, volume, time_width=ORDER_TIME_WIDTH):
         """
-
         :param time: unix time at the order
         :param price: order price
         :param volume: order volume
@@ -370,8 +371,7 @@ class LogDb:
         else:
             return None
 
-
-    def is_suceess_fixed_order_buy(self, time, price, volume, time_width = 600):
+    def is_suceess_fixed_order_buy(self, time, price, volume, time_width = ORDER_TIME_WIDTH):
         sql_count_sell_trade  = 'select sum(volume) from sell_trade where  ? <= time and time < ? and price <= ?'
 
         self.cursor.execute(sql_count_sell_trade, (time, time + time_width, price))
@@ -394,7 +394,7 @@ class LogDb:
         sell_min, sell_volume, buy_max, buy_volume = rec
         return buy_max
 
-    def calc_fixed_order_buy(self, time, volume, time_width = 600):
+    def calc_fixed_order_buy(self, time, volume, time_width = ORDER_TIME_WIDTH):
         """
 
         :param time: time in unix time
@@ -436,7 +436,6 @@ class LogDb:
 
             self.cursor.execute(update_sql, (market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, time))
 
-
     def calc_latest_time(self):
         time_sql = """select time from order_book order by time desc"""
 
@@ -446,13 +445,11 @@ class LogDb:
 
         return records[0]
 
-
     def copy_db(self, source, destination, start_time=None, end_time=None):
         self.copy_table('order_book', source, destination, start_time, end_time)
         self.copy_table('sell_trade', source, destination, start_time, end_time)
         self.copy_table('buy_trade', source, destination, start_time, end_time)
         self.copy_table('funding', source, destination, start_time, end_time)
-
 
     def copy_table(self, table_name, source, destination, start_time, end_time):
         conn = sqlite3.connect(destination)
@@ -475,13 +472,11 @@ class LogDb:
         cu.execute("detach database source_db")
         conn.commit()
 
-
     def import_db(self, file='/tmp/bitlog.dump'):
         with open(file) as f:
             for line in f:
                 self.connection.executescript(line)
                 print(line)
-
 
     def get_db_info(self):
         sql = "select time from order_book order by time asc"
@@ -489,7 +484,7 @@ class LogDb:
         start_time = cur.fetchone()[0]
         print(start_time)
 
-        sql = "select time from order_book order by time desc"
+        sql = 'select time from order_book order by time desc'
         cur = self.connection.execute(sql)
         end_time = cur.fetchone()[0]
         print(end_time)
