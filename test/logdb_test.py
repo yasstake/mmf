@@ -443,5 +443,15 @@ class LogDbTest(unittest.TestCase):
 
         db.get_db_info()
 
+    def test_latest_time(self):
+        db = LogDbTest.connect()
+        db.create_cursor()
+
+        time = db.calc_latest_time()
+
+        print('latest time->', time)
+
+
+
 if __name__ == '__main__':
     unittest.main()

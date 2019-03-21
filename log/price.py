@@ -4,11 +4,11 @@ import log.logdb as logdb;
 from math import ceil
 
 
-TIME_WITH = 256
+TIME_WITH = 100
 NUMBER_OF_LAYERS = 4
 
 
-class PriceBoard():
+class PriceBoard:
     """
     represent order book board and its history
 
@@ -38,7 +38,6 @@ class PriceBoard():
     def get_center_price(self):
         return self.center_price
 
-
     def get_position(self, time, price):
         t = int(self.current_time - time)
         p = int((price - self.center_price) / PRICE_UNIT + BOOK_DEPTH / 2)
@@ -47,7 +46,6 @@ class PriceBoard():
             return None
 
         return t, p
-
 
     def set_sell_order_book(self, time, price, line):
         width = 0
@@ -108,7 +106,6 @@ class PriceBoard():
         np.save(filename + "buy_trade", self.buy_trade)
         np.save(filename + "sell_trade", self.sell_trade)
 
-
         np.savez_compressed(filename + "sell_order", self.sell_order)
         np.savez_compressed(filename + "buy_order", self.buy_order)
         np.savez_compressed(filename + "buy_trade", self.buy_trade)
@@ -128,7 +125,7 @@ class PriceBoard():
 
         variant = non_zero_sq_sum / item_no - (non_zero_sum / item_no)**2
 
-        return non_zero_sum/item_no, variant**0.5
+        return non_zero_sum/item_no, variant ** 0.5
 
     def normalize(self):
         order_mean, order_stddev = self.calc_static(self.sell_order + self.buy_order)
@@ -146,12 +143,14 @@ class PriceBoard():
 
         return uint8_array
 
-
+class PriceBoardDB(PriceBoard):
     @staticmethod
     def load_from_db(time, db_name = "/tmp/bitlog.db"):
         db = logdb.LogDb(db_name)
         db.connect()
-        board = PriceBoard()
+        db.create_cursor()
+
+        board = PriceBoardDB()
 
         board.set_origin_time(time)
 
@@ -167,16 +166,16 @@ class PriceBoard():
         for offset in range(0,TIME_WITH):
             #todo need tuning the window size
             if offset < 300:
-                if not PriceBoard.load_from_db_time(db, board, time, offset):
+                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 8):
                     error_count = error_count + 1
             elif offset < 120:
-                if not PriceBoard.load_from_db_time(db, board, time, offset, 8):
+                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 8):
                     error_count = error_count + 1
             elif offset < 180:
-                if not PriceBoard.load_from_db_time(db, board, time, offset, 16):
+                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 16):
                     error_count = error_count + 1
             else:
-                if not PriceBoard.load_from_db_time(db, board, time, offset, 32):
+                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 32):
                     error_count = error_count + 1
 
         board.normalize()

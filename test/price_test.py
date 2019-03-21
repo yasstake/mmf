@@ -1,26 +1,26 @@
 import unittest
 from matplotlib import pylab as plt
 import numpy as np
-from log.price import PriceBoard
+from log.price import PriceBoardDB
 from log.logdb import LogDb
 
 class MyTestCase(unittest.TestCase):
 
     def test_set_center_price(self):
         PRICE = 4000.5
-        board = PriceBoard()
+        board = PriceBoardDB()
         board.set_center_price(PRICE)
         price = board.get_center_price()
         self.assertEqual(price, PRICE)
 
     def test_current_time(self):
-        board = PriceBoard()
+        board = PriceBoardDB()
         board.set_origin_time(1000)
         time = board.get_origin_time()
         self.assertEqual(1000, time)
 
     def test_get_positoin(self):
-        board = PriceBoard()
+        board = PriceBoardDB()
         board.set_origin_time(1000)
         board.set_center_price(1000)
 
@@ -33,24 +33,17 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(y, 128)
 
     def test_save(self):
-        board = PriceBoard()
+        board = PriceBoardDB()
 
         board.save("/tmp/boarddump.npz")
 
-    def test_latest_time(self):
-        db = LogDb()
-        db.connect()
-
-        time = db.calc_latest_time()
-
-        print('latest time->', time)
-
-
-
 
     def test_load_from_db(self):
-        t = 1552712195
-        board = PriceBoard.load_from_db(t)
+        end_time = self.calc_end_time()
+
+        t = end_time
+
+        board = PriceBoardDB.load_from_db(t)
 
         print(board)
 
@@ -90,9 +83,22 @@ class MyTestCase(unittest.TestCase):
 #        plt.matshow(board.buy_trade)
         plt.show()
 
+
+    def calc_end_time(self):
+        db = LogDb("/tmp/bitlog.db")
+        db.connect()
+        db.create_cursor()
+
+        return db.get_db_info()[1]
+
+
     def test_load_from_db_normalize(self):
-        t = 1552920000
-        board = PriceBoard.load_from_db(t)
+        end_time = self.calc_end_time()
+
+        print("time->", end_time)
+
+        t = end_time
+        board = PriceBoardDB.load_from_db(t)
 
         plt.imshow(board.buy_order, vmin=0, vmax=200)
         plt.figure()
@@ -108,20 +114,28 @@ class MyTestCase(unittest.TestCase):
         plt.show()
 
     def test_load_from_db_and_save_to_file(self):
-        t = 1552920000
-        board = PriceBoard.load_from_db(t)
+        end_time = self.calc_end_time()
+
+        t = end_time
+        board = PriceBoardDB.load_from_db(t)
 
         board.save("/tmp/board")
 
 
     def test_load_from_db_normalize2(self):
-        t = 1552920014
-        board = PriceBoard.load_from_db(t)
+        end_time = self.calc_end_time()
+
+        t = end_time
+
+        board = PriceBoardDB.load_from_db(t)
 
     def test_load_from_db_normalize3(self):
-        t = 1552920014
+        end_time = self.calc_end_time()
+
+        t = end_time
+
         while True:
-            board = PriceBoard.load_from_db(t)
+            board = PriceBoardDB.load_from_db(t)
             print("time->", t)
             if not board:
                 break
@@ -153,7 +167,7 @@ class MyTestCase(unittest.TestCase):
         # standard dev(non zero factor only)
         print(s**0.5)
 
-        board = PriceBoard()
+        board = PriceBoardDB()
         mean2, stddev2 = board.calc_static(a)
         self.assertEqual(mean, mean2)
         self.assertEqual(s**0.5, stddev2)

@@ -486,8 +486,13 @@ class LogDb:
     def get_db_info(self):
         sql = "select time from order_book order by time asc"
         cur = self.connection.execute(sql)
-        print(cur.fetchone()[0])
+        start_time = cur.fetchone()[0]
+        print(start_time)
 
         sql = "select time from order_book order by time desc"
         cur = self.connection.execute(sql)
-        print(cur.fetchone()[0])
+        end_time = cur.fetchone()[0]
+        print(end_time)
+
+        return start_time, end_time
+
