@@ -61,6 +61,10 @@ class DbLoader:
 
         log_storage.process_blob_dir(path, self.load_file)
 
+    def load_from_blob_by_date(self, year, month, day):
+        log_storage = LogStorage()
+
+        log_storage.process_blob_date_with_padding(year, month, day, self.load_file)
 
     def order_book_tick(self, time_stamp, order_book):
         if self.book_last_time != time_stamp:

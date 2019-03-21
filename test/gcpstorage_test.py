@@ -76,7 +76,17 @@ class MyTestCase(unittest.TestCase):
 
         storage.process_blob_dir("2019/03/16/", self.call_back)
 
+    def test_process_dir_date(self):
+        storage = LogStorage()
 
+        storage.process_blob_date_with_padding(2019, 3, 19, self.call_back)
+
+
+
+    def test_list_dayanddayafter(self):
+        storage = LogStorage()
+
+        print(storage.list_blob_names_by_date_with_padding(2019, 3,19))
 
 
 

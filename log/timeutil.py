@@ -32,9 +32,18 @@ def date_string(time = None):
 
     return time.strftime('%Y-%m-%d')
 
+
 def time_stamp_string(time = None):
     if not time:
         time = timestamp()
     time = datetime.datetime.utcfromtimestamp(time)
 
     return time.isoformat() + 'Z'
+
+
+def date_path(yyyy, mm, dd, offset=0, separator='-'):
+    date = datetime.date(yyyy, mm, dd) + datetime.timedelta(days=offset)
+
+    return '{:04d}'.format(date.year) + separator + '{:02d}'.format(date.month) + separator + '{:02d}'.format(date.day)
+
+

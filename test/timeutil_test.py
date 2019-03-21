@@ -139,6 +139,13 @@ class MyTestCase(unittest.TestCase):
         print(re.search("\+", '2019-03-08T13:49:10.740+00:00'))
 
 
+    def test_time_path(self):
+        print(date_path(2019, 3, 1, separator='/'))
+        print(date_path(2019, 3, 1, -1))
+        print(date_path(2019, 3, 1, -2))
+
+
+
 #:[{"timestamp":"2019-02-28T23:02:14.807Z","side":"Buy","size":104,"price":3791.5,"tickDirection":"ZeroPlusTick"}],
 #"TIME":1551362533}
 

@@ -4,20 +4,24 @@ from log.dbloader import DbLoader
 
 if __name__ == '__main__':
     '''
-    python3.7 blob2db.py blob_path [db_file_name]
+    python3.7 blob2db.py yyyy mm dd [db_file_name]
     '''
     db_file = os.sep + 'tmp' + os.sep + 'bitlog.db'
     blob_path = None
+    year  = 0
+    month = 12
+    day   = 31
 
-    if len(sys.argv) <= 2:
-        blob_path = sys.argv[1]
-    if len(sys.argv) == 3:
-        db_file = sys.argv[2]
+    if len(sys.argv) <= 4:
+        year  = int(sys.argv[1])
+        month = int(sys.argv[2])
+        day   = int(sys.argv[3])
+    if len(sys.argv) == 5:
+        db_file = sys.argv[4]
 
-    print(blob_path, db_file)
+    print(year, month, day, db_file)
 
     db_loader = DbLoader()
     db_loader.open_db()
-    db_loader.load_from_blobs(blob_path)
-
+    db_loader.load_from_blob_by_date(year, month, day)
     db_loader.close_db()
