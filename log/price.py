@@ -4,7 +4,7 @@ import log.logdb as logdb;
 from math import ceil
 
 
-TIME_WIDTH = 300
+TIME_WIDTH = 100
 BOARD_TIME_WIDTH = TIME_WIDTH + 1
 NUMBER_OF_LAYERS = 4
 
@@ -155,6 +155,9 @@ class PriceBoard:
 
         #np.savez_compressed(filename, self.data)
 
+    def load(self, filename):
+        pass
+
     def calc_static(self, a):
         """
         calc matrix non zero mean and stddev
@@ -209,7 +212,7 @@ class PriceBoardDB(PriceBoard):
         for offset in range(0, TIME_WIDTH):
             #todo need tuning the window size
             if offset < 300:
-                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 1):
+                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 2):
                     error_count = error_count + 1
             elif offset < 120:
                 if not PriceBoardDB.load_from_db_time(db, board, time, offset, 8):

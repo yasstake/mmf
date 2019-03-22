@@ -17,6 +17,7 @@ RUN cd /tmp && wget https://bootstrap.pypa.io/get-pip.py && /usr/bin/python3.7 g
 RUN /usr/bin/python3.7 -m pip install websocket-client==0.47
 RUN /usr/bin/python3.7 -m pip install gym
 RUN /usr/bin/python3.7 -m pip install --upgrade google-cloud-storage
+RUN /usr/bin/python3.7 -m pip install --upgrade tensorflow
 
 RUN git clone https://github.com/yasstake/mmf.git
 
