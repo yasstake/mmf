@@ -12,3 +12,10 @@ ORDER_BOOK_DATA_LIMIT = 100
 
 LOG_PROJECT_NAME = 'bitmmf'
 LOG_BUCKET_NAME= 'mmflog'
+
+class ACTION:
+    NOP = 0
+    BUY = 1
+    SELL = 2
+    BUY_NOW = 3
+    SELL_NOW = 4

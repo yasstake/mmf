@@ -58,6 +58,7 @@ class LogDb:
                     (time integer primary key, 
                     sell_min integer, sell_volume integer, sell_list BLOB,
                     buy_max  integer, buy_volume  integer, buy_list BLOB,
+                    ba integer default NULL,
                     market_order_sell integer default NULL,
                     market_order_buy integer default NULL,
                     fix_order_sell integer default NULL,
@@ -428,14 +429,67 @@ class LogDb:
                 continue
 
             fix_order_sell = self.calc_fixed_order_sell(time, 1)
-            if fix_order_sell == None:
-                continue
-
             fix_order_buy  = self.calc_fixed_order_buy(time, 1)
-            if fix_order_buy:
-                continue
 
             self.cursor.execute(update_sql, (market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, time))
+
+
+    def update_all_best_action(self):
+        time_sql = """select time from order_book where ba is NULL"""
+        update_sql = """update order_book set ba = ? where time = ?"""
+        select_order_sql = """select market_order_sell, market_order_buy, fix_order_sell, fix_order_buy from order_book where time = ?"""
+
+        self.cursor.execute(time_sql)
+
+        for rec in self.cursor.fetchall():
+            time = rec[0]
+
+
+            rec = self.cursor.execute(select_order_sql, (time))
+            if rec == None:
+                continue
+
+            market_order_sell, market_order_buy, fix_order_sell, fix_order_buy = rec
+
+            rec = self.cursor.execute(select_order_sql, (time+600))
+            if rec == None:
+                continue
+
+            market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_oder_buy_f = rec
+
+            best_action = self.best_action(market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_oder_buy_f)
+
+            self.cursor.execute(update_sql, (best_action, time))
+
+
+    def best_action(self, market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_order_buy_f):
+        MARGIN = 2
+
+        action = constant.ACTION.NOP
+
+        if fix_order_buy:
+            if fix_order_buy < fix_order_sell_f or fix_order_buy < market_order_sell_f - MARGIN:
+                action = constant.ACTION.BUY
+        elif fix_order_sell:
+            if fix_order_buy_f < fix_order_sell or market_order_buy_f + MARGIN < fix_order_sell:
+                action = constant.ACTION.SELL
+        elif market_order_buy:
+            if market_order_buy + MARGIN < fix_order_sell_f or market_order_buy + MARGIN < market_order_sell_f - MARGIN:
+                action = constant.ACTION.BUY_NOW
+        elif market_order_sell:
+            if fix_order_buy_f < market_order_sell - MARGIN or market_order_buy_f + MARGIN < market_order_sell - MARGIN:
+                action = constant.ACTION.SELL_NOW
+
+        if action:
+            print("best action->", action)
+
+        return action
+
+
+
+
+
+
 
     def calc_latest_time(self):
         time_sql = """select time from order_book order by time desc"""

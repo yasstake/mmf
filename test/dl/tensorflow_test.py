@@ -1,5 +1,5 @@
 import unittest
-
+import numpy as np
 import tensorflow as tf
 
 from log.price import PriceBoard
@@ -87,6 +87,11 @@ class TfTestCase(unittest.TestCase):
             time, buy = sess.run(next_dataset)
 
         print('time->', time)
+        print('buy->', buy)
+
+        buy2D = np.frombuffer(buy, dtype=np.uint8)
+
+        print(buy2D)
 
     @staticmethod
     def read_tfrecord(serialized):
@@ -103,7 +108,7 @@ class TfTestCase(unittest.TestCase):
         buy = features['buy']
         time = features['time']
 
-        return buy, time
+        return time, buy
 
 
 if __name__ == '__main__':

@@ -5,6 +5,8 @@ from log.dbloader import DbLoader
 import test.data as data
 import json
 
+import log.constant as constant
+
 
 class LogDbTest(unittest.TestCase):
 
@@ -473,6 +475,34 @@ class LogDbTest(unittest.TestCase):
 
         line = db.select_order_book(1553099023)
         print(line)
+
+
+    def test_best_action(self):
+        db = LogDb()
+
+        action = db.best_action(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
+                       fix_order_buy=0, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=0)
+        self.assertEqual(action, constant.ACTION.NOP)
+
+        action = db.best_action(market_order_buy=10, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=14.5,
+                       fix_order_buy=10, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=11)
+        self.assertEqual(action, constant.ACTION.BUY)
+
+        action = db.best_action(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
+                       fix_order_buy=0, fix_order_buy_f=9, fix_order_sell=10, fix_order_sell_f=0)
+        self.assertEqual(action, constant.ACTION.SELL)
+
+        action = db.best_action(market_order_buy=10, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=14.5,
+                       fix_order_buy=0, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=0)
+        self.assertEqual(action, constant.ACTION.BUY_NOW)
+
+        action = db.best_action(market_order_buy=0, market_order_buy_f=10, market_order_sell=14.5, market_order_sell_f=0,
+                       fix_order_buy=0, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=0)
+        self.assertEqual(action, constant.ACTION.SELL_NOW)
+
+
+
+
 
 
 
