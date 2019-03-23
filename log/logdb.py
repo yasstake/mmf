@@ -443,15 +443,17 @@ class LogDb:
 
         for rec in self.cursor.fetchall():
             time = rec[0]
+            print(time)
 
-
-            rec = self.cursor.execute(select_order_sql, (time))
+            self.cursor.execute(select_order_sql, (time,))
+            rec = self.cursor.fetchone()
             if rec == None:
                 continue
 
             market_order_sell, market_order_buy, fix_order_sell, fix_order_buy = rec
 
-            rec = self.cursor.execute(select_order_sql, (time+600))
+            self.cursor.execute(select_order_sql, (time+600,))
+            rec = self.cursor.fetchone()
             if rec == None:
                 continue
 
@@ -468,11 +470,17 @@ class LogDb:
         action = constant.ACTION.NOP
 
         if fix_order_buy:
-            if fix_order_buy < fix_order_sell_f or fix_order_buy < market_order_sell_f - MARGIN:
-                action = constant.ACTION.BUY
+            if fix_order_sell_f:
+                if fix_order_buy < fix_order_sell_f:
+                    action = constant.ACTION.BUY
+                if  fix_order_buy < market_order_sell_f - MARGIN:
+                    action = constant.ACTION.BUY
         elif fix_order_sell:
-            if fix_order_buy_f < fix_order_sell or market_order_buy_f + MARGIN < fix_order_sell:
-                action = constant.ACTION.SELL
+            if fix_order_buy_f:
+                if fix_order_buy_f < fix_order_sell:
+                    action = constant.ACTION.SELL
+                if market_order_buy_f + MARGIN < fix_order_sell:
+                    action = constant.ACTION.SELL
         elif market_order_buy:
             if market_order_buy + MARGIN < fix_order_sell_f or market_order_buy + MARGIN < market_order_sell_f - MARGIN:
                 action = constant.ACTION.BUY_NOW

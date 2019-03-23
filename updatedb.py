@@ -3,18 +3,18 @@ import os
 import sys
 
 if __name__ == "__main__":
-    log_dir = os.sep + 'tmp'
+
     db_file = os.sep + 'tmp' + os.sep + 'bitlog.db'
 
-    if len(sys.argv) == 3:
-        log_dir = sys.argv[1]
-        db_file = sys.argv[2]
+    if len(sys.argv) == 2:
+        db_file = sys.argv[1]
 
-    print(log_dir, db_file)
+    print(db_file)
 
     db = LogDb(db_file)
 
     db.connect()
     db.create_cursor()
     db.update_all_order_prices()
+    db.update_all_best_action()
     db.close()
