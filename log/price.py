@@ -324,12 +324,22 @@ class PriceBoardDB(PriceBoard):
                 time_window = 6
 
         board.normalize()
+
+        #load prices
+        prices = db.select_order_book_price()
+        board.market_sell_price = 0
+        board.market_buy_price = 0
+
+        board.fix_sell_price = 0
+        board.fix_buy_price = 0
+
         #load funding
         funding = db.select_funding(time)
 
         if funding:
             t, p = funding
-            board.set_funding(t, p)
+            board.funding_ttl = 0
+            board.funding = 0
 
         if 10 < error_count:
             return None

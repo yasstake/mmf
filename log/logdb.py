@@ -434,25 +434,32 @@ class LogDb:
             self.cursor.execute(update_sql, (market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, time))
 
 
+    def select_order_prices(self, time):
+        select_order_sql = """select market_order_sell, market_order_buy, fix_order_sell, fix_order_buy from order_book where time = ?"""
+        self.cursor.execute(select_order_sql, (time,))
+        rec = self.cursor.fetchone()
+        if rec == None:
+            return None
+        market_order_sell, market_order_buy, fix_order_sell, fix_order_buy = rec
+
+        return market_order_sell, market_order_buy, fix_order_sell, fix_order_buy
+
     def update_all_best_action(self):
         time_sql = """select time from order_book where ba is NULL"""
         update_sql = """update order_book set ba = ? where time = ?"""
-        select_order_sql = """select market_order_sell, market_order_buy, fix_order_sell, fix_order_buy from order_book where time = ?"""
 
         self.cursor.execute(time_sql)
 
         for rec in self.cursor.fetchall():
             time = rec[0]
 
-            self.cursor.execute(select_order_sql, (time,))
-            rec = self.cursor.fetchone()
-            if rec == None:
+            rec = self.select_order_prices(time)
+            if rec  == None:
                 continue
 
             market_order_sell, market_order_buy, fix_order_sell, fix_order_buy = rec
 
-            self.cursor.execute(select_order_sql, (time+600,))
-            rec = self.cursor.fetchone()
+            rec = self.select_order_prices(time + constant.FORCAST_TIME)
             if rec == None:
                 continue
 
