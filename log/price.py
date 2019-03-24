@@ -326,12 +326,15 @@ class PriceBoardDB(PriceBoard):
         board.normalize()
 
         #load prices
-        prices = db.select_order_book_price()
-        board.market_sell_price = 0
-        board.market_buy_price = 0
+        prices = db.select_order_book_price(time)
+        if prices:
+            market_order_sell, market_order_buy, fix_order_sell, fix_order_buy = prices
 
-        board.fix_sell_price = 0
-        board.fix_buy_price = 0
+            board.market_sell_price = market_order_sell
+            board.market_buy_price = market_order_buy
+
+            board.fix_sell_price = fix_order_sell
+            board.fix_buy_price = fix_order_buy
 
         #load funding
         funding = db.select_funding(time)
