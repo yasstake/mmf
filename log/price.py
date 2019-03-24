@@ -1,14 +1,12 @@
 import numpy as np
 from log.constant import *
 import log.logdb as logdb;
-from math import ceil
-
+import tensorflow as tf
 
 TIME_WIDTH = 128
 BOARD_WIDTH = 32
 BOARD_TIME_WIDTH = TIME_WIDTH + 1
 NUMBER_OF_LAYERS = 4
-
 
 class PriceBoard:
     """
@@ -32,14 +30,16 @@ class PriceBoard:
         self.my_sell_order = {}
         self.my_buy_order = {}
 
-        self.market_sell_price = None
-        self.market_buy_price = None
+        self.market_sell_price = 0
+        self.market_buy_price = 0
 
-        self.fix_sell_price = None
-        self.fix_buy_price = None
+        self.fix_sell_price = 0
+        self.fix_buy_price = 0
 
-        self.funding_ttl = None
-        self.funding = None
+        self.funding_ttl = 0
+        self.funding = 0
+
+        self.best_action = ACTION.NOP
 
 
     def add_sell_order(self, price, size):
@@ -155,6 +155,97 @@ class PriceBoard:
         np.savez_compressed(filename + "sell_trade", self.sell_trade)
 
         #np.savez_compressed(filename, self.data)
+
+    def feature_int64(self, a):
+        return tf.train.Feature(int64_list=tf.train.Int64List(value=[a]))
+
+    def feature_bytes(self, a):
+        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[a]))
+
+    def save_tf_record(self, output_file='/tmp/data.tfrecords'):
+        pio = tf.python_io
+
+        writer = pio.TFRecordWriter(str(output_file), options=pio.TFRecordOptions(pio.TFRecordCompressionType.GZIP))
+#        writer = pio.TFRecordWriter(str(output_file))
+
+        record = self._tf_example_record()
+
+        writer.write(record.SerializeToString())
+
+        writer.close()
+
+    def _tf_example_record(self):
+        record = tf.train.Example(features=tf.train.Features(feature={
+            'buy': self.feature_bytes(self.buy_order.tobytes()),
+            'sell': self.feature_bytes(self.sell_order.tobytes()),
+            'buy_trade': self.feature_bytes(self.buy_trade.tobytes()),
+            'sell_trade': self.feature_bytes(self.sell_trade.tobytes()),
+            'market_buy_price': self.feature_int64(self.market_buy_price),
+            'market_sell_price': self.feature_int64(self.market_sell_price),
+            'fix_buy_price': self.feature_int64(self.fix_buy_price),
+            'fix_sell_price': self.feature_int64(self.fix_sell_price),
+            'ba': self.feature_int64(self.best_action),
+            'time': self.feature_int64(self.current_time)
+            }))
+
+        return record
+
+
+    def load_tf_record(self, input_file_name='/tmp/data.tfrecords'):
+        with tf.Session() as sess:
+            dataset = tf.data.TFRecordDataset(input_file_name, compression_type='GZIP')
+            dataset2 = dataset.map(PriceBoard.read_tfrecord)
+            iterator = dataset2.make_initializable_iterator()
+            next_dataset = iterator.get_next()
+            sess.run(iterator.initializer)
+            buy, sell, buy_trade, sell_trade, market_buy_price, \
+                   market_sell_price, fix_buy_price, fix_sell_price, ba, time = sess.run(next_dataset)
+
+        self.buy = np.frombuffer(buy, dtype=np.uint8).reshape(BOARD_TIME_WIDTH, BOARD_WIDTH)
+        self.sell= np.frombuffer(sell, dtype=np.uint8).reshape(BOARD_TIME_WIDTH, BOARD_WIDTH)
+        self.buy_trade = np.frombuffer(buy_trade, dtype=np.uint8).reshape(BOARD_TIME_WIDTH, BOARD_WIDTH)
+        self.sell_trade = np.frombuffer(sell_trade, dtype=np.uint8).reshape(BOARD_TIME_WIDTH, BOARD_WIDTH)
+        self.market_buy_price = market_buy_price
+        self.market_sell_price = market_sell_price
+        self.fix_buy_price = fix_buy_price
+        self.fix_sell_price = fix_sell_price
+        self.ba = ba
+        self.time = time
+
+
+    @staticmethod
+    def read_tfrecord(serialized):
+        buy = None
+        time = None
+
+        features = tf.parse_single_example(
+            serialized,
+            features={
+                'buy': tf.FixedLenFeature([], tf.string),
+                'sell': tf.FixedLenFeature([], tf.string),
+                'buy_trade': tf.FixedLenFeature([], tf.string),
+                'sell_trade': tf.FixedLenFeature([], tf.string),
+                'market_buy_price': tf.FixedLenFeature([], tf.int64),
+                'market_sell_price': tf.FixedLenFeature([], tf.int64),
+                'fix_buy_price': tf.FixedLenFeature([], tf.int64),
+                'fix_sell_price': tf.FixedLenFeature([], tf.int64),
+                'ba': tf.FixedLenFeature([], tf.int64),
+                'time': tf.FixedLenFeature([], tf.int64)
+            })
+
+        buy = features['buy']
+        sell= features['sell']
+        buy_trade = features['buy_trade']
+        sell_trade = features['sell_trade']
+        market_buy_price = features['market_buy_price']
+        market_sell_price = features['market_sell_price']
+        fix_buy_price = features['fix_buy_price']
+        fix_sell_price = features['fix_sell_price']
+        ba = features['ba']
+        time = features['time']
+
+        return  buy,    sell,     buy_trade,    sell_trade,    market_buy_price,\
+                market_sell_price,    fix_buy_price,    fix_sell_price, ba,  time
 
     def load(self, filename):
         pass

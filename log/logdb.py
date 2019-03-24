@@ -443,7 +443,6 @@ class LogDb:
 
         for rec in self.cursor.fetchall():
             time = rec[0]
-            print(time)
 
             self.cursor.execute(select_order_sql, (time,))
             rec = self.cursor.fetchone()
@@ -457,9 +456,18 @@ class LogDb:
             if rec == None:
                 continue
 
-            market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_oder_buy_f = rec
+            market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_order_buy_f = rec
 
-            best_action = self.best_action(market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_oder_buy_f)
+            best_action = self.best_action(market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_order_buy_f)
+
+            if best_action == constant.ACTION.SELL:
+                print("[BA] SELL-> fos, mob", time, fix_order_sell, fix_order_sell_f, market_order_sell_f)
+            elif best_action == constant.ACTION.BUY:
+                print("[BA] BUY -> fob, mos", time, fix_order_buy, fix_order_sell_f, market_order_sell_f)
+            elif best_action == constant.ACTION.SELL_NOW:
+                print("[BA]SELLN  -> mos, mob", time, market_order_sell, fix_order_buy_f, market_order_buy_f)
+            elif best_action == constant.ACTION.BUY_NOW:
+                print("[BA]BUYN -> mob, mos", time, market_order_buy, fix_order_buy_f, market_order_sell_f)
 
             self.cursor.execute(update_sql, (best_action, time))
 
@@ -487,9 +495,6 @@ class LogDb:
         elif market_order_sell:
             if fix_order_buy_f < market_order_sell - MARGIN or market_order_buy_f + MARGIN < market_order_sell - MARGIN:
                 action = constant.ACTION.SELL_NOW
-
-        if action:
-            print("best action->", action)
 
         return action
 

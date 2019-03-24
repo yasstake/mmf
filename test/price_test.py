@@ -47,6 +47,19 @@ class MyTestCase(unittest.TestCase):
 
         board.save("/tmp/boarddump.npz")
 
+    def test_save_tf_record(self):
+        board = PriceBoardDB()
+
+        board.normalize()
+
+        board.save_tf_record()
+
+    def test_load_tf_record(self):
+        board = PriceBoardDB()
+
+        board.load_tf_record()
+
+
 
     def test_load_from_db_one_rec(self):
         end_time = self.calc_end_time()
