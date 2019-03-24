@@ -4,7 +4,8 @@ import log.logdb as logdb;
 from math import ceil
 
 
-TIME_WIDTH = 100
+TIME_WIDTH = 128
+BOARD_WIDTH = 32
 BOARD_TIME_WIDTH = TIME_WIDTH + 1
 NUMBER_OF_LAYERS = 4
 
@@ -23,10 +24,10 @@ class PriceBoard:
         self.current_time = 0
         self.center_price = 0
 
-        self.sell_trade = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
-        self.buy_trade = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
-        self.sell_order = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
-        self.buy_order = np.zeros((BOARD_TIME_WIDTH, BOOK_DEPTH))
+        self.sell_trade = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
+        self.buy_trade = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
+        self.sell_order = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
+        self.buy_order = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
 
         self.my_sell_order = {}
         self.my_buy_order = {}
@@ -67,9 +68,9 @@ class PriceBoard:
 
     def get_position(self, time, price):
         t = int(self.current_time - time) + 1 # first line[0] is for actual
-        p = int((price - self.center_price) / PRICE_UNIT + BOOK_DEPTH / 2)
+        p = int((price - self.center_price) / PRICE_UNIT + BOARD_WIDTH / 2)
 
-        if p < 0 or BOOK_DEPTH <= p:
+        if p < 0 or BOARD_WIDTH <= p:
             return None
 
         return t, p
@@ -207,22 +208,29 @@ class PriceBoardDB(PriceBoard):
 
         board.set_center_price(center_price)
 
+        print(time)
+
         error_count = 0
+        query_time = time
+        time_window = 1
 
         for offset in range(0, TIME_WIDTH):
-            #todo need tuning the window size
-            if offset < 300:
-                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 2):
-                    error_count = error_count + 1
-            elif offset < 120:
-                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 8):
-                    error_count = error_count + 1
-            elif offset < 180:
-                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 16):
-                    error_count = error_count + 1
+            if not PriceBoardDB.load_from_db_time(db, board, time, offset, query_time, time_window):
+                error_count = error_count + 1
+            query_time = query_time - time_window
+
+            if time - query_time < 8:
+                pass
+            elif time - query_time < 16:
+                time_window = 2
+            elif time - query_time < 32:
+                time_window = 3
+            elif time - query_time < 64:
+                time_window = 4
+            elif time - query_time < 128:
+                time_window = 5
             else:
-                if not PriceBoardDB.load_from_db_time(db, board, time, offset, 32):
-                    error_count = error_count + 1
+                time_window = 6
 
         board.normalize()
         #load funding
@@ -239,37 +247,35 @@ class PriceBoardDB(PriceBoard):
 
 
     @staticmethod
-    def load_from_db_time(db, board, time_origin, offset = 0, magnifier = 1):
-        query_time = time_origin - offset * magnifier
+    def load_from_db_time(db, board, time_origin, offset, query_time, time_window=1):
+
         #load sell order
-        for t, price, volume in db.select_sell_trade(query_time, magnifier):
-            board.add_sell_trade(time_origin - offset, price, volume)
+        for t, price, volume in db.select_sell_trade(query_time, time_window):
+            board.add_sell_trade(time_origin - offset, price, volume / time_window)
 
         #load buy order
-        for t, price, volume in db.select_buy_trade(query_time, magnifier):
-            board.add_buy_trade(time_origin - offset, price, volume)
+        for t, price, volume in db.select_buy_trade(query_time, time_window):
+            board.add_buy_trade(time_origin - offset, price, volume / time_window)
 
         #load order book
         order_book = None
 
         max_retry = 100
-        if magnifier < max_retry:
-            max_retry = magnifier + 50
+        if time_window < max_retry:
+            max_retry = time_window + 50
 
         retry = 0
         while(not order_book and retry < max_retry):
             order_book = db.select_order_book(query_time - retry)
             retry = retry + 1
             if not order_book:
-                # todo: consider time tick to be 2 second, if there is so many retry
-                print("retry order book", query_time - retry)
+                print("retry order book", query_time - retry, time_origin - query_time)
 
         if order_book:
             t, sell_min, sell_book, buy_max, buy_book = order_book
             board.set_sell_order_book(time_origin - offset, sell_min, sell_book)
             if(len(sell_book) < 10):
                 print("shot->", time_origin - offset, sell_book)
-
 
             board.set_buy_order_book(time_origin - offset, buy_max, buy_book)
 

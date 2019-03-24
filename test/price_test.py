@@ -90,32 +90,25 @@ class MyTestCase(unittest.TestCase):
         end_time = self.calc_end_time()
 
         t = end_time
+#        t = 1552695458
 
         board = PriceBoardDB.load_from_db(t)
 
-        print(board)
-
-        print("sttistics")
-
-        mean, stddev = board.calc_static(board.buy_order+board.sell_order)
-
-        array = board.normalize_array(board.buy_order, mean + stddev)
+        array = board.buy_order
         plt.imshow(array, vmin=0, vmax=255)
         plt.figure()
 
-        array = board.normalize_array(board.sell_order, mean + stddev)
+        array = board.sell_order
         plt.imshow(array, vmin=0, vmax=255)
         plt.figure()
 
         np.savez_compressed('/tmp/compress_sell_order.npz', array)
 
-        mean, stddev = board.calc_static(board.buy_trade + board.sell_trade)
-
-        array = board.normalize_array(board.buy_trade, mean + stddev)
+        array = board.buy_trade
         plt.imshow(array, vmin=0, vmax=100)
         plt.figure()
 
-        array = board.normalize_array(board.sell_trade, mean + stddev)
+        array = board.sell_trade
         plt.imshow(array, vmin=0, vmax=100)
         plt.figure()
 
@@ -146,6 +139,9 @@ class MyTestCase(unittest.TestCase):
         print("time->", end_time)
 
         t = end_time
+
+        t = 1552695065
+
         board = PriceBoardDB.load_from_db(t)
 
         plt.imshow(board.buy_order, vmin=0, vmax=200)

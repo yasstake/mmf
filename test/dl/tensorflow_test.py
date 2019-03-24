@@ -77,6 +77,28 @@ class TfTestCase(unittest.TestCase):
         writer.close()
 
 
+    def test_save_file_2rec(self):
+        board = PriceBoard()
+
+        output_file = '/tmp/data2.tfrecords'
+        pio = tf.python_io
+
+        #        writer = pio.TFRecordWriter(
+        #                      str(output_file), options=pio.TFRecordOptions(pio.TFRecordCompressionType.GZIP))
+        writer = pio.TFRecordWriter(str(output_file))
+
+        board.current_time = 1
+        record = tf.train.Example(features=tf.train.Features(feature={
+            'buy': self.feature_bytes(board.buy_order.tobytes()),
+            'time' : self.feature_int64(board.current_time)
+            }))
+
+        writer.write(record.SerializeToString())
+        writer.write(record.SerializeToString())
+
+        writer.close()
+
+
     def test_load_file(self):
         with tf.Session() as sess:
             dataset = tf.data.TFRecordDataset('/tmp/data.tfrecords')
@@ -92,6 +114,23 @@ class TfTestCase(unittest.TestCase):
         buy2D = np.frombuffer(buy, dtype=np.uint8)
 
         print(buy2D)
+
+    def test_load_file_2rec(self):
+        with tf.Session() as sess:
+            dataset = tf.data.TFRecordDataset('/tmp/data2.tfrecords')
+            dataset2 = dataset.map(TfTestCase.read_tfrecord)
+            iterator = dataset2.make_initializable_iterator()
+            next_dataset = iterator.get_next()
+            sess.run(iterator.initializer)
+            time, buy = sess.run(next_dataset)
+
+        print('time->', time)
+        print('buy->', buy)
+
+        buy2D = np.frombuffer(buy, dtype=np.uint8)
+
+        print(buy2D)
+
 
     @staticmethod
     def read_tfrecord(serialized):
