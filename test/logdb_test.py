@@ -477,6 +477,33 @@ class LogDbTest(unittest.TestCase):
         print(line)
 
 
+    def test_best_actions(self):
+        db = LogDb()
+
+        action = db.best_actions(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
+                       fix_order_buy=0, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=0)
+        self.assertTrue(action == constant.ACTION.NOP)
+
+        action = db.best_actions(market_order_buy=10, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=14.5,
+                       fix_order_buy=10, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=11)
+        self.assertTrue(action & constant.ACTION.BUY)
+
+        action = db.best_actions(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
+                       fix_order_buy=0, fix_order_buy_f=9, fix_order_sell=10, fix_order_sell_f=0)
+        self.assertTrue(action & constant.ACTION.SELL)
+
+        action = db.best_actions(market_order_buy=10, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=14.5,
+                       fix_order_buy=0, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=0)
+        self.assertTrue(action & constant.ACTION.BUY_NOW)
+
+        action = db.best_actions(market_order_buy=0, market_order_buy_f=10, market_order_sell=14.5, market_order_sell_f=0,
+                       fix_order_buy=0, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=0)
+        self.assertTrue(action & constant.ACTION.SELL_NOW)
+
+
+
+
+
     def test_best_action(self):
         db = LogDb()
 

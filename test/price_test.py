@@ -59,8 +59,6 @@ class MyTestCase(unittest.TestCase):
 
         board.load_tf_record()
 
-
-
     def test_load_from_db_one_rec(self):
         end_time = self.calc_end_time()
         self._load_from_db_one_rec_with_time(end_time)

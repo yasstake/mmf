@@ -3,11 +3,6 @@ from log.constant import *
 import log.logdb as logdb;
 import tensorflow as tf
 
-TIME_WIDTH = 128
-BOARD_WIDTH = 32
-BOARD_TIME_WIDTH = TIME_WIDTH + 1
-NUMBER_OF_LAYERS = 4
-
 class PriceBoard:
     """
     represent order book board and its history
