@@ -145,6 +145,8 @@ class MyTestCase(unittest.TestCase):
         print(date_path(2019, 3, 1, -2))
 
 
+    def test_time_sprit_day(self):
+        print(sprit_timestamp(0))
 
 #:[{"timestamp":"2019-02-28T23:02:14.807Z","side":"Buy","size":104,"price":3791.5,"tickDirection":"ZeroPlusTick"}],
 #"TIME":1551362533}

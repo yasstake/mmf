@@ -157,17 +157,22 @@ class PriceBoard:
     def feature_bytes(self, a):
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[a]))
 
-    def save_tf_record(self, output_file='/tmp/data.tfrecords'):
+    def get_tf_writer(self, output_file='/tmp/data.tfrecords'):
         pio = tf.python_io
-
         writer = pio.TFRecordWriter(str(output_file), options=pio.TFRecordOptions(pio.TFRecordCompressionType.GZIP))
-#        writer = pio.TFRecordWriter(str(output_file))
 
+        return writer
+
+    def save_tf_record(self, output_file='/tmp/data.tfrecords'):
+        writer = self.get_tf_writer(output_file)
+        self.save_tf_to_writer(writer)
+        writer.close()
+
+    def save_tf_to_writer(self, writer):
         record = self._tf_example_record()
 
         writer.write(record.SerializeToString())
 
-        writer.close()
 
     def _tf_example_record(self):
         record = tf.train.Example(features=tf.train.Features(feature={
@@ -277,6 +282,30 @@ class PriceBoard:
 
 
 class PriceBoardDB(PriceBoard):
+    @staticmethod
+    def load_and_export_db(db_name = "/tmp/bitlog.db"):
+        #
+
+        pass
+
+
+
+    @staticmethod
+    def start_time():
+        db = logdb.LogDb('/tmp/bitlog.db')
+        db.connect()
+        db.create_cursor()
+
+        start_time, end_time = db.get_db_info()
+
+        db.close()
+
+        return start_time, end_time
+
+    @staticmethod
+    def end_time():
+        pass
+
     @staticmethod
     def load_from_db(time, db_name = "/tmp/bitlog.db"):
         db = logdb.LogDb(db_name)

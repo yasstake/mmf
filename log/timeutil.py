@@ -2,6 +2,8 @@ import re
 import datetime
 #from pytz import utc
 
+
+
 def time_sec(iso_time):
     if iso_time.endswith('Z'):
         iso_time = iso_time.replace('Z', '+00:00')
@@ -11,7 +13,6 @@ def time_sec(iso_time):
     sec = datetime.datetime.strptime(iso_time, "%Y-%m-%dT%H:%M:%S.%f%z")
 
     return sec.timestamp()
-
 
 def timestamp():
     return _timestamp()
@@ -33,10 +34,15 @@ def date_string(time = None):
     return time.strftime('%Y-%m-%d')
 
 
-def time_stamp_string(time = None):
+def time_stamp_object(time = None):
     if not time:
         time = timestamp()
-    time = datetime.datetime.utcfromtimestamp(time)
+
+    return datetime.datetime.utcfromtimestamp(time)
+
+
+def time_stamp_string(time = None):
+    time = time_stamp_object(time)
 
     return time.isoformat() + 'Z'
 
@@ -47,3 +53,7 @@ def date_path(yyyy, mm, dd, offset=0, separator='-'):
     return '{:04d}'.format(date.year) + separator + '{:02d}'.format(date.month) + separator + '{:02d}'.format(date.day)
 
 
+def sprit_timestamp(time):
+    time = time_stamp_object(time)
+
+    return time.year, time.month, time.day, time.hour, time.minute

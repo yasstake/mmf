@@ -9,23 +9,24 @@ import numpy as np
 # just do https://keras.io/ tutorial
 
 
-
-
-
 class MyTestCase(unittest.TestCase):
+
     def test_first_tutorial(self):
+        '''
+        example from https://keras.io/getting-started/sequential-model-guide/
+        :return:
+        '''
         model = Sequential()
 
-        model.add(Dense(units=32, activation='relu', input_dim=10))
+        model.add(Dense(units=64, activation='relu', input_dim=100))
         model.add(Dense(units=10, activation='softmax'))
 
         model.summary()
 
         model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
 
-        data = np.random.random((1000, 10))
-
-        labels = np.random.randint(10, size=(10, 1))
+        data = np.random.random((1000, 100))
+        labels = np.random.randint(10, size=(1000, 1))
 
         one_hot_labels = keras.utils.to_categorical(labels, num_classes=10)
 
@@ -33,7 +34,7 @@ class MyTestCase(unittest.TestCase):
 
         print (model.predict(data))
 
-        print(model.predict([.05,1,1,1,1,1,1,1,1,1]))
+
 
     def test_first_tutorial_mod(self):
         model = Sequential()

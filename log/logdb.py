@@ -415,25 +415,25 @@ class LogDb:
             return None
 
     def update_all_order_prices(self):
-        time_sql = """select time from order_book where market_order_sell is NULL"""
+        time_sql = """select time, sell_min from order_book where market_order_sell is NULL"""
         update_sql = """update order_book set market_order_sell = ?, market_order_buy = ?, fix_order_sell = ?, fix_order_buy = ? where time = ?"""
 
         self.cursor.execute(time_sql)
 
         for rec in self.cursor.fetchall():
-            time = rec[0]
-            market_order_sell = self.calc_market_order_sell(time, 5000)
+            time, sell_min = rec
+
+            market_order_sell = self.calc_market_order_sell(time, sell_min)
             if market_order_sell == None:
                 print("cont")
                 continue
 
-            market_order_buy  = self.calc_market_order_buy(time, 5000)
+            market_order_buy  = self.calc_market_order_buy(time, sell_min)
             if market_order_buy == None:
                 continue
 
-
-            fix_order_sell = self.calc_fixed_order_sell(time, 1)
-            fix_order_buy  = self.calc_fixed_order_buy(time, 1)
+            fix_order_sell = self.calc_fixed_order_sell(time, sell_min)
+            fix_order_buy  = self.calc_fixed_order_buy(time, sell_min)
 
             self.cursor.execute(update_sql, (market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, time))
 

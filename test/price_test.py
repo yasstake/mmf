@@ -4,6 +4,7 @@ import numpy as np
 from log.price import PriceBoard
 from log.price import PriceBoardDB
 from log.logdb import LogDb
+from log.timeutil import *
 
 class MyTestCase(unittest.TestCase):
     def test_add_buy_order(self):
@@ -50,9 +51,9 @@ class MyTestCase(unittest.TestCase):
     def test_save_tf_record(self):
         board = PriceBoardDB()
 
-        board.normalize()
-
         board.save_tf_record()
+    #        board.save_tf_record('gs://mmflog/data.tfrecords')
+
 
     def test_load_tf_record(self):
         board = PriceBoardDB()
@@ -142,6 +143,33 @@ class MyTestCase(unittest.TestCase):
         db.create_cursor()
 
         return db.get_db_info()[1]
+
+    def test_db_stat_time(self):
+        DAY_MIN = 24 * 60 * 60
+
+        board = PriceBoardDB()
+
+        start_time, end_time = board.start_time()
+
+        start_midnight = (int(start_time / (DAY_MIN)) + 1) * DAY_MIN
+        end_midnight = (int(end_time / (DAY_MIN))) * DAY_MIN -1
+
+        if(start_time < start_midnight and end_midnight < end_time):
+            print('good data')
+            # todo do something
+
+        width = end_midnight - start_midnight
+
+        time  = start_midnight
+        while time < end_midnight:
+            file = (int(time/60)*60)
+
+            if file == time:
+                file_path = date_string(file)
+                print(file_path, time, file)
+
+            time += 1
+
 
 
     def test_load_from_db_normalize(self):
@@ -241,6 +269,8 @@ class MyTestCase(unittest.TestCase):
         g = f.astype('uint8')
 
         print(g)
+
+
 
 if __name__ == '__main__':
     unittest.main()
