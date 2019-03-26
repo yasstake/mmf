@@ -335,9 +335,8 @@ class LogDb:
             return buy_max - constant.PRICE_UNIT * 2
 
 
-
-
     def is_suceess_fixed_order_sell(self, time, price, volume, time_width = ORDER_TIME_WIDTH):
+        sell_min, sell_volume, buy_max, buy_volume = self.select_order_book_price_with_retry(time)
 
         sql_count_sell_trade  = 'select sum(volume) from buy_trade where  ? <= time and time < ? and ? <= price'
 
@@ -348,7 +347,7 @@ class LogDb:
         if amount[0] is None:
             return False
 
-        if volume * 2 < amount[0]: # 2 is enough margin
+        if volume + sell_volume < amount[0]:
             return True
         else:
             return False
@@ -377,6 +376,7 @@ class LogDb:
             return None
 
     def is_suceess_fixed_order_buy(self, time, price, volume, time_width = ORDER_TIME_WIDTH):
+        sell_min, sell_volume, buy_max, buy_volume = self.select_order_book_price_with_retry(time)
         sql_count_sell_trade  = 'select sum(volume) from sell_trade where  ? <= time and time < ? and price <= ?'
 
         self.cursor.execute(sql_count_sell_trade, (time, time + time_width, price))
@@ -386,7 +386,7 @@ class LogDb:
         if amount[0] is None:
             return False
 
-        if volume * 2 < amount[0]: # 2 is enough margin
+        if volume + buy_volume < amount[0]: # 2 is enough margin
             return True
         else:
             return False
@@ -469,62 +469,96 @@ class LogDb:
 
             market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_order_buy_f = rec
 
-            best_action = self.best_action(market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_order_buy_f)
+            best_action = self.best_actions(market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_order_buy_f)
 
-            if best_action == constant.ACTION.SELL:
-                print("[BA] SELL-> fos, mob", time, fix_order_sell, fix_order_sell_f, market_order_sell_f)
-            elif best_action == constant.ACTION.BUY:
-                print("[BA] BUY -> fob, mos", time, fix_order_buy, fix_order_sell_f, market_order_sell_f)
-            elif best_action == constant.ACTION.SELL_NOW:
-                print("[BA]SELLN  -> mos, mob", time, market_order_sell, fix_order_buy_f, market_order_buy_f)
-            elif best_action == constant.ACTION.BUY_NOW:
-                print("[BA]BUYN -> mob, mos", time, market_order_buy, fix_order_buy_f, market_order_sell_f)
+            if best_action != constant.ACTION.NOP:
+                print(time, ' ', end='')
+                print("fob  {}, mob  {}, fos  {}, mos  {} / ".format(fix_order_buy, market_order_buy, fix_order_sell, market_order_sell), end='')
+                print("fobF {}, mobF {}, fosF {}, mosF {}".format(fix_order_buy_f, market_order_buy_f, fix_order_sell_f, market_order_sell_f), end='')
+
+                if best_action & constant.ACTION.SELL:
+                    print(' sell', end='')
+                if best_action & constant.ACTION.SELL_NOW:
+                    print(' SELL', end='')
+                if best_action & constant.ACTION.BUY:
+                    print(' buy', end='')
+                if best_action & constant.ACTION.BUY_NOW:
+                    print(' BUY', end='')
+
+                print("")
 
             self.cursor.execute(update_sql, (best_action, time))
 
-    def best_actions(self, market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f,
-                        market_order_buy_f, fix_order_sell_f, fix_order_buy_f):
+
+    def best_actions(self, market_order_sell, market_order_buy, fix_order_sell, fix_order_buy,
+                        market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_order_buy_f):
 
         MARGIN = 1
-        MAKER = -0.025*0.01
-        TAKER =  0.075*0.01
+        MAKER_BUY =   (1 - ( 0.00025))
+        TAKER_BUY =   (      1.00075)
 
-        action = 0
+        MAKER_SELL =  (1 + (0.00025))
+        TAKER_SELL =  (1 -  0.00075)
+
+        if market_order_sell:
+            market_order_sell = market_order_sell * TAKER_SELL
+
+        if market_order_sell_f:
+            market_order_sell_f = market_order_sell_f * TAKER_SELL
+
+        if market_order_buy:
+            market_order_buy  = market_order_buy * TAKER_BUY
+
+        if market_order_buy_f:
+            market_order_buy_f=market_order_buy_f * TAKER_BUY
+
+        if fix_order_sell:
+            fix_order_sell=    fix_order_sell * MAKER_SELL
+
+        if fix_order_sell_f:
+            fix_order_sell_f = fix_order_sell_f * MAKER_SELL
+
+        if fix_order_buy:
+            fix_order_buy=     fix_order_buy * MAKER_BUY
+
+        if fix_order_buy_f:
+            fix_order_buy_f    =fix_order_buy_f * MAKER_BUY
+
+        action = 0b0
 
         if fix_order_buy:
             if fix_order_sell_f:
-                if fix_order_buy < fix_order_sell_f:
+                if fix_order_buy + MARGIN < fix_order_sell_f:
                     action |= constant.ACTION.BUY
             if market_order_sell_f:
-                if fix_order_buy < market_order_sell_f:
+                if fix_order_buy + MARGIN < market_order_sell_f:
                     action |= constant.ACTION.BUY
 
         if market_order_buy:
             if fix_order_sell_f:
-                if market_order_buy < fix_order_sell_f:
+                if market_order_buy + MARGIN < fix_order_sell_f:
                     action |= constant.ACTION.BUY_NOW
             if market_order_sell_f:
-                if market_order_buy < market_order_sell_f:
+                if market_order_buy + MARGIN < market_order_sell_f:
                     action |= constant.ACTION.BUY_NOW
 
         if fix_order_sell:
             if fix_order_buy_f:
-                if fix_order_sell > fix_order_buy_f:
+                if fix_order_sell > fix_order_buy_f + MARGIN:
                     action |= constant.ACTION.SELL
             if market_order_buy_f:
-                if fix_order_sell > market_order_buy_f:
+                if fix_order_sell > market_order_buy_f + MARGIN:
                     action |= constant.ACTION.SELL
 
         if market_order_sell:
             if fix_order_buy_f:
-                if market_order_sell > fix_order_buy_f:
+                if market_order_sell > fix_order_buy_f + MARGIN:
                     action |= constant.ACTION.SELL_NOW
             if market_order_buy_f:
-                if market_order_sell > market_order_buy_f:
+                if market_order_sell > market_order_buy_f + MARGIN:
                     action |= constant.ACTION.SELL_NOW
 
         return action
-
 
 
 
