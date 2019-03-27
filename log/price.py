@@ -2,6 +2,7 @@ import numpy as np
 from log.constant import *
 import log.logdb as logdb;
 import tensorflow as tf
+from log.timeutil import *
 
 class PriceBoard:
     """
@@ -154,17 +155,21 @@ class PriceBoard:
     def feature_int64(self, a):
         return tf.train.Feature(int64_list=tf.train.Int64List(value=[a]))
 
+    def feature_float(self, a):
+        return tf.train.Feature(float_list=tf.train.FloatList(value=[a]))
+
     def feature_bytes(self, a):
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[a]))
 
-    def get_tf_writer(self, output_file='/tmp/data.tfrecords'):
+    @staticmethod
+    def get_tf_writer(output_file='/tmp/data.tfrecords'):
         pio = tf.python_io
         writer = pio.TFRecordWriter(str(output_file), options=pio.TFRecordOptions(pio.TFRecordCompressionType.GZIP))
 
         return writer
 
     def save_tf_record(self, output_file='/tmp/data.tfrecords'):
-        writer = self.get_tf_writer(output_file)
+        writer = PriceBoard.get_tf_writer(output_file)
         self.save_tf_to_writer(writer)
         writer.close()
 
@@ -180,10 +185,10 @@ class PriceBoard:
             'sell': self.feature_bytes(self.sell_order.tobytes()),
             'buy_trade': self.feature_bytes(self.buy_trade.tobytes()),
             'sell_trade': self.feature_bytes(self.sell_trade.tobytes()),
-            'market_buy_price': self.feature_int64(self.market_buy_price),
-            'market_sell_price': self.feature_int64(self.market_sell_price),
-            'fix_buy_price': self.feature_int64(self.fix_buy_price),
-            'fix_sell_price': self.feature_int64(self.fix_sell_price),
+            'market_buy_price': self.feature_float(self.market_buy_price),
+            'market_sell_price': self.feature_float(self.market_sell_price),
+            'fix_buy_price': self.feature_float(self.fix_buy_price),
+            'fix_sell_price': self.feature_float(self.fix_sell_price),
             'ba': self.feature_int64(self.best_action),
             'time': self.feature_int64(self.current_time)
             }))
@@ -247,9 +252,6 @@ class PriceBoard:
         return  buy,    sell,     buy_trade,    sell_trade,    market_buy_price,\
                 market_sell_price,    fix_buy_price,    fix_sell_price, ba,  time
 
-    def load(self, filename):
-        pass
-
     def calc_static(self, a):
         """
         calc matrix non zero mean and stddev
@@ -283,10 +285,49 @@ class PriceBoard:
 
 class PriceBoardDB(PriceBoard):
     @staticmethod
-    def load_and_export_db(db_name = "/tmp/bitlog.db"):
-        #
+    def export_board_to_blob(db_name = "/tmp/bitlog.db"):
+        DAY_MIN = 24 * 60 * 60
+        BOARD_IN_FILE = 60
 
-        pass
+        board = PriceBoardDB()
+
+        start_time, end_time = board.start_time()
+
+        start_midnight = (int(start_time / (DAY_MIN)) + 1) * DAY_MIN
+        end_midnight = (int(end_time / (DAY_MIN))) * DAY_MIN - 1
+
+        print(start_time, end_time, start_midnight, end_midnight)
+
+        if not (start_time < start_midnight and end_midnight < end_time):
+            print('wrong data')
+            # todo do something
+            return None
+
+        width = end_midnight - start_midnight
+
+        time = start_midnight
+        tf_writer = None
+        while time < end_midnight:
+            print(time)
+
+            file = (int(time / 60) * 60)
+            if file == time:
+                if tf_writer:
+                    tf_writer.close()
+
+                print('openfile')
+                file_path = date_string(file, '/')
+                tf_writer = PriceBoard.get_tf_writer('/tmp/{}.tfrecords'.format(time_stamp_string(time)))
+
+            board = PriceBoardDB.load_from_db(time, db_name)
+            print(board)
+            board.save_tf_to_writer(tf_writer)
+
+            time += 1
+
+        if tf_writer:
+            tf_writer.close()
+
 
 
 
@@ -316,10 +357,17 @@ class PriceBoardDB(PriceBoard):
 
         board.set_origin_time(time)
 
-        center_price = db.select_center_price(time)
+        retry = 10
+        center_price = None
+        while retry:
+            center_price = db.select_center_price(time)
+            if center_price:
+                break
+            time = time + 1
+            retry = retry - 1
+
         if not center_price:
             print('---DBEND---')
-            return None
 
         board.set_center_price(center_price)
 
@@ -362,6 +410,8 @@ class PriceBoardDB(PriceBoard):
 
         #load funding
         funding = db.select_funding(time)
+
+        db.close()
 
         if funding:
             t, p = funding

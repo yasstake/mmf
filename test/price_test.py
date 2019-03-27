@@ -226,6 +226,8 @@ class MyTestCase(unittest.TestCase):
                 break
             t = t+1
 
+    def test_save_to_tf_record(self):
+        PriceBoardDB.export_board_to_blob()
 
 
     def test_calc_variance(self):
