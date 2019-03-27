@@ -37,11 +37,11 @@ class MyTestCase(unittest.TestCase):
 
         x, y = board.get_position(999, 1000.5)
         self.assertEqual(x, 2)
-        self.assertEqual(y, 51)
+        self.assertEqual(y, 17)
 
         x, y = board.get_position(1000, 1000)
         self.assertEqual(x,1)
-        self.assertEqual(y, 50)
+        self.assertEqual(y, 16)
 
     def test_save(self):
         board = PriceBoardDB()
@@ -50,6 +50,8 @@ class MyTestCase(unittest.TestCase):
 
     def test_save_tf_record(self):
         board = PriceBoardDB()
+
+        board.normalize()
 
         board.save_tf_record()
     #        board.save_tf_record('gs://mmflog/data.tfrecords')
@@ -98,11 +100,34 @@ class MyTestCase(unittest.TestCase):
             print('', end='\n')
         print(board)
 
+    def test_load_from_db_one(self):
+        end_time = self.calc_end_time()
+
+        t = end_time
+
+        board = PriceBoardDB.load_from_db(t)
+
+    def test_load_from_db_100(self):
+        end_time = self.calc_end_time()
+
+        t = end_time
+
+        db = LogDb('/tmp/bitlog.db')
+        db.connect()
+        db.create_cursor()
+
+        retry = 100
+        while retry:
+            board = PriceBoardDB.load_from_connected_db(t-retry, db)
+            retry -= 1
+
+        db.close()
+
     def test_load_from_db(self):
         end_time = self.calc_end_time()
 
         t = end_time
-#        t = 1552695458
+        #        t = 1552695458
 
         board = PriceBoardDB.load_from_db(t)
 

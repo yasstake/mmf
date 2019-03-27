@@ -63,18 +63,18 @@ class PriceBoard:
         return self.center_price
 
     def get_position(self, time, price):
-        t = int(self.current_time - time) + 1 # first line[0] is for actual
         p = int((price - self.center_price) / PRICE_UNIT + BOARD_WIDTH / 2)
 
         if p < 0 or BOARD_WIDTH <= p:
             return None
+
+        t = int(self.current_time - time) + 1 # first line[0] is for actual
 
         return t, p
 
     def set_sell_order_book(self, time, price, line):
         width = 0
 
-        data_width = 0
         for vol in line:
             pos = self.get_position(time, price)
             if not pos:
@@ -85,40 +85,25 @@ class PriceBoard:
             price += PRICE_UNIT
             width += 1
 
-            data_width = data_width + 1
-
-            if ORDER_BOOK_DATA_LIMIT < width:
+            if BOARD_WIDTH < width:
                 break
-
-        if(data_width < 10):
-            print('data width->', data_width, line)
-
 
     def set_buy_order_book(self, time, price, line):
         width = 0
-
-        valid_line = False
 
         for vol in line:
             pos = self.get_position(time, price)
 
             if not pos:
-                # print("error in BUY pos", time, price)
                 break
 
             t, p = pos
             self.buy_order[t, p] = vol
 
-            if vol:
-                valid_line = True
-
             price -= PRICE_UNIT
             width += 1
-            if ORDER_BOOK_DATA_LIMIT < width:
+            if BOARD_WIDTH < width:
                 break
-
-        if valid_line is False:
-            print('INVALIDLINE---->', time, price, line)
 
     def add_buy_trade(self, time, price, volume, window=1):
         pos = self.get_position(time, price)
@@ -230,10 +215,10 @@ class PriceBoard:
                 'sell': tf.FixedLenFeature([], tf.string),
                 'buy_trade': tf.FixedLenFeature([], tf.string),
                 'sell_trade': tf.FixedLenFeature([], tf.string),
-                'market_buy_price': tf.FixedLenFeature([], tf.int64),
-                'market_sell_price': tf.FixedLenFeature([], tf.int64),
-                'fix_buy_price': tf.FixedLenFeature([], tf.int64),
-                'fix_sell_price': tf.FixedLenFeature([], tf.int64),
+                'market_buy_price': tf.FixedLenFeature([], tf.float32),
+                'market_sell_price': tf.FixedLenFeature([], tf.float32),
+                'fix_buy_price': tf.FixedLenFeature([], tf.float32),
+                'fix_sell_price': tf.FixedLenFeature([], tf.float32),
                 'ba': tf.FixedLenFeature([], tf.int64),
                 'time': tf.FixedLenFeature([], tf.int64)
             })
@@ -332,14 +317,13 @@ class PriceBoardDB(PriceBoard):
 
 
     @staticmethod
-    def start_time():
-        db = logdb.LogDb('/tmp/bitlog.db')
-        db.connect()
-        db.create_cursor()
+    def start_time(db=None):
+        if db == None:
+            db = logdb.LogDb('/tmp/bitlog.db')
+            db.connect()
+            db.create_cursor()
 
         start_time, end_time = db.get_db_info()
-
-        db.close()
 
         return start_time, end_time
 
@@ -352,6 +336,15 @@ class PriceBoardDB(PriceBoard):
         db = logdb.LogDb(db_name)
         db.connect()
         db.create_cursor()
+
+        board = PriceBoardDB.load_from_connected_db(time, db)
+
+        db.close()
+        return board
+
+
+    @staticmethod
+    def load_from_connected_db(time, db):
 
         board = PriceBoardDB()
 
@@ -370,8 +363,6 @@ class PriceBoardDB(PriceBoard):
             print('---DBEND---')
 
         board.set_center_price(center_price)
-
-        print(time)
 
         error_count = 0
         query_time = time
@@ -410,8 +401,6 @@ class PriceBoardDB(PriceBoard):
 
         #load funding
         funding = db.select_funding(time)
-
-        db.close()
 
         if funding:
             t, p = funding
