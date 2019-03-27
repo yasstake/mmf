@@ -26,12 +26,12 @@ def _timestamp():
     return now.timestamp()
 
 
-def date_string(time = None):
+def date_string(time = None, separator='-'):
     if not time:
         time = timestamp()
-    time = datetime.datetime.fromtimestamp(time)
+    time = datetime.datetime.fromtimestamp(time, tz=datetime.timezone.utc)
 
-    return time.strftime('%Y-%m-%d')
+    return time.strftime('%Y'+ separator + '%m' + separator +'%d')
 
 
 def time_stamp_object(time = None):

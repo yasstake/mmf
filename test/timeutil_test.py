@@ -144,6 +144,20 @@ class MyTestCase(unittest.TestCase):
         print(date_path(2019, 3, 1, -1))
         print(date_path(2019, 3, 1, -2))
 
+    def test_midnight(self):
+        start = 1552692811
+        start_m=1552694400
+        end_m  =1552867199
+        end =   1552873616
+
+        print(time_stamp_string(start))
+        print(time_stamp_string(start_m))
+        print(time_stamp_string(end_m))
+        print(time_stamp_string(end))
+
+        print(date_string(start_m))
+        print(date_string(end_m))
+
 
     def test_time_sprit_day(self):
         print(sprit_timestamp(0))

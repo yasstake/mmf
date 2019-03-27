@@ -154,6 +154,8 @@ class MyTestCase(unittest.TestCase):
         start_midnight = (int(start_time / (DAY_MIN)) + 1) * DAY_MIN
         end_midnight = (int(end_time / (DAY_MIN))) * DAY_MIN -1
 
+        print(start_time, end_time, start_midnight, end_midnight)
+
         if(start_time < start_midnight and end_midnight < end_time):
             print('good data')
             # todo do something
@@ -165,8 +167,8 @@ class MyTestCase(unittest.TestCase):
             file = (int(time/60)*60)
 
             if file == time:
-                file_path = date_string(file)
-                print(file_path, time, file)
+                file_path = date_string(file, '/')
+                print(file_path, time_stamp_string(time))
 
             time += 1
 
