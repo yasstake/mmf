@@ -5,9 +5,6 @@ import tensorflow as tf
 from log.price import PriceBoard
 
 class TfTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)
-
     def feature_int64(self, a):
         return tf.train.Feature(int64_list=tf.train.Int64List(value=[a]))
 
@@ -92,8 +89,13 @@ class TfTestCase(unittest.TestCase):
             'buy': self.feature_bytes(board.buy_order.tobytes()),
             'time' : self.feature_int64(board.current_time)
             }))
-
         writer.write(record.SerializeToString())
+
+        board.current_time = 2
+        record = tf.train.Example(features=tf.train.Features(feature={
+            'buy': self.feature_bytes(board.buy_order.tobytes()),
+            'time' : self.feature_int64(board.current_time)
+            }))
         writer.write(record.SerializeToString())
 
         writer.close()
@@ -116,20 +118,33 @@ class TfTestCase(unittest.TestCase):
         print(buy2D)
 
     def test_load_file_2rec(self):
+        dataset = tf.data.TFRecordDataset('/tmp/data2.tfrecords')
+        dataset2 = dataset.map(TfTestCase.read_tfrecord)
+        iterator = dataset2.make_one_shot_iterator()
+        next_dataset = iterator.get_next()
+
         with tf.Session() as sess:
-            dataset = tf.data.TFRecordDataset('/tmp/data2.tfrecords')
-            dataset2 = dataset.map(TfTestCase.read_tfrecord)
-            iterator = dataset2.make_initializable_iterator()
-            next_dataset = iterator.get_next()
-            sess.run(iterator.initializer)
+            sess.run(tf.global_variables_initializer())
+
+
             time, buy = sess.run(next_dataset)
+            buy2D = np.frombuffer(buy, dtype=np.uint8)
+            print('time->', time)
+            print(buy2D)
 
-        print('time->', time)
-        print('buy->', buy)
+            time, buy = sess.run(next_dataset)
+            buy2D = np.frombuffer(buy, dtype=np.uint8)
 
-        buy2D = np.frombuffer(buy, dtype=np.uint8)
+            print('time->', time)
+            print(buy2D)
 
-        print(buy2D)
+            # end of data
+            #time, buy = sess.run(next_dataset)
+            #self.assertEqual(time, None)
+
+
+
+
 
 
     @staticmethod
