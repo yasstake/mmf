@@ -64,6 +64,8 @@ class PriceBoard:
 
     def get_position(self, time, price):
         p = int((price - self.center_price) / PRICE_UNIT + BOARD_WIDTH / 2)
+        if price == None:
+            print('price=None', time)
 
         if p < 0 or BOARD_WIDTH <= p:
             return None
@@ -270,42 +272,59 @@ class PriceBoard:
 
 class PriceBoardDB(PriceBoard):
     @staticmethod
-    def export_board_to_blob(db_name = "/tmp/bitlog.db"):
+    def export_board_to_blob(db_name = "/tmp/bitlog.db", start_time=None, end_time=None):
         DAY_MIN = 24 * 60 * 60
-        BOARD_IN_FILE = 60
+
 
         board = PriceBoardDB()
 
-        start_time, end_time = board.start_time()
+        if start_time == None or end_time == None:
+            db_start_time, db_end_time = board.start_time()
 
-        start_midnight = (int(start_time / (DAY_MIN)) + 1) * DAY_MIN
-        end_midnight = (int(end_time / (DAY_MIN))) * DAY_MIN - 1
+            start_time = (int(db_start_time / (DAY_MIN)) + 1) * DAY_MIN
+            end_time = (int(db_end_time / (DAY_MIN))) * DAY_MIN - 1
 
-        print(start_time, end_time, start_midnight, end_midnight)
+            print(start_time, end_time, db_start_time, db_end_time)
 
-        if not (start_time < start_midnight and end_midnight < end_time):
-            print('wrong data')
-            # todo do something
-            return None
+            if not (db_start_time < start_time and end_time < db_end_time):
+                print('wrong data')
+                # todo do something
+                return None
 
-        width = end_midnight - start_midnight
+        width = end_time - start_time
 
-        time = start_midnight
+        db = logdb.LogDb('/tmp/bitlog.db')
+        db.connect()
+        db.create_cursor()
+
+        PriceBoardDB.export_db_to_blob(db, start_time, end_time)
+
+
+    @staticmethod
+    def export_db_to_blob(db, start_time, end_time):
+        BOARD_IN_FILE = 600
+
+        time = start_time
         tf_writer = None
-        while time < end_midnight:
+        while time < end_time:
             print(time)
 
-            file = (int(time / 60) * 60)
+            file = (int(time / BOARD_IN_FILE) * BOARD_IN_FILE)
+
             if file == time:
                 if tf_writer:
                     tf_writer.close()
 
                 print('openfile')
-                file_path = date_string(file, '/')
-                tf_writer = PriceBoard.get_tf_writer('/tmp/{}.tfrecords'.format(time_stamp_string(time)))
 
-            board = PriceBoardDB.load_from_db(time, db_name)
-            print(board)
+                #file_dir = '/tmp/' + date_string(file, '/')
+                file_dir = '/tmp'
+                file_path = file_dir + '/{}.tfrecords'.format(time_stamp_string(time))
+                print(time, file_path)
+                tf_writer = PriceBoard.get_tf_writer(file_path)
+
+            board = PriceBoardDB.load_from_connected_db(time, db)
+
             board.save_tf_to_writer(tf_writer)
 
             time += 1
@@ -313,7 +332,7 @@ class PriceBoardDB(PriceBoard):
         if tf_writer:
             tf_writer.close()
 
-
+        db.close()
 
 
     @staticmethod
@@ -435,8 +454,7 @@ class PriceBoardDB(PriceBoard):
         while(not order_book and retry < max_retry):
             order_book = db.select_order_book(query_time - retry)
             retry = retry + 1
-            if not order_book:
-                print("retry order book", query_time - retry, time_origin - query_time)
+
 
         if order_book:
             t, sell_min, sell_book, buy_max, buy_book = order_book

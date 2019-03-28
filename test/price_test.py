@@ -62,12 +62,18 @@ class MyTestCase(unittest.TestCase):
 
         board.load_tf_record()
 
+    def test_load_tf_records(self):
+        PriceBoardDB.export_board_to_blob()
+
+
     def test_load_from_db_one_rec(self):
         end_time = self.calc_end_time()
         self._load_from_db_one_rec_with_time(end_time)
 
     def test_load_from_db_one_rec_t(self):
         self._load_from_db_one_rec_with_time(1553099023)
+
+
 
     def _load_from_db_one_rec_with_time(self, time):
 
@@ -105,9 +111,12 @@ class MyTestCase(unittest.TestCase):
 
         t = end_time
 
+        writer = PriceBoardDB.get_tf_writer('/tmp/onedata.tfrecords')
         board = PriceBoardDB.load_from_db(t)
+        board.save_tf_to_writer(writer)
+        writer.close()
 
-    def test_load_from_db_100(self):
+    def test_load_from_db_600(self):
         end_time = self.calc_end_time()
 
         t = end_time
@@ -116,12 +125,16 @@ class MyTestCase(unittest.TestCase):
         db.connect()
         db.create_cursor()
 
-        retry = 100
+        writer = PriceBoardDB.get_tf_writer('/tmp/600rec.tfrecords')
+
+        retry = 600
         while retry:
             board = PriceBoardDB.load_from_connected_db(t-retry, db)
+            board.save_tf_to_writer(writer)
             retry -= 1
 
         db.close()
+        writer.close()
 
     def test_load_from_db(self):
         end_time = self.calc_end_time()
