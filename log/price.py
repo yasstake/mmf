@@ -3,6 +3,7 @@ from log.constant import *
 import log.logdb as logdb;
 import tensorflow as tf
 from log.timeutil import *
+import os
 
 class PriceBoard:
     """
@@ -64,7 +65,7 @@ class PriceBoard:
 
     def get_position(self, time, price):
         p = int((price - self.center_price) / PRICE_UNIT + BOARD_WIDTH / 2)
-        if price == None:
+        if price is None:
             print('price=None', time)
 
         if p < 0 or BOARD_WIDTH <= p:
@@ -272,13 +273,12 @@ class PriceBoard:
 
 class PriceBoardDB(PriceBoard):
     @staticmethod
-    def export_board_to_blob(db_name = "/tmp/bitlog.db", start_time=None, end_time=None):
+    def export_board_to_blob(start_time=None, end_time=None, db_object=None):
         DAY_MIN = 24 * 60 * 60
-
 
         board = PriceBoardDB()
 
-        if start_time == None or end_time == None:
+        if start_time is None or end_time is None:
             db_start_time, db_end_time = board.start_time()
 
             start_time = (int(db_start_time / (DAY_MIN)) + 1) * DAY_MIN
@@ -293,51 +293,79 @@ class PriceBoardDB(PriceBoard):
 
         width = end_time - start_time
 
-        db = logdb.LogDb('/tmp/bitlog.db')
-        db.connect()
-        db.create_cursor()
+        if db_object is None:
+            db = logdb.LogDb('/tmp/bitlog.db')
+            db.connect()
+            db.create_cursor()
+        else:
+            db = db_object
 
         PriceBoardDB.export_db_to_blob(db, start_time, end_time)
 
+        if db_object is None:
+            db.close()
 
     @staticmethod
-    def export_db_to_blob(db, start_time, end_time):
-        BOARD_IN_FILE = 600
+    def export_db_to_blob(db, start_time, end_time, root_dir='/tmp'):
+        BOARD_IN_FILE = 60
 
         time = start_time
-        tf_writer = None
+
         while time < end_time:
-            print(time)
+            last_board = PriceBoardDB.export_db_to_blob_with_time(db, time, BOARD_IN_FILE, root_dir)
 
-            file = (int(time / BOARD_IN_FILE) * BOARD_IN_FILE)
-
-            if file == time:
-                if tf_writer:
-                    tf_writer.close()
-
-                print('openfile')
-
-                #file_dir = '/tmp/' + date_string(file, '/')
-                file_dir = '/tmp'
-                file_path = file_dir + '/{}.tfrecords'.format(time_stamp_string(time))
-                print(time, file_path)
-                tf_writer = PriceBoard.get_tf_writer(file_path)
-
-            board = PriceBoardDB.load_from_connected_db(time, db)
-
-            board.save_tf_to_writer(tf_writer)
-
-            time += 1
-
-        if tf_writer:
-            tf_writer.close()
+            if last_board is None:
+                print('error to export board', time)
+            time += BOARD_IN_FILE
 
         db.close()
 
 
     @staticmethod
+    def export_db_to_blob_with_time(db, start_time, width, root_dir):
+        time = start_time
+        end_time = start_time + width
+
+        tf_writer = None
+        while time < end_time:
+            print(time)
+
+            file = (int(time / width) * width)
+
+            if file == time:
+                if tf_writer:
+                    tf_writer.close()
+
+                time_object = time_stamp_object(time)
+
+                file_dir = root_dir + '/{:04d}/{:02d}/{:02d}/{:02d}'.format(time_object.year, time_object.month, time_object.day, time_object.hour)
+                if root_dir.startswith('/') and not os.path.exists(file_dir):
+                    os.makedirs(file_dir)
+
+                file_path = file_dir + '/{:010d}-{:02d}-{:02d}.tfrecords'.format(time, time_object.hour, time_object.minute)
+
+                print(time, file_path)
+                tf_writer = PriceBoard.get_tf_writer(file_path)
+
+            board = PriceBoardDB.load_from_connected_db(time, db)
+            time += 1
+
+            if not board:
+                print("ERROR to skip load", time)
+                continue
+
+            board.save_tf_to_writer(tf_writer)
+
+
+        if tf_writer:
+            tf_writer.close()
+
+        return board
+
+
+    @staticmethod
     def start_time(db=None):
-        if db == None:
+        if db is None:
             db = logdb.LogDb('/tmp/bitlog.db')
             db.connect()
             db.create_cursor()
@@ -380,6 +408,7 @@ class PriceBoardDB(PriceBoard):
 
         if not center_price:
             print('---DBEND---')
+            return None
 
         board.set_center_price(center_price)
 

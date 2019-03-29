@@ -162,6 +162,19 @@ class MyTestCase(unittest.TestCase):
     def test_time_sprit_day(self):
         print(sprit_timestamp(0))
 
+
+    def test_time_date_time_path(self):
+        time = time_stamp_object(0)
+        print(time.year, time.month, time.day, time.hour, time.minute, time.second)
+
+        self.assertEqual(time.year, 1970)
+        self.assertEqual(time.month, 1)
+        self.assertEqual(time.day, 1)
+        self.assertEqual(time.hour, 0)
+        self.assertEqual(time.minute, 0)
+        self.assertEqual(time.second, 0)
+
+
 #:[{"timestamp":"2019-02-28T23:02:14.807Z","side":"Buy","size":104,"price":3791.5,"tickDirection":"ZeroPlusTick"}],
 #"TIME":1551362533}
 

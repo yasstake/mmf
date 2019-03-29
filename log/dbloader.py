@@ -13,7 +13,7 @@ class DbLoader:
         self.log_db = None
         self.log_loader = LogLoader(self.order_book_tick,  self.trade_tick, self.funding_tick)
 
-    def open_db(self, db_file="/tmp/bitlog.db"):
+    def open_db(self, db_file=None):
         self.log_db = LogDb(db_file)
         self.log_db.connect()
         self.log_db.create_cursor()

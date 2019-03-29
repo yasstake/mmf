@@ -35,7 +35,7 @@ def date_string(time = None, separator='-'):
 
 
 def time_stamp_object(time = None):
-    if not time:
+    if time is None:
         time = timestamp()
 
     return datetime.datetime.utcfromtimestamp(time)
