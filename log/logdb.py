@@ -146,14 +146,8 @@ class LogDb:
 
 
     def zip_string_to_list(self, zip_string):
-        message_string = zlib.decompress(zip_string)
-        message_array =  message_string.decode().split(',')
-
-        message = []
-        for m in message_array:
-            message.append(int(m))
-
-        return message
+        message_array = zlib.decompress(zip_string).decode().split(',')
+        return list(map(int, message_array))
 
     def insert_order_book_message(self, time, message):
         sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list = self.message_to_list(message)

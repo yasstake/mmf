@@ -63,15 +63,15 @@ class PriceBoard:
     def get_center_price(self):
         return self.center_price
 
+    BOARD_CENTER = BOARD_WIDTH / 2
+
     def get_position(self, time, price):
-        p = int((price - self.center_price) / PRICE_UNIT + BOARD_WIDTH / 2)
-        if price is None:
-            print('price=None', time)
+        p = int((price - self.center_price) / PRICE_UNIT + PriceBoardDB.BOARD_CENTER)
 
         if p < 0 or BOARD_WIDTH <= p:
             return None
 
-        t = int(self.current_time - time) + 1 # first line[0] is for actual
+        t = int(self.current_time - time)
 
         return t, p
 
