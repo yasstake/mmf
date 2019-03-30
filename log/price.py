@@ -328,7 +328,6 @@ class PriceBoardDB(PriceBoard):
 
         tf_writer = None
         while time < end_time:
-            print(time)
 
             file = (int(time / width) * width)
 

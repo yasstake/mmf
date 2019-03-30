@@ -65,18 +65,27 @@ class MyTestCase(unittest.TestCase):
     def test_load_tf_records(self):
         PriceBoardDB.export_board_to_blob()
 
-
     def test_load_tf_records_with_time(self):
+        db = LogDb()
+        db.connect()
+        db.create_cursor()
 
+        db.import_db()
+
+        time = 1552910400
+        PriceBoardDB.export_db_to_blob_with_time(db, time, width=600, root_dir='/tmp/')
+
+    #        db.close()
+
+    def test_load_tf_records_with_time_from_file(self):
         db = LogDb('/tmp/bitlog.db')
         db.connect()
         db.create_cursor()
 
         time = 1552910400
-        PriceBoardDB.export_db_to_blob_with_time(db, time, width=600)
+        PriceBoardDB.export_db_to_blob_with_time(db, time, width=600, root_dir='/tmp/')
 
-        db.close()
-
+    #        db.close()
 
     def test_load_from_db_one_rec(self):
         end_time = self.calc_end_time()

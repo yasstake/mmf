@@ -18,13 +18,16 @@ class LogDb:
         self.cursor = None
 
     def __del__(self):
-        self.close()
+        # self.close()
+        # todo: ensure db file is closed
+        pass
 
     def connect(self):
-        print("open db name=", self.db_name)
         if self.db_name:
+            print("open db name=", self.db_name)
             self.connection = sqlite3.connect(self.db_name)
         else:
+            print('Inmemory db created')
             self.connection = sqlite3.connect(DB_NAME, uri=True)
 
     def create_cursor(self):
@@ -43,11 +46,9 @@ class LogDb:
     def commit(self):
         if self.connection:
             self.connection.commit()
-            self.cursor = None
 
     def create(self):
         self._create_table(self.cursor)
-
 
     def _create_table(self, cursor):
         '''create db'''
@@ -593,9 +594,6 @@ class LogDb:
 
 
 
-
-
-
     def calc_latest_time(self):
         time_sql = """select time from order_book order by time desc"""
 
@@ -604,6 +602,7 @@ class LogDb:
         records = self.cursor.fetchone()
 
         return records[0]
+
 
     def copy_db(self, source, destination, start_time=None, end_time=None):
         self.copy_table('order_book', source, destination, start_time, end_time)
@@ -614,7 +613,8 @@ class LogDb:
     def copy_table(self, table_name, source, destination, start_time, end_time):
         conn = sqlite3.connect(destination)
         cu = conn.cursor()
-        self._create_table(cu)
+        self.create()
+
         cu.execute("attach database '" + source + "'as source_db")
 
         where_statement = ""
@@ -632,7 +632,42 @@ class LogDb:
         cu.execute("detach database source_db")
         conn.commit()
 
-    def import_db(self, file='/tmp/bitlog.dump'):
+
+    def import_db(self, file='/tmp/bitlog.db', start_time=None, end_time=None):
+        self._create_table(self.cursor)
+
+        self.import_table('order_book', file, start_time, end_time)
+        self.import_table('sell_trade', file, start_time, end_time)
+        self.import_table('buy_trade', file, start_time, end_time)
+        self.import_table('funding', file, start_time, end_time)
+
+        self.commit()
+
+
+
+    def import_table(self, table_name, source, start_time=None, end_time=None):
+
+        self.cursor.execute("attach database '" + source + "'as source_db")
+
+        where_statement = ""
+        if start_time is not None:
+            where_statement = " where {0} <= time".format(str(start_time))
+
+        if end_time is not None:
+            where_statement += " and time < {0} ".format(str(end_time))
+
+        sql = "insert or replace into {0} select * from source_db.{1}".format(table_name, table_name) + where_statement
+
+        self.cursor.execute(sql)
+
+        self.commit()
+
+        self.cursor.execute("detach database source_db")
+
+        print('import table', table_name, source)
+
+
+    def import_dump_file(self, file='/tmp/bitlog.dump'):
         with open(file) as f:
             for line in f:
                 self.connection.executescript(line)

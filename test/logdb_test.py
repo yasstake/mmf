@@ -431,7 +431,7 @@ class LogDbTest(unittest.TestCase):
     def test_load_db(self):
         db = LogDbTest.connect()
         db.create_cursor()
-        db.import_db()
+        db.import_dump_file()
         db.commit()
 
     def test_copy_db(self):
@@ -526,6 +526,15 @@ class LogDbTest(unittest.TestCase):
         self.assertTrue(action & constant.ACTION.SELL)
         self.assertTrue(action & constant.ACTION.BUY)
 
+
+    def test_import_db(self):
+        db = LogDb()
+        db.connect()
+        db.create_cursor()
+
+        db.import_db()
+
+        print(db.get_db_info())
 
 
 
