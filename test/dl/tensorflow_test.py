@@ -144,7 +144,7 @@ class TfTestCase(unittest.TestCase):
 
 
     def test_load_file_ALL_rec(self):
-        dataset = tf.data.Dataset.list_files('/tmp/**/*.tfrecords')
+        dataset = tf.data.Dataset.list_files('/tmp/2019/**/*.tfrecords')
         dataset2 = dataset.map(TfTestCase.read_tfrecord)
         iterator = dataset2.make_one_shot_iterator()
         next_dataset = iterator.get_next()

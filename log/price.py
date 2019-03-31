@@ -184,6 +184,7 @@ class PriceBoard:
             'fix_buy_price': self.feature_float(self.fix_buy_price),
             'fix_sell_price': self.feature_float(self.fix_sell_price),
             'ba': self.feature_int64(self.best_action),
+            'ba_nop': self.feature_float(self.ba_nop),
             'ba_sell': self.feature_float(self.ba_sell),
             'ba_buy': self.feature_float(self.ba_buy),
             'ba_sell_now': self.feature_float(self.ba_sell_now),
@@ -202,7 +203,7 @@ class PriceBoard:
             next_dataset = iterator.get_next()
             sess.run(iterator.initializer)
             buy, sell, buy_trade, sell_trade, market_buy_price, \
-            market_sell_price, fix_buy_price, fix_sell_price, ba, ba_sell, ba_buy, ba_sell_now, ba_buy_now, time = sess.run(
+            market_sell_price, fix_buy_price, fix_sell_price, ba, ba_nop, ba_sell, ba_buy, ba_sell_now, ba_buy_now, time = sess.run(
                 next_dataset)
 
         self.buy_order = np.frombuffer(buy, dtype=np.uint8).reshape(BOARD_TIME_WIDTH, BOARD_WIDTH)
@@ -261,6 +262,7 @@ class PriceBoard:
                 'fix_buy_price': tf.FixedLenFeature([], tf.float32),
                 'fix_sell_price': tf.FixedLenFeature([], tf.float32),
                 'ba': tf.FixedLenFeature([], tf.int64),
+                'ba_nop': tf.FixedLenFeature([], tf.float32),
                 'ba_sell': tf.FixedLenFeature([], tf.float32),
                 'ba_buy': tf.FixedLenFeature([], tf.float32),
                 'ba_sell_now': tf.FixedLenFeature([], tf.float32),
@@ -277,6 +279,7 @@ class PriceBoard:
         fix_buy_price = features['fix_buy_price']
         fix_sell_price = features['fix_sell_price']
         ba = features['ba']
+        ba_nop = features['ba_nop']
         ba_sell = features['ba_sell']
         ba_buy = features['ba_buy']
         ba_sell_now = features['ba_sell_now']
@@ -284,7 +287,7 @@ class PriceBoard:
         time = features['time']
 
         return  buy,    sell,     buy_trade,    sell_trade,    market_buy_price, \
-                market_sell_price, fix_buy_price, fix_sell_price, ba, ba_sell, ba_buy, ba_sell_now, ba_buy_now, time
+                market_sell_price, fix_buy_price, fix_sell_price, ba, ba_nop, ba_sell, ba_buy, ba_sell_now, ba_buy_now, time
 
     def calc_static(self, a):
         """
