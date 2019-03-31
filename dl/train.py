@@ -23,10 +23,7 @@ class Train:
         features = tf.parse_single_example(
             serialized,
             features={
-                'buy': tf.FixedLenFeature([], tf.string),
-                'sell': tf.FixedLenFeature([], tf.string),
-                'buy_trade': tf.FixedLenFeature([], tf.string),
-                'sell_trade': tf.FixedLenFeature([], tf.string),
+                'board': tf.FixedLenFeature([], tf.string),
                 'market_buy_price': tf.FixedLenFeature([], tf.float32),
                 'market_sell_price': tf.FixedLenFeature([], tf.float32),
                 'fix_buy_price': tf.FixedLenFeature([], tf.float32),
@@ -40,12 +37,7 @@ class Train:
                 'time': tf.FixedLenFeature([], tf.int64)
             })
 
-
-        buy_order = features['buy']
-        sell_order= features['sell']
-        buy_trade = features['buy_trade']
-        sell_trade = features['sell_trade']
-        board_array = [buy_order, sell_order, buy_trade, sell_trade]
+        board = features['board']
 
         ba_nop = features['ba_nop']
         ba_sell = features['ba_sell']
@@ -56,23 +48,22 @@ class Train:
 
         time = features['time']
 
-        return  board_array, ba, time
+        return  board, ba, time
 
-
-    def board_array_to_np_array(self, board_array):
-        board = np.stack([self.decode_buffer(board_array[0]), self.decode_buffer(board_array[1]), self.decode_buffer(board_array[2]), self.decode_buffer(board_array[3])])
-        return board
-
-
-    def decode_buffer(self, buffer):
-        return np.frombuffer(buffer, dtype=np.uint8).reshape(constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)
-
+    @staticmethod
+    def decode_buffer(buffer):
+        return np.frombuffer(buffer, dtype=np.uint8).reshape(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)
 
     def create_model(self):
         self.model = Sequential()
 
-        input = keras.Input(shape=(constant.BOARD_WIDTH, constant.BOARD_TIME_WIDTH, constant.NUMBER_OF_LAYERS))
-        self.model.add(Dense(units=128, activation='relu')(input))
+        input = keras.Input(shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH))
+
+        self.model.add(keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)))
+
+        self.model.add(keras.layers.MaxPooling2D((2,2)))
+        self.model.add(keras.layers.Flatten())
+        self.model.add(Dense(units=32, activation='relu'))
         self.model.add(Dense(units=5, activation='softmax'))
 
         self.model.summary()
@@ -105,30 +96,31 @@ class Train:
     def do_train(self, file_pattern):
         files = sorted(glob.glob(file_pattern, recursive=True))
 
-        print(files)
-
         input_dataset = tf.data.Dataset.list_files(files)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
-        dataset2 = dataset.map(Train.read_tfrecord)
-        iterator = dataset2.make_initializable_iterator()
+        dataset = dataset.map(Train.read_tfrecord)
+        dataset.repeat()
+        dataset.shuffle(buffer_size=100000)
+        dataset = dataset.batch(32)
+
+        iterator = dataset.make_initializable_iterator()
         next_dataset = iterator.get_next()
 
         with tf.Session() as sess:
             sess.run(iterator.initializer)
 
             while True:
-                board_array, ba, time = sess.run(next_dataset)
+                try:
+                    board_array, ba, time = sess.run(next_dataset)
 
-                board = self.board_array_to_np_array(board_array)
+                    boards = np.stack(list(map(Train.decode_buffer, board_array)))
 
-                print(board_array.shape, board.shape, time, ba)
+                    print('data shape', board_array.shape, boards.shape, ba.shape)
 
-        data = np.random.random((1000, 100))
-        labels = np.random.randint(10, size=(1000, 1))
+                    self.model.fit(boards, ba, batch_size=32)
 
-        one_hot_labels = keras.utils.to_categorical(labels, num_classes=10)
+                except tf.errors.OutOfRangeError as e:
+                    break
 
-        model.fit(data, one_hot_labels, epochs=10, batch_size=32)
 
-        print (model.predict(data))
 

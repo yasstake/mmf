@@ -174,11 +174,10 @@ class PriceBoard:
 
 
     def _tf_example_record(self):
+        board = np.stack([self.buy_order, self.sell_order, self.buy_trade, self.sell_trade])
+
         record = tf.train.Example(features=tf.train.Features(feature={
-            'buy': self.feature_bytes(self.buy_order.tobytes()),
-            'sell': self.feature_bytes(self.sell_order.tobytes()),
-            'buy_trade': self.feature_bytes(self.buy_trade.tobytes()),
-            'sell_trade': self.feature_bytes(self.sell_trade.tobytes()),
+            'board': self.feature_bytes(board.tobytes()),
             'market_buy_price': self.feature_float(self.market_buy_price),
             'market_sell_price': self.feature_float(self.market_sell_price),
             'fix_buy_price': self.feature_float(self.fix_buy_price),
@@ -356,7 +355,7 @@ class PriceBoardDB(PriceBoard):
 
     @staticmethod
     def export_db_to_blob(db, start_time, end_time, root_dir='/tmp'):
-        BOARD_IN_FILE = 600
+        BOARD_IN_FILE = 1
 
         time = start_time
 
@@ -384,11 +383,11 @@ class PriceBoardDB(PriceBoard):
 
                 time_object = time_stamp_object(time)
 
-                file_dir = root_dir + '/{:04d}/{:02d}/{:02d}'.format(time_object.year, time_object.month, time_object.day)
+                file_dir = root_dir + '/{:04d}/{:02d}/{:02d}/{:02d}/{:02d}'.format(time_object.year, time_object.month, time_object.day, time_object.hour, time_object.minute)
                 if root_dir.startswith('/') and not os.path.exists(file_dir):
                     os.makedirs(file_dir)
 
-                file_path = file_dir + '/{:010d}-{:02d}-{:02d}-{:02d}-{:02d}.tfrecords'.format(time, time_object.month, time_object.day, time_object.hour, time_object.minute)
+                file_path = file_dir + '/{:010d}-{:02d}-{:02d}-{:02d}-{:02d}-{:02d}.tfrecords'.format(time, time_object.month, time_object.day, time_object.hour, time_object.minute, time_object.second)
 
                 print(time, file_path)
                 tf_writer = PriceBoard.get_tf_writer(file_path)
