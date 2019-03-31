@@ -4,6 +4,7 @@ import log.logdb as logdb;
 import tensorflow as tf
 from log.timeutil import *
 import os
+import glob
 
 class PriceBoard:
     """
@@ -37,6 +38,11 @@ class PriceBoard:
         self.funding = 0
 
         self.best_action = ACTION.NOP
+        self.ba_nop = 0
+        self.ba_sell = 0
+        self.ba_sell_now = 0
+        self.ba_buy = 0
+        self.ba_buy_now =0
 
 
     def add_sell_order(self, price, size):
@@ -205,6 +211,29 @@ class PriceBoard:
         self.ba = ba
         self.time = time
 
+    @staticmethod
+    def load_tf_dataset(file_pattern):
+
+        files = sorted(glob.glob(file_pattern, recursive=True))
+
+        #files = tf.gfile.Glob(file_pattern)
+
+        print(files)
+
+        input_dataset = tf.data.Dataset.list_files(files)
+        dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
+        dataset2 = dataset.map(PriceBoard.read_tfrecord)
+        iterator = dataset2.make_initializable_iterator()
+        next_dataset = iterator.get_next()
+
+        with tf.Session() as sess:
+            sess.run(iterator.initializer)
+
+            while True:
+                buy, sell, buy_trade, sell_trade, market_buy_price, \
+                      market_sell_price, fix_buy_price, fix_sell_price, ba, time = sess.run(next_dataset)
+                print(time)
+
 
     @staticmethod
     def read_tfrecord(serialized):
@@ -307,7 +336,7 @@ class PriceBoardDB(PriceBoard):
 
     @staticmethod
     def export_db_to_blob(db, start_time, end_time, root_dir='/tmp'):
-        BOARD_IN_FILE = 60
+        BOARD_IN_FILE = 600
 
         time = start_time
 
@@ -317,8 +346,6 @@ class PriceBoardDB(PriceBoard):
             if last_board is None:
                 print('error to export board', time)
             time += BOARD_IN_FILE
-
-        db.close()
 
 
     @staticmethod
@@ -331,17 +358,17 @@ class PriceBoardDB(PriceBoard):
 
             file = (int(time / width) * width)
 
-            if file == time:
+            if file == time or tf_writer is None:
                 if tf_writer:
                     tf_writer.close()
 
                 time_object = time_stamp_object(time)
 
-                file_dir = root_dir + '/{:04d}/{:02d}/{:02d}/{:02d}'.format(time_object.year, time_object.month, time_object.day, time_object.hour)
+                file_dir = root_dir + '/{:04d}/{:02d}/{:02d}'.format(time_object.year, time_object.month, time_object.day)
                 if root_dir.startswith('/') and not os.path.exists(file_dir):
                     os.makedirs(file_dir)
 
-                file_path = file_dir + '/{:010d}-{:02d}-{:02d}.tfrecords'.format(time, time_object.hour, time_object.minute)
+                file_path = file_dir + '/{:010d}-{:02d}-{:02d}-{:02d}-{:02d}.tfrecords'.format(time, time_object.month, time_object.day, time_object.hour, time_object.minute)
 
                 print(time, file_path)
                 tf_writer = PriceBoard.get_tf_writer(file_path)
@@ -453,6 +480,16 @@ class PriceBoardDB(PriceBoard):
             t, p = funding
             board.funding_ttl = 0
             board.funding = 0
+
+
+        #load action
+        ba_nop, ba_buy, ba_buy_now, ba_sell, ba_sell_now = db.calc_best_actions(time)
+
+        board.ba_nop = ba_nop
+        board.ba_buy = ba_buy
+        board.ba_buy_now = ba_buy_now
+        board.ba_sell = ba_sell
+        board.ba_sell_now = ba_sell_now
 
         if 10 < error_count:
             return None

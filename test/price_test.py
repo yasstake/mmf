@@ -62,6 +62,13 @@ class MyTestCase(unittest.TestCase):
 
         board.load_tf_record()
 
+
+    def test_load_tf_record_set2(self):
+        board = PriceBoardDB()
+
+        board.load_tf_dataset('/tmp/2019/**/*.tfrecords')
+
+
     def test_load_tf_records(self):
         PriceBoardDB.export_board_to_blob()
 
@@ -82,18 +89,15 @@ class MyTestCase(unittest.TestCase):
         db.connect()
         db.create_cursor()
 
-        time = 1552910400
+        time = 1552957717
+
         PriceBoardDB.export_db_to_blob_with_time(db, time, width=600, root_dir='/tmp/')
 
     #        db.close()
 
     def test_load_from_db_one_rec(self):
-        end_time = self.calc_end_time()
+        end_time = self.calc_end_time() - 600
         self._load_from_db_one_rec_with_time(end_time)
-
-    def test_load_from_db_one_rec_t(self):
-        self._load_from_db_one_rec_with_time(1553099023)
-
 
 
     def _load_from_db_one_rec_with_time(self, time):

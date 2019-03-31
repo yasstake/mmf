@@ -10,6 +10,16 @@ class TFFileTest(unittest.TestCase):
 
 
     def test_list_blobs(self):
-        tfds.list_builders()
+
+
+        data_set = tf.data.Dataset.list_files(('/tmp/2019/**/*.tfrecords'))
+
+        iter = tf.data.make_one_shot_iterator(data_set)
+
+        for item in iter:
+            print(item)
+
+        print(data_set)
+
         pass
 

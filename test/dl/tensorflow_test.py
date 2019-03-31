@@ -143,6 +143,31 @@ class TfTestCase(unittest.TestCase):
             #self.assertEqual(time, None)
 
 
+    def test_load_file_ALL_rec(self):
+        dataset = tf.data.Dataset.list_files('/tmp/**/*.tfrecords')
+        dataset2 = dataset.map(TfTestCase.read_tfrecord)
+        iterator = dataset2.make_one_shot_iterator()
+        next_dataset = iterator.get_next()
+
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+
+            time, buy = sess.run(next_dataset)
+            buy2D = np.frombuffer(buy, dtype=np.uint8)
+            print('time->', time)
+            print(buy2D)
+
+            time, buy = sess.run(next_dataset)
+            buy2D = np.frombuffer(buy, dtype=np.uint8)
+
+            print('time->', time)
+            print(buy2D)
+
+            # end of data
+            #time, buy = sess.run(next_dataset)
+            #self.assertEqual(time, None)
+
+
 
 
 
