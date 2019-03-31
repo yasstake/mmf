@@ -40,8 +40,8 @@ class PriceBoard:
         self.best_action = ACTION.NOP
         self.ba_nop = 0
         self.ba_sell = 0
-        self.ba_sell_now = 0
         self.ba_buy = 0
+        self.ba_sell_now = 0
         self.ba_buy_now =0
 
 
@@ -184,6 +184,10 @@ class PriceBoard:
             'fix_buy_price': self.feature_float(self.fix_buy_price),
             'fix_sell_price': self.feature_float(self.fix_sell_price),
             'ba': self.feature_int64(self.best_action),
+            'ba_sell': self.feature_float(self.ba_sell),
+            'ba_buy': self.feature_float(self.ba_buy),
+            'ba_sell_now': self.feature_float(self.ba_sell_now),
+            'ba_buy_now': self.feature_float(self.ba_buy_now),
             'time': self.feature_int64(self.current_time)
             }))
 
@@ -198,10 +202,11 @@ class PriceBoard:
             next_dataset = iterator.get_next()
             sess.run(iterator.initializer)
             buy, sell, buy_trade, sell_trade, market_buy_price, \
-                   market_sell_price, fix_buy_price, fix_sell_price, ba, time = sess.run(next_dataset)
+            market_sell_price, fix_buy_price, fix_sell_price, ba, ba_sell, ba_buy, ba_sell_now, ba_buy_now, time = sess.run(
+                next_dataset)
 
-        self.buy = np.frombuffer(buy, dtype=np.uint8).reshape(BOARD_TIME_WIDTH, BOARD_WIDTH)
-        self.sell= np.frombuffer(sell, dtype=np.uint8).reshape(BOARD_TIME_WIDTH, BOARD_WIDTH)
+        self.buy_order = np.frombuffer(buy, dtype=np.uint8).reshape(BOARD_TIME_WIDTH, BOARD_WIDTH)
+        self.sell_order= np.frombuffer(sell, dtype=np.uint8).reshape(BOARD_TIME_WIDTH, BOARD_WIDTH)
         self.buy_trade = np.frombuffer(buy_trade, dtype=np.uint8).reshape(BOARD_TIME_WIDTH, BOARD_WIDTH)
         self.sell_trade = np.frombuffer(sell_trade, dtype=np.uint8).reshape(BOARD_TIME_WIDTH, BOARD_WIDTH)
         self.market_buy_price = market_buy_price
@@ -209,7 +214,11 @@ class PriceBoard:
         self.fix_buy_price = fix_buy_price
         self.fix_sell_price = fix_sell_price
         self.ba = ba
-        self.time = time
+        self.ba_buy = ba_buy
+        self.ba_sell = ba_sell
+        self.ba_sell_now = ba_sell_now
+        self.ba_buy_now = ba_buy_now
+        self.current_time = time
 
     @staticmethod
     def load_tf_dataset(file_pattern):
@@ -231,7 +240,7 @@ class PriceBoard:
 
             while True:
                 buy, sell, buy_trade, sell_trade, market_buy_price, \
-                      market_sell_price, fix_buy_price, fix_sell_price, ba, time = sess.run(next_dataset)
+                      market_sell_price, fix_buy_price, fix_sell_price, ba, ba_sell, ba_buy, ba_sell_now, ba_buy_now, time = sess.run(next_dataset)
                 print(time)
 
 
@@ -252,6 +261,10 @@ class PriceBoard:
                 'fix_buy_price': tf.FixedLenFeature([], tf.float32),
                 'fix_sell_price': tf.FixedLenFeature([], tf.float32),
                 'ba': tf.FixedLenFeature([], tf.int64),
+                'ba_sell': tf.FixedLenFeature([], tf.float32),
+                'ba_buy': tf.FixedLenFeature([], tf.float32),
+                'ba_sell_now': tf.FixedLenFeature([], tf.float32),
+                'ba_buy_now': tf.FixedLenFeature([], tf.float32),
                 'time': tf.FixedLenFeature([], tf.int64)
             })
 
@@ -264,10 +277,14 @@ class PriceBoard:
         fix_buy_price = features['fix_buy_price']
         fix_sell_price = features['fix_sell_price']
         ba = features['ba']
+        ba_sell = features['ba_sell']
+        ba_buy = features['ba_buy']
+        ba_sell_now = features['ba_sell_now']
+        ba_buy_now = features['ba_buy_now']
         time = features['time']
 
-        return  buy,    sell,     buy_trade,    sell_trade,    market_buy_price,\
-                market_sell_price,    fix_buy_price,    fix_sell_price, ba,  time
+        return  buy,    sell,     buy_trade,    sell_trade,    market_buy_price, \
+                market_sell_price, fix_buy_price, fix_sell_price, ba, ba_sell, ba_buy, ba_sell_now, ba_buy_now, time
 
     def calc_static(self, a):
         """
