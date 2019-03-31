@@ -355,7 +355,7 @@ class PriceBoardDB(PriceBoard):
 
     @staticmethod
     def export_db_to_blob(db, start_time, end_time, root_dir='/tmp'):
-        BOARD_IN_FILE = 1
+        BOARD_IN_FILE = 600
 
         time = start_time
 

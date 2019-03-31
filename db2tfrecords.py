@@ -24,6 +24,5 @@ if __name__ == '__main__':
 
     db.import_db(db_file)
 
-    time = 1552910400
     PriceBoardDB.export_board_to_blob(db_object=db)
-#    PriceBoardDB.export_db_to_blob_with_time(db, time, width=600, root_dir=export_dir)
+

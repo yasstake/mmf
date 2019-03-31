@@ -96,11 +96,13 @@ class Train:
     def do_train(self, file_pattern):
         files = sorted(glob.glob(file_pattern, recursive=True))
 
+        print(files)
+
         input_dataset = tf.data.Dataset.list_files(files)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         dataset = dataset.map(Train.read_tfrecord)
-        dataset.repeat()
-        dataset.shuffle(buffer_size=100000)
+        dataset = dataset.repeat(20)
+        dataset = dataset.shuffle(buffer_size=100000)
         dataset = dataset.batch(32)
 
         iterator = dataset.make_initializable_iterator()
@@ -115,7 +117,7 @@ class Train:
 
                     boards = np.stack(list(map(Train.decode_buffer, board_array)))
 
-                    print('data shape', board_array.shape, boards.shape, ba.shape)
+                    print('DATA TIME->', time)
 
                     self.model.fit(boards, ba, batch_size=32)
 
