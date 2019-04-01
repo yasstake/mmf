@@ -321,7 +321,7 @@ class PriceBoard:
 
 class PriceBoardDB(PriceBoard):
     @staticmethod
-    def export_board_to_blob(start_time=None, end_time=None, db_object=None):
+    def export_board_to_blob(start_time=None, end_time=None, db_object=None, root_dir='/tmp'):
         DAY_MIN = 24 * 60 * 60
 
         board = PriceBoardDB()
@@ -348,7 +348,7 @@ class PriceBoardDB(PriceBoard):
         else:
             db = db_object
 
-        PriceBoardDB.export_db_to_blob(db, start_time, end_time)
+        PriceBoardDB.export_db_to_blob(db, start_time, end_time, root_dir)
 
         if db_object is None:
             db.close()
@@ -383,7 +383,7 @@ class PriceBoardDB(PriceBoard):
 
                 time_object = time_stamp_object(time)
 
-                file_dir = root_dir + '/{:04d}/{:02d}/{:02d}/{:02d}/{:02d}'.format(time_object.year, time_object.month, time_object.day, time_object.hour, time_object.minute)
+                file_dir = root_dir + '/{:04d}/{:02d}/{:02d}'.format(time_object.year, time_object.month, time_object.day)
                 if root_dir.startswith('/') and not os.path.exists(file_dir):
                     os.makedirs(file_dir)
 

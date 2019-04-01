@@ -103,7 +103,7 @@ class Train:
         dataset = dataset.map(Train.read_tfrecord)
         dataset = dataset.repeat(20)
         dataset = dataset.shuffle(buffer_size=100000)
-        dataset = dataset.batch(32)
+        dataset = dataset.batch(2048)
 
         iterator = dataset.make_initializable_iterator()
         next_dataset = iterator.get_next()
@@ -117,9 +117,7 @@ class Train:
 
                     boards = np.stack(list(map(Train.decode_buffer, board_array)))
 
-                    print('DATA TIME->', time)
-
-                    self.model.fit(boards, ba, batch_size=32)
+                    self.model.fit(boards, ba, batch_size=64)
 
                 except tf.errors.OutOfRangeError as e:
                     break
