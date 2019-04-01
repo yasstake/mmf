@@ -59,9 +59,9 @@ class Train:
 
         input = keras.Input(shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH))
 
-        self.model.add(keras.layers.Conv2D(32, (3,3), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)))
+        self.model.add(keras.layers.Conv2D(32, (2, 2), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)))
 
-        self.model.add(keras.layers.MaxPooling2D((2,2)))
+        self.model.add(keras.layers.MaxPooling2D((3,3)))
         self.model.add(keras.layers.Flatten())
         self.model.add(Dense(units=32, activation='relu'))
         self.model.add(Dense(units=5, activation='softmax'))

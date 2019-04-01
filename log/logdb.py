@@ -145,7 +145,7 @@ class LogDb:
 
         return zlib.compress(message_string[:-1].encode())
 
-#    @lru_cache(maxsize=512)
+
     def zip_string_to_list(self, zip_string):
         message_array = zlib.decompress(zip_string).decode().split(',')
         return list(map(int, message_array))
@@ -209,7 +209,7 @@ class LogDb:
         else:
             return None
 
-
+    @lru_cache(maxsize=2048)
     def select_order_book(self, time):
         """
         :param time:
@@ -230,7 +230,7 @@ class LogDb:
 
         return time, sell_min, self.zip_string_to_list(sell_list), buy_max, self.zip_string_to_list(buy_list)
 
-
+    @lru_cache(maxsize=2048)
     def select_sell_trade(self, time, window = 1):
         """
         :param time:
@@ -240,6 +240,7 @@ class LogDb:
 
         return self.cursor.execute(sql,(time - window, time)).fetchall()
 
+    @lru_cache(maxsize=2048)
     def select_buy_trade(self, time, window = 1):
         """
         :param time:
@@ -279,6 +280,7 @@ class LogDb:
 
         return self.cursor.fetchone()
 
+    @lru_cache(maxsize=2048)
     def select_order_book_price_with_retry(self, time, retry = 30):
         rec = None
 
