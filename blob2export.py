@@ -15,6 +15,7 @@ def log2db(year, month, day):
     db_loader = DbLoader()
     db_loader.open_db(db_file=db_file)
     db_loader.load_from_blob_by_date(year, month, day)
+    db_loader.close_db()
 
 
 def update_db(year, month, day):
@@ -40,8 +41,8 @@ def db2blob(year, month, day, root_dir='/tmp'):
 
     date = '{:04d}-{:02d}-{:02d}'.format(year, month, day)
 
-    start_time = time_sec(date + 'T00:00:00.00')
-    end_time = time_sec(date + 'T23:59:59.99')
+    start_time = int(time_sec(date + 'T00:00:00.00'))
+    end_time = int(time_sec(date + 'T23:59:59.99'))
 
     PriceBoardDB.export_board_to_blob(db_object=db, start_time=start_time, end_time=end_time, root_dir=root_dir)
 
@@ -70,5 +71,5 @@ if __name__ == '__main__':
 
     log2db(year, month, day)
     update_db(year, month, day)
-    db2blob(year, month, day, '/tmp')
+    db2blob(year, month, day, 'gs://bitboard')
 

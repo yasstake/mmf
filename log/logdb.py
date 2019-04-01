@@ -6,6 +6,7 @@ import sqlite3
 import log.bitws
 import zlib
 from log import constant
+from functools import lru_cache
 
 DB_NAME = "file::memory:?cache=shared"
 ORDER_TIME_WIDTH = 120
@@ -144,7 +145,7 @@ class LogDb:
 
         return zlib.compress(message_string[:-1].encode())
 
-
+#    @lru_cache(maxsize=512)
     def zip_string_to_list(self, zip_string):
         message_array = zlib.decompress(zip_string).decode().split(',')
         return list(map(int, message_array))

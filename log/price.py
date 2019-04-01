@@ -387,7 +387,7 @@ class PriceBoardDB(PriceBoard):
                 if root_dir.startswith('/') and not os.path.exists(file_dir):
                     os.makedirs(file_dir)
 
-                file_path = file_dir + '/{:010d}-{:02d}-{:02d}-{:02d}-{:02d}-{:02d}.tfrecords'.format(time, time_object.month, time_object.day, time_object.hour, time_object.minute, time_object.second)
+                file_path = file_dir + '/{:010d}-{:02d}-{:02d}-{:02d}-{:02d}.tfrecords'.format(time, time_object.month, time_object.day, time_object.hour, time_object.minute)
 
                 print(time, file_path)
                 tf_writer = PriceBoard.get_tf_writer(file_path)
