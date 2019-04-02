@@ -4,6 +4,7 @@ from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense
 import tensorflow.python.keras as keras
 import numpy as np
+import random
 
 from log  import constant
 from log.price import PriceBoard
@@ -57,12 +58,14 @@ class Train:
     def create_model(self):
         self.model = Sequential()
 
-        input = keras.Input(shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH))
+        self.model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH), padding='same'))
+        self.model.add(keras.layers.MaxPooling2D((2,2)))
 
-        self.model.add(keras.layers.Conv2D(32, (2, 2), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)))
+#        self.model.add(keras.layers.Conv2D(128, (2, 2), activation='relu', padding='same'))
+#        self.model.add(keras.layers.MaxPooling2D((2,2)))
 
-        self.model.add(keras.layers.MaxPooling2D((3,3)))
         self.model.add(keras.layers.Flatten())
+        self.model.add(keras.layers.Dropout(0.4))
         self.model.add(Dense(units=32, activation='relu'))
         self.model.add(Dense(units=5, activation='softmax'))
 
@@ -95,29 +98,29 @@ class Train:
 
 
     def train_data_set(self, file_pattern):
-        files = sorted(glob.glob(file_pattern, recursive=True))
+        files = []
+        for pattern in file_pattern:
+            files += sorted(glob.glob(pattern, recursive=True))
 
-        print(files)
+        random.shuffle(files)
 
         input_dataset = tf.data.Dataset.list_files(files)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         dataset = dataset.map(Train.read_tfrecord)
         dataset = dataset.repeat(1)
         dataset = dataset.shuffle(buffer_size=100000)
-        dataset = dataset.batch(10000)
+        dataset = dataset.batch(50000)
 
         return dataset
 
     def test_data_set(self, file_pattern):
         files = sorted(glob.glob(file_pattern, recursive=True))
 
-        print(files)
-
         input_dataset = tf.data.Dataset.list_files(files)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         dataset = dataset.map(Train.read_tfrecord)
         dataset = dataset.repeat(1)
-        dataset = dataset.shuffle(buffer_size=100000)
+        dataset = dataset.shuffle(buffer_size=10000)
         dataset = dataset.batch(5000)
 
         return dataset
@@ -137,25 +140,26 @@ class Train:
             sess.run(tf.global_variables_initializer())
             sess.run(train_iterator.initializer)
 
-            try:
-                board_array, ba, time = sess.run(train_next_dataset)
+            while True:
+                try:
+                    board_array, ba, time = sess.run(train_next_dataset)
 
-                boards = np.stack(list(map(Train.decode_buffer, board_array)))
+                    boards = np.stack(list(map(Train.decode_buffer, board_array)))
 
-                self.model.fit(boards, ba, batch_size=64)
+                    self.model.fit(boards, ba, batch_size=128)
 
-            except tf.errors.OutOfRangeError as e:
-                pass
+                except tf.errors.OutOfRangeError as e:
+                    print('training end')
+                    break
+                    pass
 
-
+            # Evaluate
             try:
                 board_array, ba, time = sess.run(test_next_dataset)
                 boards = np.stack(list(map(Train.decode_buffer, board_array)))
 
                 result = self.model.evaluate(boards, ba)
-
-                print('training->', result)
-
+                print('evaluation->', result)
 
             except tf.errors.OutOfRangeError as e:
                 pass
