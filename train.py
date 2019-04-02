@@ -1,8 +1,11 @@
 from dl.train import Train
 
 
-train = Train()
-train.create_model()
+if __name__ == "__main__":
 
-train.do_train('/tmp/2019/**/*.tfrecords')
+    train = Train()
+    train.create_model()
+
+    train.do_train('/tmp/2019/03/17/*.tfrecords', '/tmp/2019/03/18/*.tfrecords')
+
 

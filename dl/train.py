@@ -93,7 +93,8 @@ class Train:
 
                     print(time, ba_sell)
 
-    def do_train(self, file_pattern):
+
+    def train_data_set(self, file_pattern):
         files = sorted(glob.glob(file_pattern, recursive=True))
 
         print(files)
@@ -101,26 +102,62 @@ class Train:
         input_dataset = tf.data.Dataset.list_files(files)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         dataset = dataset.map(Train.read_tfrecord)
-        dataset = dataset.repeat(20)
+        dataset = dataset.repeat(1)
         dataset = dataset.shuffle(buffer_size=100000)
-        dataset = dataset.batch(2048)
+        dataset = dataset.batch(10000)
 
-        iterator = dataset.make_initializable_iterator()
-        next_dataset = iterator.get_next()
+        return dataset
+
+    def test_data_set(self, file_pattern):
+        files = sorted(glob.glob(file_pattern, recursive=True))
+
+        print(files)
+
+        input_dataset = tf.data.Dataset.list_files(files)
+        dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
+        dataset = dataset.map(Train.read_tfrecord)
+        dataset = dataset.repeat(1)
+        dataset = dataset.shuffle(buffer_size=100000)
+        dataset = dataset.batch(5000)
+
+        return dataset
+
+
+    def do_train(self, train_pattern, test_pattern):
+        train_dataset = self.train_data_set(train_pattern)
+        test_dataset  = self.test_data_set(test_pattern)
+
+        train_iterator = train_dataset.make_initializable_iterator()
+        train_next_dataset = train_iterator.get_next()
+
+        test_iterator = test_dataset.make_one_shot_iterator()
+        test_next_dataset = test_iterator.get_next()
 
         with tf.Session() as sess:
-            sess.run(iterator.initializer)
+            sess.run(tf.global_variables_initializer())
+            sess.run(train_iterator.initializer)
 
-            while True:
-                try:
-                    board_array, ba, time = sess.run(next_dataset)
+            try:
+                board_array, ba, time = sess.run(train_next_dataset)
 
-                    boards = np.stack(list(map(Train.decode_buffer, board_array)))
+                boards = np.stack(list(map(Train.decode_buffer, board_array)))
 
-                    self.model.fit(boards, ba, batch_size=64)
+                self.model.fit(boards, ba, batch_size=64)
 
-                except tf.errors.OutOfRangeError as e:
-                    break
+            except tf.errors.OutOfRangeError as e:
+                pass
 
+
+            try:
+                board_array, ba, time = sess.run(test_next_dataset)
+                boards = np.stack(list(map(Train.decode_buffer, board_array)))
+
+                result = self.model.evaluate(boards, ba)
+
+                print('training->', result)
+
+
+            except tf.errors.OutOfRangeError as e:
+                pass
 
 
