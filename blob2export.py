@@ -42,7 +42,7 @@ def db2blob(year, month, day, root_dir='/tmp'):
     date = '{:04d}-{:02d}-{:02d}'.format(year, month, day)
 
     start_time = int(time_sec(date + 'T00:00:00.00'))
-    end_time = int(time_sec(date + 'T23:59:59.99'))
+    end_time = start_time + 24 * 60 * 60
 
     PriceBoardDB.export_board_to_blob(db_object=db, start_time=start_time, end_time=end_time, root_dir=root_dir)
 
@@ -59,17 +59,22 @@ if __name__ == '__main__':
     month = 12
     day   = 31
 '''
-    if len(sys.argv) != 4:
-        print('blob2export.py yyyy mm dd')
+    if len(sys.argv) < 4:
+        print('blob2export.py yyyy mm dd [base]')
         exit(1)
 
     year  = int(sys.argv[1])
     month = int(sys.argv[2])
     day   = int(sys.argv[3])
 
+    if len(sys.argv) == 5:
+        base = sys.argv[4]
+    else:
+        base = 'gs://bitboard'
+
     print(year, month, day)
 
     log2db(year, month, day)
     update_db(year, month, day)
-    db2blob(year, month, day, 'gs://bitboard')
+    db2blob(year, month, day, base)
 

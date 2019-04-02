@@ -339,8 +339,6 @@ class PriceBoardDB(PriceBoard):
                 # todo do something
                 return None
 
-        width = end_time - start_time
-
         if db_object is None:
             db = logdb.LogDb('/tmp/bitlog.db')
             db.connect()
