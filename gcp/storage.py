@@ -95,4 +95,3 @@ class LogStorage:
             self.process_blob(path, call_back)
 
 
-

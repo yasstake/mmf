@@ -73,39 +73,13 @@ class Train:
 
         self.model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
 
-        def load_tf_dataset(self, file_pattern):
-            files = sorted(glob.glob(file_pattern, recursive=True))
-
-            # files = tf.gfile.Glob(file_pattern)
-
-            print(files)
-
-            input_dataset = tf.data.Dataset.list_files(files)
-            dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
-            dataset2 = dataset.map(PriceBoard.read_tfrecord)
-            iterator = dataset2.make_initializable_iterator()
-            next_dataset = iterator.get_next()
-
-            with tf.Session() as sess:
-                sess.run(iterator.initializer)
-
-                while True:
-                    buy, sell, buy_trade, sell_trade, market_buy_price, \
-                    market_sell_price, fix_buy_price, fix_sell_price, ba, ba_sell, ba_buy, ba_sell_now, ba_buy_now, time = sess.run(
-                        next_dataset)
-
-                    print(time, ba_sell)
-
 
     def train_data_set(self, file_pattern):
-        files = []
-        for pattern in file_pattern:
-            files += sorted(glob.glob(pattern, recursive=True))
+        print('train', file_pattern)
 
-        random.shuffle(files)
-
-        input_dataset = tf.data.Dataset.list_files(files)
+        input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
+        dataset.cache('/tmp/data.cache')
         dataset = dataset.map(Train.read_tfrecord)
         dataset = dataset.repeat(1)
         dataset = dataset.shuffle(buffer_size=100000)
@@ -114,9 +88,9 @@ class Train:
         return dataset
 
     def test_data_set(self, file_pattern):
-        files = sorted(glob.glob(file_pattern, recursive=True))
+        print(file_pattern)
 
-        input_dataset = tf.data.Dataset.list_files(files)
+        input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         dataset = dataset.map(Train.read_tfrecord)
         dataset = dataset.repeat(1)
@@ -135,6 +109,8 @@ class Train:
 
         test_iterator = test_dataset.make_one_shot_iterator()
         test_next_dataset = test_iterator.get_next()
+
+        print("start session")
 
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
@@ -160,6 +136,8 @@ class Train:
 
                 result = self.model.evaluate(boards, ba)
                 print('evaluation->', result)
+
+                print(self.model.predict(boards[0]))
 
             except tf.errors.OutOfRangeError as e:
                 pass
