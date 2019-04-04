@@ -61,8 +61,8 @@ class Train:
         self.model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH), padding='same'))
         self.model.add(keras.layers.MaxPooling2D((2,2)))
 
-#        self.model.add(keras.layers.Conv2D(128, (2, 2), activation='relu', padding='same'))
-#        self.model.add(keras.layers.MaxPooling2D((2,2)))
+        self.model.add(keras.layers.Conv2D(128, (2, 2), activation='relu', padding='same'))
+        self.model.add(keras.layers.MaxPooling2D((2,2)))
 
         self.model.add(keras.layers.Flatten())
         self.model.add(keras.layers.Dropout(0.4))
@@ -82,7 +82,7 @@ class Train:
         dataset.cache('/tmp/data.cache')
         dataset = dataset.map(Train.read_tfrecord)
         dataset = dataset.repeat(1)
-        dataset = dataset.shuffle(buffer_size=100000)
+        dataset = dataset.shuffle(buffer_size=10000)
         dataset = dataset.batch(50000)
 
         return dataset
@@ -134,12 +134,20 @@ class Train:
                 board_array, ba, time = sess.run(test_next_dataset)
                 boards = np.stack(list(map(Train.decode_buffer, board_array)))
 
-                result = self.model.evaluate(boards, ba)
-                print('evaluation->', result)
-
-                print(self.model.predict(boards[0]))
+                loss, acc = self.model.evaluate(boards, ba)
+                print('evaluation->', loss, acc)
 
             except tf.errors.OutOfRangeError as e:
                 pass
 
+            path = '/tmp/bitmodel.h5'
+            self.model.save(path)
 
+    def load_model(self, path):
+        self.model = keras.models.load_model(path)
+
+    def predict(self, board):
+
+        result = self.model.predict((board))
+
+        print(result)

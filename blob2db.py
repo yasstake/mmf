@@ -12,7 +12,7 @@ if __name__ == '__main__':
     month = 12
     day   = 31
 '''
-    if len(sys.argv) <= 4:
+    if 4 <= len(sys.argv):
         year  = int(sys.argv[1])
         month = int(sys.argv[2])
         day   = int(sys.argv[3])
@@ -22,6 +22,6 @@ if __name__ == '__main__':
     print(year, month, day, db_file)
 
     db_loader = DbLoader()
-    db_loader.open_db()
+    db_loader.open_db(db_file)
     db_loader.load_from_blob_by_date(year, month, day)
     db_loader.close_db()

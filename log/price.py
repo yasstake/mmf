@@ -44,6 +44,9 @@ class PriceBoard:
         self.ba_sell_now = 0
         self.ba_buy_now =0
 
+    def get_board(self):
+        board = np.stack([self.buy_order, self.sell_order, self.buy_trade, self.sell_trade])
+        return board
 
     def add_sell_order(self, price, size):
         if price in self.my_sell_order:
