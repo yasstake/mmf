@@ -22,8 +22,8 @@ NUMBER_OF_LAYERS = 4
 
 
 class ACTION:
-    NOP =           0
-    BUY =      0b0001
-    SELL =     0b0010
-    BUY_NOW =  0b0100
-    SELL_NOW = 0b1000
+    NOP =      0
+    BUY =      1
+    BUY_NOW =  2
+    SELL =     3
+    SELL_NOW = 4

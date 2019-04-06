@@ -198,6 +198,10 @@ class PriceBoard:
 
 
     def load_tf_record(self, input_file_name='/tmp/data.tfrecords'):
+#
+
+
+
         with tf.Session() as sess:
             dataset = tf.data.TFRecordDataset(input_file_name, compression_type='GZIP')
             dataset2 = dataset.map(PriceBoard.read_tfrecord)
@@ -333,7 +337,7 @@ class PriceBoardDB(PriceBoard):
             db_start_time, db_end_time = board.start_time()
 
             start_time = (int(db_start_time / (DAY_MIN)) + 1) * DAY_MIN
-            end_time = (int(db_end_time / (DAY_MIN))) * DAY_MIN - 1
+            end_time = (int(db_end_time / (DAY_MIN))) * DAY_MIN
 
             print(start_time, end_time, db_start_time, db_end_time)
 
@@ -356,7 +360,7 @@ class PriceBoardDB(PriceBoard):
 
     @staticmethod
     def export_db_to_blob(db, start_time, end_time, root_dir='/tmp'):
-        BOARD_IN_FILE = 600
+        BOARD_IN_FILE = 1
 
         time = start_time
 
@@ -378,7 +382,14 @@ class PriceBoardDB(PriceBoard):
 
             file = (int(time / width) * width)
 
-            if file == time or tf_writer is None:
+            board = PriceBoardDB.load_from_connected_db(time, db)
+
+            if not board:
+                time += 1
+                print("ERROR to skip load", time)
+                continue
+
+            if board and file == time or tf_writer is None:
                 if tf_writer:
                     tf_writer.close()
 
@@ -388,17 +399,13 @@ class PriceBoardDB(PriceBoard):
                 if root_dir.startswith('/') and not os.path.exists(file_dir):
                     os.makedirs(file_dir)
 
-                file_path = file_dir + '/{:010d}-{:02d}-{:02d}-{:02d}-{:02d}.tfrecords'.format(time, time_object.month, time_object.day, time_object.hour, time_object.minute)
+                file_path = file_dir + '/{:010d}-{:02d}-{:02d}-{:02d}-{:02d}.{:02d}.tfrecords'.format(time, time_object.month, time_object.day, time_object.hour, time_object.minute, board.ba)
 
                 print(time, file_path)
                 tf_writer = PriceBoard.get_tf_writer(file_path)
 
-            board = PriceBoardDB.load_from_connected_db(time, db)
             time += 1
 
-            if not board:
-                print("ERROR to skip load", time)
-                continue
 
             board.save_tf_to_writer(tf_writer)
 
@@ -501,8 +508,9 @@ class PriceBoardDB(PriceBoard):
             board.funding_ttl = 0
             board.funding = 0
 
-
         #load action
+        board.ba = db.select_best_action(time)
+
         ba_nop, ba_buy, ba_buy_now, ba_sell, ba_sell_now = db.calc_best_actions(time)
 
         board.ba_nop = ba_nop

@@ -36,11 +36,11 @@ class MyTestCase(unittest.TestCase):
         board.set_center_price(1000)
 
         x, y = board.get_position(999, 1000.5)
-        self.assertEqual(x, 2)
+        self.assertEqual(x, 1)
         self.assertEqual(y, 17)
 
         x, y = board.get_position(1000, 1000)
-        self.assertEqual(x,1)
+        self.assertEqual(x,0)
         self.assertEqual(y, 16)
 
     def test_save(self):
@@ -61,12 +61,6 @@ class MyTestCase(unittest.TestCase):
         board = PriceBoardDB()
 
         board.load_tf_record()
-
-
-    def test_load_tf_record_set2(self):
-        board = PriceBoardDB()
-
-        board.load_tf_dataset('/tmp/2019/**/*.tfrecords')
 
 
     def test_load_tf_records(self):
@@ -243,8 +237,6 @@ class MyTestCase(unittest.TestCase):
         print("time->", end_time)
 
         t = end_time
-
-        t = 1552695065
 
         board = PriceBoardDB.load_from_db(t)
 

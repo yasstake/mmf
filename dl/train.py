@@ -2,11 +2,14 @@ import glob
 import tensorflow as tf
 from tensorflow.python.keras.models import Sequential
 from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.utils import to_categorical
+
 import tensorflow.python.keras as keras
 import numpy as np
 import random
 
 from log  import constant
+from log.constant import ACTION
 from log.price import PriceBoard
 
 
@@ -45,15 +48,25 @@ class Train:
         ba_buy = features['ba_buy']
         ba_sell_now = features['ba_sell_now']
         ba_buy_now = features['ba_buy_now']
-        ba = [ba_nop, ba_sell, ba_buy, ba_sell_now, ba_buy_now]
+        # ba = [ba_nop, ba_sell, ba_buy, ba_sell_now, ba_buy_now]
+        #ba = features['ba']
+
+        ba = ba_sell * ACTION.SELL + ba_buy * ACTION.BUY + ba_sell_now * ACTION.SELL_NOW + ba_buy_now * ACTION.BUY_NOW
 
         time = features['time']
+
+        print('ba->', ba, ' ', end="")
 
         return  board, ba, time
 
     @staticmethod
     def decode_buffer(buffer):
         return np.frombuffer(buffer, dtype=np.uint8).reshape(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)
+
+    @staticmethod
+    def loss_function(y_true, y_pred):
+        pass
+        #return keras.K.mean(K.abs(y_pred - y_true))
 
     def create_model(self):
         self.model = Sequential()
@@ -67,11 +80,11 @@ class Train:
         self.model.add(keras.layers.Flatten())
         self.model.add(keras.layers.Dropout(0.4))
         self.model.add(Dense(units=32, activation='relu'))
-        self.model.add(Dense(units=5, activation='softmax'))
+        self.model.add(Dense(units=16, activation='softmax'))
 
         self.model.summary()
 
-        self.model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+        self.model.compile(loss='sparse_categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
 
 
     def train_data_set(self, file_pattern):
@@ -121,7 +134,8 @@ class Train:
                     board_array, ba, time = sess.run(train_next_dataset)
 
                     boards = np.stack(list(map(Train.decode_buffer, board_array)))
-
+                    #best = to_categorical(ba)
+                    print(ba, ' ', end='')
                     self.model.fit(boards, ba, batch_size=128)
 
                 except tf.errors.OutOfRangeError as e:

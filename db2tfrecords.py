@@ -1,8 +1,12 @@
 import sys
-import os
-from  log.price import PriceBoardDB
-from log.dbloader import DbLoader
+from log.price import PriceBoardDB
 from log.logdb import LogDb
+
+'''
+usage
+
+python3.7 db2tfrecords.py [dbname] [outdir]
+'''
 
 if __name__ == '__main__':
 
@@ -11,9 +15,10 @@ if __name__ == '__main__':
 
     if len(sys.argv) <= 1:
         pass
-    elif len(sys.argv) <= 2:
+    elif 2 <= len(sys.argv):
         db_file = sys.argv[1]
-        if len(sys.argv) <= 3:
+
+        if len(sys.argv) == 3:
             export_dir = sys.argv[2]
 
     print(db_file, export_dir)

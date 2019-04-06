@@ -477,54 +477,53 @@ class LogDbTest(unittest.TestCase):
         print(line)
 
 
-    def test_best_actions(self):
+    def test_best_action(self):
         db = LogDb()
 
-        action = db.best_actions(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
+        action = db.best_action(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
                        fix_order_buy=0, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=0)
         self.assertTrue(action == constant.ACTION.NOP)
 
-        action = db.best_actions(market_order_buy=None, market_order_buy_f=None, market_order_sell=None, market_order_sell_f=None,
+        action = db.best_action(market_order_buy=None, market_order_buy_f=None, market_order_sell=None, market_order_sell_f=None,
                        fix_order_buy=None, fix_order_buy_f=None, fix_order_sell=None, fix_order_sell_f=None)
         self.assertTrue(action == constant.ACTION.NOP)
 
-        action = db.best_actions(market_order_buy=10, market_order_buy_f=None, market_order_sell=None, market_order_sell_f=14.5,
+        action = db.best_action(market_order_buy=10, market_order_buy_f=None, market_order_sell=None, market_order_sell_f=14.5,
                        fix_order_buy=None, fix_order_buy_f=None, fix_order_sell=None, fix_order_sell_f=None)
         print(action)
         self.assertTrue(action == constant.ACTION.BUY_NOW)
 
-        action = db.best_actions(market_order_buy=10, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=14.5,
+        action = db.best_action(market_order_buy=10, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=14.5,
                        fix_order_buy=10, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=14)
-        self.assertTrue(action & constant.ACTION.BUY)
+        self.assertTrue(action == constant.ACTION.BUY)
 
-        action = db.best_actions(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
+        action = db.best_action(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
                        fix_order_buy=0, fix_order_buy_f=9, fix_order_sell=9.5, fix_order_sell_f=0) # margin is small
         print(action)
         self.assertTrue(action == constant.ACTION.NOP)
 
-        action = db.best_actions(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
+        action = db.best_action(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
                        fix_order_buy=0, fix_order_buy_f=9, fix_order_sell=12, fix_order_sell_f=0)
         print(action)
-        self.assertTrue(action & constant.ACTION.SELL)
+        self.assertTrue(action == constant.ACTION.SELL)
 
 
-        action = db.best_actions(market_order_buy=10, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=14.5,
+        action = db.best_action(market_order_buy=10, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=14.5,
                        fix_order_buy=0, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=0)
-        self.assertTrue(action & constant.ACTION.BUY_NOW)
+        self.assertTrue(action == constant.ACTION.BUY_NOW)
 
-        action = db.best_actions(market_order_buy=0, market_order_buy_f=10, market_order_sell=14.5, market_order_sell_f=0,
+        action = db.best_action(market_order_buy=0, market_order_buy_f=10, market_order_sell=14.5, market_order_sell_f=0,
                        fix_order_buy=0, fix_order_buy_f=0, fix_order_sell=0, fix_order_sell_f=0)
-        self.assertTrue(action & constant.ACTION.SELL_NOW)
+        self.assertTrue(action == constant.ACTION.SELL_NOW)
 
-        action = db.best_actions(market_order_buy=0, market_order_buy_f=3890, market_order_sell=3899, market_order_sell_f=0,
+        action = db.best_action(market_order_buy=0, market_order_buy_f=3890, market_order_sell=3899, market_order_sell_f=0,
                        fix_order_buy=0, fix_order_buy_f=0, fix_order_sell=None, fix_order_sell_f=0)
-        self.assertTrue(action & constant.ACTION.SELL_NOW)
+        self.assertTrue(action == constant.ACTION.SELL_NOW)
 
-        action = db.best_actions(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
+        action = db.best_action(market_order_buy=0, market_order_buy_f=0, market_order_sell=0, market_order_sell_f=0,
                        fix_order_buy=100, fix_order_buy_f=99, fix_order_sell=100, fix_order_sell_f=101)
         print(action)
-        self.assertTrue(action & constant.ACTION.SELL)
-        self.assertTrue(action & constant.ACTION.BUY)
+        self.assertTrue(action == constant.ACTION.SELL)
 
 
     def test_import_db(self):
