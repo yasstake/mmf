@@ -315,38 +315,22 @@ class LogDb:
         return self._calc_best_actions(time, best_action)
 
     def _calc_best_actions(self, time, best_action):
-        count = 0
-
         ba_nop = 0
+        ba_buy = 0
+        ba_buy_now = 0
         ba_sell = 0
         ba_sell_now = 0
-        ba_buy  = 0
-        ba_buy_now = 0
 
         if best_action == constant.ACTION.NOP or best_action is None:
             ba_nop = 1
-        else:
-            if best_action & constant.ACTION.SELL:
-                ba_sell = 1
-                count += 1
-                print(' sell', end='')
-            if best_action & constant.ACTION.SELL_NOW:
-                ba_sell_now = 1
-                count += 1
-                print(' SELL', end='')
-            if best_action & constant.ACTION.BUY:
-                ba_buy = 1
-                count += 1
-                print(' buy', end='')
-            if best_action & constant.ACTION.BUY_NOW:
-                ba_buy_now = 1
-                count += 1
-                print(' BUY', end='')
-
-            ba_buy = ba_buy / count
-            ba_buy_now = ba_buy_now /count
-            ba_sell = ba_sell /count
-            ba_sell_now = ba_sell_now /count
+        elif best_action & constant.ACTION.SELL:
+            ba_sell = 1
+        elif best_action & constant.ACTION.SELL_NOW:
+            ba_sell_now = 1
+        elif best_action & constant.ACTION.BUY:
+            ba_buy = 1
+        elif best_action & constant.ACTION.BUY_NOW:
+            ba_buy_now = 1
 
         return (ba_nop, ba_buy, ba_buy_now, ba_sell, ba_sell_now)
 

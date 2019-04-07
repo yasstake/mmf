@@ -7,6 +7,9 @@ if __name__ == '__main__':
     #    db_file = os.sep + 'tmp' + os.sep + 'bitlog.db'
     db_file = None
 
+    if len(sys.argv) == 1:
+        log_dir = '/tmp/LOG'
+
     if 2  <= len(sys.argv):
         log_dir = sys.argv[1]
 

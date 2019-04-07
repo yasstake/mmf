@@ -33,11 +33,11 @@ class Train:
                 'fix_buy_price': tf.FixedLenFeature([], tf.float32),
                 'fix_sell_price': tf.FixedLenFeature([], tf.float32),
                 'ba': tf.FixedLenFeature([], tf.int64),
-                'ba_nop': tf.FixedLenFeature([], tf.float32),
-                'ba_sell': tf.FixedLenFeature([], tf.float32),
-                'ba_buy': tf.FixedLenFeature([], tf.float32),
-                'ba_sell_now': tf.FixedLenFeature([], tf.float32),
-                'ba_buy_now': tf.FixedLenFeature([], tf.float32),
+                'ba_nop': tf.FixedLenFeature([], tf.int64),
+                'ba_sell': tf.FixedLenFeature([], tf.int64),
+                'ba_buy': tf.FixedLenFeature([], tf.int64),
+                'ba_sell_now': tf.FixedLenFeature([], tf.int64),
+                'ba_buy_now': tf.FixedLenFeature([], tf.int64),
                 'time': tf.FixedLenFeature([], tf.int64)
             })
 
@@ -48,10 +48,8 @@ class Train:
         ba_buy = features['ba_buy']
         ba_sell_now = features['ba_sell_now']
         ba_buy_now = features['ba_buy_now']
-        # ba = [ba_nop, ba_sell, ba_buy, ba_sell_now, ba_buy_now]
-        #ba = features['ba']
 
-        ba = ba_sell * ACTION.SELL + ba_buy * ACTION.BUY + ba_sell_now * ACTION.SELL_NOW + ba_buy_now * ACTION.BUY_NOW
+        ba = [ba_nop, ba_sell, ba_sell_now, ba_buy, ba_buy_now]
 
         time = features['time']
 
@@ -80,11 +78,12 @@ class Train:
         self.model.add(keras.layers.Flatten())
         self.model.add(keras.layers.Dropout(0.4))
         self.model.add(Dense(units=32, activation='relu'))
-        self.model.add(Dense(units=16, activation='softmax'))
+        self.model.add(keras.layers.Dropout(0.4))
+        self.model.add(Dense(units=5, activation='softmax'))
 
         self.model.summary()
 
-        self.model.compile(loss='sparse_categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+        self.model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
 
 
     def train_data_set(self, file_pattern):
@@ -94,9 +93,9 @@ class Train:
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         dataset.cache('/tmp/data.cache')
         dataset = dataset.map(Train.read_tfrecord)
-        dataset = dataset.repeat(1)
+        dataset = dataset.repeat(10)
         dataset = dataset.shuffle(buffer_size=10000)
-        dataset = dataset.batch(50000)
+        dataset = dataset.batch(5000)
 
         return dataset
 
@@ -134,8 +133,7 @@ class Train:
                     board_array, ba, time = sess.run(train_next_dataset)
 
                     boards = np.stack(list(map(Train.decode_buffer, board_array)))
-                    #best = to_categorical(ba)
-                    print(ba, ' ', end='')
+
                     self.model.fit(boards, ba, batch_size=128)
 
                 except tf.errors.OutOfRangeError as e:

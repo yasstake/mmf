@@ -6,6 +6,8 @@ import tensorflow.python.keras as keras
 
 import numpy as np
 
+from tensorflow.python.keras.utils import np_utils
+
 # just do https://keras.io/ tutorial
 
 
@@ -45,13 +47,28 @@ class MyTestCase(unittest.TestCase):
         model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
 
         #Alternatively, you can feed batches to your model manually:
-#        model.train_on_batch(x_batch, y_batch)
+        #        model.train_on_batch(x_batch, y_batch)
 
         #Evaluate your performance in one line:
-#        loss_and_metrics = model.evaluate(x_test, y_test, batch_size=128)
+        #        loss_and_metrics = model.evaluate(x_test, y_test, batch_size=128)
 
         #Or generate predictions on new data:
-#        classes = model.predict(x_test, batch_size=128)
+        #        classes = model.predict(x_test, batch_size=128)
+
+    def test_one_hot_encoding(self):
+
+        src =[0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5]
+
+        array = np_utils.to_categorical(src)
+
+        print(array)
+
+
+
+
+
+
+
 
 
 if __name__ == '__main__':

@@ -186,11 +186,11 @@ class PriceBoard:
             'fix_buy_price': self.feature_float(self.fix_buy_price),
             'fix_sell_price': self.feature_float(self.fix_sell_price),
             'ba': self.feature_int64(self.best_action),
-            'ba_nop': self.feature_float(self.ba_nop),
-            'ba_sell': self.feature_float(self.ba_sell),
-            'ba_buy': self.feature_float(self.ba_buy),
-            'ba_sell_now': self.feature_float(self.ba_sell_now),
-            'ba_buy_now': self.feature_float(self.ba_buy_now),
+            'ba_nop': self.feature_int64(self.ba_nop),
+            'ba_sell': self.feature_int64(self.ba_sell),
+            'ba_buy': self.feature_int64(self.ba_buy),
+            'ba_sell_now': self.feature_int64(self.ba_sell_now),
+            'ba_buy_now': self.feature_int64(self.ba_buy_now),
             'time': self.feature_int64(self.current_time)
             }))
 
