@@ -6,10 +6,12 @@ import random
 
 if __name__ == '__main__':
 
-    dir = './'
+    if len(sys.argv) != 3:
+        print('python3 select_tffile.py org_dir copy_target_dir')
 
-    if len(sys.argv) == 2:
-        dir = sys.argv[1]
+
+    dir = sys.argv[1]
+    target_dir = sys.argv[2]
 
     number_of_files = [0,0,0,0,0]
     for i in range(0, 5):
@@ -25,7 +27,6 @@ if __name__ == '__main__':
 
     print(min_cluster)
 
-
     train_files = []
     for i in range(0, 5):
         files = glob.glob(dir + '*.{:02d}.tfrecords'.format(i))
@@ -35,10 +36,9 @@ if __name__ == '__main__':
         train_files += files
         random.shuffle(train_files)
 
-
-
-    print(train_files)
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
 
     for file in train_files:
-        shutil.copy(file, '/tmp/TRAIN/')
+        shutil.copy(file, target_dir)
 
