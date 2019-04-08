@@ -12,5 +12,10 @@ export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
 cd /tmp; wget https://bootstrap.pypa.io/get-pip.py && sudo /usr/bin/python3.7 get-pip.py
 
 sudo /usr/bin/python3.7 -m pip install websocket-client==0.47
+
 sudo /usr/bin/python3.7 -m pip install --upgrade google-cloud-storage
+sudo /usr/bin/python3.7 -m pip install gym
+sudo /usr/bin/python3.7 -m pip install numpy
+sudo /usr/bin/python3.7 -m pip install matplotlib
+sudo /usr/bin/python3.7 -m pip install --upgrade tensorflow
 

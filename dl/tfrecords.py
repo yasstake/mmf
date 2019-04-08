@@ -52,7 +52,7 @@ def read_one_tf_file(tffile):
     dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
     dataset = dataset.map(read_tfrecord)
     dataset = dataset.repeat(1)
-    dataset = dataset.batch(1)
+    dataset = dataset.batch(20000)
 
     iterator = dataset.make_one_shot_iterator()
     next_dataset = iterator.get_next()

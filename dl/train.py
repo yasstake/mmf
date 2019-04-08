@@ -119,6 +119,6 @@ class Train:
 
     def predict(self, board):
 
-        result = self.model.predict((board))
+        result = self.model.predict_proba((board))
 
-        print(result)
+        return result

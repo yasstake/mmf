@@ -21,7 +21,12 @@ if __name__ == '__main__':
     boards, ba, time = tfrecords.read_one_tf_file(file)
 
     result = train.predict(boards)
-    print(time, ba, result)
+
+    print(result)
+    
+    for i in range(0,len(ba)):
+        print(ba[i], result[i])
+
 
 
 

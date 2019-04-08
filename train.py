@@ -3,6 +3,9 @@ import sys
 
 
 if __name__ == "__main__":
+    if not len(sys.argv) == 3:
+        print('python3.7 train.py trainpattern testpattern')
+    
     train_pattern = sys.argv[1] + '/*.tfrecords'
     test_pattern = sys.argv[2] +  '/*.tfrecords'
 
