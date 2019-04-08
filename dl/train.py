@@ -13,6 +13,7 @@ from log.constant import ACTION
 from log.price import PriceBoard
 from dl.tfrecords import read_tfrecord
 from dl.tfrecords import decode_buffer
+from dl.tfrecords import calc_class_weight
 
 
 class Train:
@@ -72,6 +73,8 @@ class Train:
 
 
     def do_train(self, train_pattern, test_pattern):
+        weight = calc_class_weight(train_pattern)
+
         train_dataset = self.train_data_set(train_pattern)
         test_dataset  = self.test_data_set(test_pattern)
 
@@ -94,7 +97,7 @@ class Train:
 
                     boards = np.stack(list(map(decode_buffer, board_array)))
 
-                    self.model.fit(boards, ba, batch_size=128, class_weight='auto')
+                    self.model.fit(boards, ba, batch_size=128, class_weight=weight)
 
                 except tf.errors.OutOfRangeError as e:
                     print('training end')

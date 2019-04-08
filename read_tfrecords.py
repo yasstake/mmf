@@ -7,5 +7,9 @@ if __name__ == '__main__':
 
     tffile = sys.argv[1]
 
+    weight = dl.tfrecords.calc_class_weight(tffile)
+
+    print('weigth->', weight)
+
     dl.tfrecords.read_one_tf_file(tffile)
 

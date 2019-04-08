@@ -52,7 +52,7 @@ def read_one_tf_file(tffile):
     dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
     dataset = dataset.map(read_tfrecord)
     dataset = dataset.repeat(1)
-    dataset = dataset.batch(20000)
+    dataset = dataset.batch(30000)
 
     iterator = dataset.make_one_shot_iterator()
     next_dataset = iterator.get_next()
@@ -74,6 +74,49 @@ def read_one_tf_file(tffile):
     return boards, ba, time
 
 
+def calc_class_weight(tffile):
+    dataset = tf.data.Dataset.list_files(tffile)
+    dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
+    dataset = dataset.map(read_tfrecord)
+    dataset = dataset.repeat(1)
+    dataset = dataset.batch(1000)
 
+    iterator = dataset.make_initializable_iterator()
+    next_dataset = iterator.get_next()
+
+
+    print("start session")
+
+    boards = None
+    score = np.zeros(5)
+    count = 0
+
+    with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
+        sess.run(iterator.initializer)
+
+        while True:
+            try:
+                board_array, ba, time = sess.run(next_dataset)
+
+                for i in range(0, len(ba)):
+                    score[np.argmax(ba[i])] += 1
+                    count += 1
+
+            except tf.errors.OutOfRangeError as e:
+                print('End Data')
+                break
+
+
+    print(score, count)
+    weight = {0:0.0, 1:0.0, 2:0.0, 3:0.0, 4:0.0}
+
+    for i in range(0,5):
+        if score[i]:
+            weight[i] = count / score[i]
+        else:
+            weight[i] = 0
+
+    return weight
 
 
