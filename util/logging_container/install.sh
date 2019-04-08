@@ -18,4 +18,5 @@ sudo /usr/bin/python3.7 -m pip install gym
 sudo /usr/bin/python3.7 -m pip install numpy
 sudo /usr/bin/python3.7 -m pip install matplotlib
 sudo /usr/bin/python3.7 -m pip install --upgrade tensorflow
+sudo /usr/bin/python3.7 -m pip install --upgrade sklearn
 

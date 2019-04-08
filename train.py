@@ -11,16 +11,26 @@ if __name__ == "__main__":
 
     train = Train()
     train.create_model()
-#    train.do_train('/tmp/2019/T/*.tfrecords', '/tmp/2019/T/*.tfrecords')
-    train.do_train(train_pattern, test_pattern)
 
-#    train.do_train(('/tmp/2019/03/17/*.tfrecords', '/tmp/2019/03/18/*.tfrecords',
-#                    '/tmp/2019/03/19/*.tfrecords', '/tmp/2019/03/20/*.tfrecords'),
-#                   '/tmp/2019/03/21/*.tfrecords')
+#    train.do_train('/tmp/2019/T/*.tfrecords', '/tmp/2019/T/*.tfrecords')
+
+#train.do_train(train_pattern, test_pattern)
+
+#    train.do_train(('/bitlog/BALANCED/20190320/*.tfrecords', '/bitlog/BALANCED/20190321/*.tfrecords',
+#                    '/bitlog/BALANCED/20190322/*.tfrecords', 
+#                    '/bitlog/BALANCED/20190323/*.tfrecords',
+#                    '/bitlog/BALANCED/20190325/*.tfrecords'), '/bitlog/2019/03/29/*.tfrecords')
 
 
 #    train.do_train('gs://bitboard/2019/03/21/*.tfrecords', 'gs://bitboard/2019/03/22/*.tfrecords')
 
+    train.do_train(('/bitlog/2019/03/20/*.tfrecords',
+                    '/bitlog/2019/03/21/*.tfrecords',
+                    '/bitlog/2019/03/22/*.tfrecords',
+                    '/bitlog/2019/03/23/*.tfrecords',
+                    '/bitlog/2019/03/24/*.tfrecords',
+                    '/bitlog/2019/03/25/*.tfrecords',                                         
+                    ), '/bitlog/2019/03/29/*.tfrecords')
 
 
 

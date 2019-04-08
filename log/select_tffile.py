@@ -23,8 +23,10 @@ if __name__ == '__main__':
         print('[FILE]', i, 'number=', number_of_files[i])
 
     print(number_of_files)
-    min_cluster = min(number_of_files)
 
+    list.sort(number_of_files)
+    min_cluster = number_of_files[2]
+    
     print(min_cluster)
 
     train_files = []
