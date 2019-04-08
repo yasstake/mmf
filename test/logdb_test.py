@@ -526,6 +526,16 @@ class LogDbTest(unittest.TestCase):
         self.assertTrue(action == constant.ACTION.SELL)
 
 
+    def test_calc_best_actions(self):
+        db = LogDb()
+
+        print(db._calc_best_actions(0))
+        print(db._calc_best_actions(1))
+        print(db._calc_best_actions(2))
+        print(db._calc_best_actions(3))
+        print(db._calc_best_actions(4))
+
+
     def test_import_db(self):
         db = LogDb()
         db.connect()
