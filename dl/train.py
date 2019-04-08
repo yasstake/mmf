@@ -11,55 +11,14 @@ import random
 from log  import constant
 from log.constant import ACTION
 from log.price import PriceBoard
-
+from dl.tfrecords import read_tfrecord
+from dl.tfrecords import decode_buffer
 
 
 class Train:
     def __init__(self):
         self.model = None
         pass
-
-    @staticmethod
-    def read_tfrecord(serialized):
-        buy = None
-        time = None
-
-        features = tf.parse_single_example(
-            serialized,
-            features={
-                'board': tf.FixedLenFeature([], tf.string),
-                'market_buy_price': tf.FixedLenFeature([], tf.float32),
-                'market_sell_price': tf.FixedLenFeature([], tf.float32),
-                'fix_buy_price': tf.FixedLenFeature([], tf.float32),
-                'fix_sell_price': tf.FixedLenFeature([], tf.float32),
-                'ba': tf.FixedLenFeature([], tf.int64),
-                'ba_nop': tf.FixedLenFeature([], tf.int64),
-                'ba_sell': tf.FixedLenFeature([], tf.int64),
-                'ba_buy': tf.FixedLenFeature([], tf.int64),
-                'ba_sell_now': tf.FixedLenFeature([], tf.int64),
-                'ba_buy_now': tf.FixedLenFeature([], tf.int64),
-                'time': tf.FixedLenFeature([], tf.int64)
-            })
-
-        board = features['board']
-
-        ba_nop = features['ba_nop']
-        ba_sell = features['ba_sell']
-        ba_buy = features['ba_buy']
-        ba_sell_now = features['ba_sell_now']
-        ba_buy_now = features['ba_buy_now']
-
-        ba = [ba_nop, ba_sell, ba_sell_now, ba_buy, ba_buy_now]
-
-        time = features['time']
-
-        print('ba->', ba, ' ', end="")
-
-        return  board, ba, time
-
-    @staticmethod
-    def decode_buffer(buffer):
-        return np.frombuffer(buffer, dtype=np.uint8).reshape(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)
 
     @staticmethod
     def loss_function(y_true, y_pred):
@@ -92,7 +51,7 @@ class Train:
         input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         dataset.cache('/tmp/data.cache')
-        dataset = dataset.map(Train.read_tfrecord)
+        dataset = dataset.map(read_tfrecord)
         dataset = dataset.repeat(10)
         dataset = dataset.shuffle(buffer_size=10000)
         dataset = dataset.batch(5000)
@@ -104,7 +63,7 @@ class Train:
 
         input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
-        dataset = dataset.map(Train.read_tfrecord)
+        dataset = dataset.map(read_tfrecord)
         dataset = dataset.repeat(1)
         dataset = dataset.shuffle(buffer_size=10000)
         dataset = dataset.batch(5000)
@@ -132,7 +91,7 @@ class Train:
                 try:
                     board_array, ba, time = sess.run(train_next_dataset)
 
-                    boards = np.stack(list(map(Train.decode_buffer, board_array)))
+                    boards = np.stack(list(map(decode_buffer, board_array)))
 
                     self.model.fit(boards, ba, batch_size=128)
 
@@ -144,7 +103,7 @@ class Train:
             # Evaluate
             try:
                 board_array, ba, time = sess.run(test_next_dataset)
-                boards = np.stack(list(map(Train.decode_buffer, board_array)))
+                boards = np.stack(list(map(decode_buffer, board_array)))
 
                 loss, acc = self.model.evaluate(boards, ba)
                 print('evaluation->', loss, acc)
