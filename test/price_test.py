@@ -159,39 +159,38 @@ class MyTestCase(unittest.TestCase):
         end_time = self.calc_end_time()
 
         t = end_time
+
+        t = 1553302179 # ba = 1
+        #t = 1553276602 # ba = 2
+        #t = 1553301395 # ba = 3
         #        t = 1552695458
 
         board = PriceBoardDB.load_from_db(t)
 
+        fig = plt.figure()
+
+        fig.text(0.1, 0.1, board.best_action)
+
         array = board.buy_order
-        plt.imshow(array, vmin=0, vmax=255)
-        plt.figure()
+        sub = fig.add_subplot(2, 2, 1)
+        sub.matshow(array, vmin=0, vmax=255)
 
         array = board.sell_order
-        plt.imshow(array, vmin=0, vmax=255)
-        plt.figure()
+        sub = fig.add_subplot(2, 2, 2)
+        sub.matshow(array, vmin=0, vmax=255)
 
-        np.savez_compressed('/tmp/compress_sell_order.npz', array)
 
         array = board.buy_trade
-        plt.imshow(array, vmin=0, vmax=100)
-        plt.figure()
+        sub = fig.add_subplot(2, 2, 3)
+        sub.matshow(array, vmin=0, vmax=100)
 
         array = board.sell_trade
-        plt.imshow(array, vmin=0, vmax=100)
-        plt.figure()
+        sub = fig.add_subplot(2, 2, 4)
+        sub.matshow(array, vmin=0, vmax=100)
 
-        np.savez_compressed('/tmp/compress_sell_trade.npz', array)
+        fig.show()
 
-
-
-#        plt.matshow(board.sell_trade)
-#        plt.matshow(board.sell_order)
-#        plt.matshow(board.buy_order)
-#        print(board.sell_trade)
-#        np.save("/tmp/sell.np", board.sell_trade)
-#        plt.matshow(board.buy_trade)
-        plt.show()
+        print(board.best_action)
 
 
     def calc_end_time(self):
@@ -329,7 +328,12 @@ class MyTestCase(unittest.TestCase):
 
         print(g)
 
+    def test_save_to_img(self):
+        end_time = self.calc_end_time()
 
+        t = end_time
+
+        PriceBoardDB.save_to_img(end_time, '/tmp/')
 
 if __name__ == '__main__':
     unittest.main()

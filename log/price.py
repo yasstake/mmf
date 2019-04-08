@@ -1,10 +1,12 @@
-import numpy as np
-from log.constant import *
-import log.logdb as logdb;
-import tensorflow as tf
-from log.timeutil import *
 import os
-import glob
+import numpy as np
+import tensorflow as tf
+from matplotlib import pylab as plt
+
+from log.timeutil import *
+import log.logdb as logdb;
+from log.constant import *
+
 
 class PriceBoard:
     """
@@ -463,3 +465,54 @@ class PriceBoardDB(PriceBoard):
         else:
             print("NO ORDERBOOK FOUND->", query_time)
             return False
+
+    @staticmethod
+    def save_to_img(time, img_dir):
+        t = time
+
+        board = PriceBoardDB.load_from_db(t)
+
+        fig = plt.figure()
+
+        fig.text(0.1, 0.1, board.best_action)
+
+        fig.text(0.1, 0.2, board.market_buy_price)
+        fig.text(0.1, 0.3, board.center_price)
+        fig.text(0.1, 0.4, board.market_sell_price)
+
+        array = board.buy_order
+        sub = fig.add_subplot(1, 4, 1)
+        sub.matshow(array, vmin=0, vmax=255)
+
+        array = board.sell_order
+        sub = fig.add_subplot(1, 4, 2)
+        sub.matshow(array, vmin=0, vmax=255)
+
+        array = board.buy_trade
+        sub = fig.add_subplot(1, 4, 3)
+        sub.matshow(array, vmin=0, vmax=100)
+
+        array = board.sell_trade
+        sub = fig.add_subplot(1, 4, 4)
+        sub.matshow(array, vmin=0, vmax=100)
+
+        img_file = img_dir + '/{:d}-{:02d}.png'.format(t, board.best_action)
+
+        plt.savefig(img_file)
+
+    @staticmethod
+    def export_db_to_img(db_file, img_dir):
+        DAY_MIN = 24 * 60 * 60
+
+        db = logdb.LogDb(db_file)
+        db.connect()
+        db_start_time, db_end_time = PriceBoardDB.start_time(db)
+
+        start_time = (int(db_start_time / (DAY_MIN)) + 1) * DAY_MIN
+        end_time = (int(db_end_time / (DAY_MIN))) * DAY_MIN
+
+        time = start_time
+
+        while time < end_time:
+            PriceBoardDB.save_to_img(time, img_dir)
+            time += 1

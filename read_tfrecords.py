@@ -7,9 +7,10 @@ if __name__ == '__main__':
 
     tffile = sys.argv[1]
 
-    weight = dl.tfrecords.calc_class_weight(tffile)
+#    weight = dl.tfrecords.calc_class_weight(tffile)
 
-    print('weigth->', weight)
+ #   print('weigth->', weight)
 
-    dl.tfrecords.read_one_tf_file(tffile)
+    board, ba, time = dl.tfrecords.read_one_tf_file(tffile)
 
+    print('boardshape->', board.shape)
