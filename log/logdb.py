@@ -451,8 +451,12 @@ class LogDb:
         else:
             return None
 
-    def update_all_order_prices(self):
-        time_sql = """select time, sell_min from order_book where market_order_sell is NULL"""
+    def update_all_order_prices(self, force=False):
+        if force:
+            time_sql = """select time, sell_min from order_book"""
+        else:
+            time_sql = """select time, sell_min from order_book where market_order_sell is NULL"""
+
         update_sql = """update order_book set market_order_sell = ?, market_order_buy = ?, fix_order_sell = ?, fix_order_buy = ? where time = ?"""
 
         self.cursor.execute(time_sql)
@@ -485,8 +489,11 @@ class LogDb:
 
         return market_order_sell, market_order_buy, fix_order_sell, fix_order_buy
 
-    def update_all_best_action(self):
-        time_sql = """select time from order_book where ba is NULL"""
+    def update_all_best_action(self, force=False):
+        if force:
+            time_sql = """select time from order_book"""
+        else:
+            time_sql = """select time from order_book where ba is NULL"""
         update_sql = """update order_book set ba = ? where time = ?"""
 
         self.cursor.execute(time_sql)

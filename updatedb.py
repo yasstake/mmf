@@ -15,6 +15,6 @@ if __name__ == "__main__":
 
     db.connect()
     db.create_cursor()
-    db.update_all_order_prices()
-    db.update_all_best_action()
+    db.update_all_order_prices(True)
+    db.update_all_best_action(True)
     db.close()
