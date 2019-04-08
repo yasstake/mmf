@@ -467,10 +467,10 @@ class PriceBoardDB(PriceBoard):
             return False
 
     @staticmethod
-    def save_to_img(time, img_dir):
+    def save_to_img(time, img_dir, db):
         t = time
 
-        board = PriceBoardDB.load_from_db(t)
+        board = PriceBoardDB.load_from_connected_db(time, db)
 
         fig = plt.figure()
 
@@ -514,5 +514,8 @@ class PriceBoardDB(PriceBoard):
         time = start_time
 
         while time < end_time:
-            PriceBoardDB.save_to_img(time, img_dir)
+            PriceBoardDB.save_to_img(time, img_dir, db)
             time += 1
+
+        db.close()
+

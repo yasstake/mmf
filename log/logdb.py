@@ -520,13 +520,13 @@ class LogDb:
                 print("fob  {}, mob  {}, fos  {}, mos  {} / ".format(fix_order_buy, market_order_buy, fix_order_sell, market_order_sell), end='')
                 print("fobF {}, mobF {}, fosF {}, mosF {}".format(fix_order_buy_f, market_order_buy_f, fix_order_sell_f, market_order_sell_f), end='')
 
-                if best_action & constant.ACTION.SELL:
+                if best_action == constant.ACTION.SELL:
                     print(' sell', end='')
-                if best_action & constant.ACTION.SELL_NOW:
+                if best_action == constant.ACTION.SELL_NOW:
                     print(' SELL', end='')
-                if best_action & constant.ACTION.BUY:
+                if best_action == constant.ACTION.BUY:
                     print(' buy', end='')
-                if best_action & constant.ACTION.BUY_NOW:
+                if best_action == constant.ACTION.BUY_NOW:
                     print(' BUY', end='')
 
                 print("")
@@ -537,7 +537,7 @@ class LogDb:
     def best_action(self, market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f,
                         market_order_buy_f, fix_order_sell_f, fix_order_buy_f):
 
-        MARGIN = 1
+        MARGIN = 0.5
         MAKER_BUY = (1 - (0.00025))
         TAKER_BUY = (1.00075)
 
@@ -570,22 +570,6 @@ class LogDb:
 
         action = constant.ACTION.NOP
 
-        if market_order_buy:
-            if fix_order_sell_f:
-                if market_order_buy + MARGIN < fix_order_sell_f:
-                    action = constant.ACTION.BUY_NOW
-            if market_order_sell_f:
-                if market_order_buy + MARGIN < market_order_sell_f:
-                    action = constant.ACTION.BUY_NOW
-
-        if fix_order_buy:
-            if fix_order_sell_f:
-                if fix_order_buy + MARGIN < fix_order_sell_f:
-                    action = constant.ACTION.BUY
-            if market_order_sell_f:
-                if fix_order_buy + MARGIN < market_order_sell_f:
-                    action = constant.ACTION.BUY
-
         if market_order_sell:
             if fix_order_buy_f:
                 if market_order_sell > fix_order_buy_f + MARGIN:
@@ -602,7 +586,32 @@ class LogDb:
                 if fix_order_sell > market_order_buy_f + MARGIN:
                     action = constant.ACTION.SELL
 
+        if market_order_buy:
+            if fix_order_sell_f:
+                if market_order_buy + MARGIN < fix_order_sell_f:
+                    action = constant.ACTION.BUY_NOW
+            if market_order_sell_f:
+                if market_order_buy + MARGIN < market_order_sell_f:
+                    action = constant.ACTION.BUY_NOW
+
+        if fix_order_buy:
+            if fix_order_sell_f:
+                if fix_order_buy + MARGIN < fix_order_sell_f:
+                    action = constant.ACTION.BUY
+            if market_order_sell_f:
+                if fix_order_buy + MARGIN < market_order_sell_f:
+                    action = constant.ACTION.BUY
+
         return action
+
+    def action_stat(self):
+        sql = '''select ba, count(*) from order_book group by ba'''
+
+        self.cursor.execute(sql)
+
+        records = self.cursor.fetchall()
+
+        return records
 
 
     def calc_latest_time(self):
