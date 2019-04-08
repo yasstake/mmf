@@ -303,7 +303,7 @@ class PriceBoardDB(PriceBoard):
                 if root_dir.startswith('/') and not os.path.exists(file_dir):
                     os.makedirs(file_dir)
 
-                file_path = file_dir + '/{:010d}-{:02d}-{:02d}-{:02d}-{:02d}.{:02d}.tfrecords'.format(time, time_object.month, time_object.day, time_object.hour, time_object.minute, board.ba)
+                file_path = file_dir + '/{:010d}-{:02d}-{:02d}-{:02d}-{:02d}.{:02d}.tfrecords'.format(time, time_object.month, time_object.day, time_object.hour, time_object.minute, board.best_action)
 
                 print(time, file_path)
                 tf_writer = PriceBoard.get_tf_writer(file_path)
@@ -413,7 +413,7 @@ class PriceBoardDB(PriceBoard):
             board.funding = 0
 
         #load action
-        board.ba = db.select_best_action(time)
+        board.best_action = db.select_best_action(time)
 
         ba_nop, ba_buy, ba_buy_now, ba_sell, ba_sell_now = db.calc_best_actions(time)
 
@@ -474,11 +474,11 @@ class PriceBoardDB(PriceBoard):
 
         fig = plt.figure()
 
-        fig.text(0.1, 0.1, board.best_action)
+        fig.text(0.05, 0.05, board.best_action)
 
-        fig.text(0.1, 0.2, board.market_buy_price)
-        fig.text(0.1, 0.3, board.center_price)
-        fig.text(0.1, 0.4, board.market_sell_price)
+        fig.text(0.2, 0.05, board.market_buy_price)
+        fig.text(0.4, 0.05, board.center_price)
+        fig.text(0.6, 0.05, board.market_sell_price)
 
         array = board.buy_order
         sub = fig.add_subplot(1, 4, 1)
@@ -499,6 +499,7 @@ class PriceBoardDB(PriceBoard):
         img_file = img_dir + '/{:d}-{:02d}.png'.format(t, board.best_action)
 
         plt.savefig(img_file)
+        plt.close()
 
     @staticmethod
     def export_db_to_img(db_file, img_dir):
