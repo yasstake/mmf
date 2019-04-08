@@ -15,9 +15,11 @@ if __name__ == '__main__':
         exit(-1)
 
 
+
     db_file = sys.argv[1]
     img_dir = sys.argv[2]
 
     print(db_file, img_dir)
 
     PriceBoardDB.export_db_to_img(db_file, img_dir)
+

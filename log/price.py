@@ -506,14 +506,21 @@ class PriceBoardDB(PriceBoard):
 
         db = logdb.LogDb(db_file)
         db.connect()
+        db.create_cursor()
+
         db_start_time, db_end_time = PriceBoardDB.start_time(db)
+
+        print('time->', db_end_time)
 
         start_time = (int(db_start_time / (DAY_MIN)) + 1) * DAY_MIN
         end_time = (int(db_end_time / (DAY_MIN))) * DAY_MIN
 
         time = start_time
 
+        print('time->', time)
+
         while time < end_time:
+            print('db->', db)
             PriceBoardDB.save_to_img(time, img_dir, db)
             time += 1
 
