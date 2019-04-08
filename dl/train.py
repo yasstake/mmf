@@ -83,6 +83,32 @@ class Train:
 
         print("start session")
 
+        class_weight = np.zeros(5)
+        with tf.Session() as sess:
+            sess.run(tf.global_variables_initializer())
+            sess.run(train_iterator.initializer)
+
+            while True:
+                try:
+                    board_array, ba, time = sess.run(train_next_dataset)
+
+                    boards = np.stack(list(map(decode_buffer, board_array)))
+
+                    class_weight[0] += ba[0]
+                    class_weight[1] += ba[1]
+                    class_weight[2] += ba[2]
+                    class_weight[3] += ba[3]
+                    class_weight[4] += ba[4]
+
+                    self.model.fit(boards, ba, batch_size=128)
+
+                except tf.errors.OutOfRangeError as e:
+                    print('training end')
+                    break
+                    pass
+
+
+
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(train_iterator.initializer)
