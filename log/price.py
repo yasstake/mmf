@@ -381,20 +381,20 @@ class PriceBoardDB(PriceBoard):
             if time - query_time < 8:
                 pass
             elif time - query_time < 16:
-                time_window = 2
+                pass
             elif time - query_time < 32:
-                time_window = 3
+                pass
             elif time - query_time < 64:
-                time_window = 4
+                pass
             elif time - query_time < 128:
-                time_window = 5
+                pass
             else:
-                time_window = 6
+                pass
 
         board.normalize()
 
         #load prices
-        prices = db.select_order_book_price(time)
+        prices = db.select_order_prices(time)
         if prices:
             market_order_sell, market_order_buy, fix_order_sell, fix_order_buy = prices
 
@@ -483,18 +483,22 @@ class PriceBoardDB(PriceBoard):
         array = board.buy_order
         sub = fig.add_subplot(1, 4, 1)
         sub.matshow(array, vmin=0, vmax=255)
+        fig.text(0.15, 0.95, 'BUY BOOK')
 
         array = board.sell_order
         sub = fig.add_subplot(1, 4, 2)
         sub.matshow(array, vmin=0, vmax=255)
+        fig.text(0.35, 0.95, 'SELL BOOK')
 
         array = board.buy_trade
         sub = fig.add_subplot(1, 4, 3)
         sub.matshow(array, vmin=0, vmax=100)
+        fig.text(0.55, 0.95, 'BUY TRAN')
 
         array = board.sell_trade
         sub = fig.add_subplot(1, 4, 4)
         sub.matshow(array, vmin=0, vmax=100)
+        fig.text(0.75, 0.95, 'SELL TRAN')
 
         img_file = img_dir + '/{:d}-{:02d}.png'.format(t, board.best_action)
 
