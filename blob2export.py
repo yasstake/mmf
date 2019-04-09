@@ -27,6 +27,7 @@ def update_db(year, month, day):
     db.create_cursor()
     db.update_all_order_prices()
     db.update_all_best_action()
+    db.skip_nop_close_to_action()
     db.close()
 
 
@@ -51,10 +52,8 @@ def db2blob(year, month, day, root_dir='/tmp'):
 
 if __name__ == '__main__':
     '''
-    python3.7 blob2db.py yyyy mm dd [db_file_name]
+    python3.7 blob2db.py yyyy mm dd [basename: default is gs:/xxx]
 
-    db_file = os.sep + 'tmp' + os.sep + 'bitlog.db'
-    blob_path = None
     year  = 0
     month = 12
     day   = 31
