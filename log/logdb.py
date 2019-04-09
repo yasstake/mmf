@@ -348,10 +348,10 @@ class LogDb:
 
         sell_min, sell_volume, buy_max, buy_volume = rec
 
-        if order_volume * 2 < sell_volume: # 2 means enough margin
+        if order_volume * 1.5 < sell_volume: # 1.5 means enough margin
             return sell_min
         else:
-            return sell_min + constant.PRICE_UNIT * 2
+            return sell_min + constant.PRICE_UNIT
 
     def calc_market_order_sell(self, time, order_volume):
         """
@@ -366,10 +366,10 @@ class LogDb:
 
         sell_min, sell_volume, buy_max, buy_volume = rec
 
-        if order_volume * 2 < buy_volume: # 2 means enough margin
+        if order_volume * 1.5 < buy_volume: # 2 means enough margin
             return buy_max
         else:
-            return buy_max - constant.PRICE_UNIT * 2
+            return buy_max - constant.PRICE_UNIT
 
 
     def is_suceess_fixed_order_sell(self, time, price, volume, time_width = ORDER_TIME_WIDTH):
@@ -537,7 +537,7 @@ class LogDb:
     def best_action(self, market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f,
                         market_order_buy_f, fix_order_sell_f, fix_order_buy_f):
 
-        MARGIN = 0.5
+        MARGIN = 0
         MAKER_BUY = (1 - (0.00025))
         TAKER_BUY = (1.00075)
 
