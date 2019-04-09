@@ -9,12 +9,24 @@ if __name__ == "__main__":
     train_pattern = sys.argv[1]
     test_pattern = sys.argv[2]
 
+    train_pattern = (
+        '/tmp/2019/03/22/*.tfrecords',
+        '/tmp/2019/03/23/*.tfrecords',
+        '/tmp/2019/03/24/*.tfrecords'
+        '/tmp/2019/03/25/*.tfrecords'
+        '/tmp/2019/03/26/*.tfrecords'
+        '/tmp/2019/03/27/*.tfrecords'
+        '/tmp/2019/03/28/*.tfrecords'
+    )
+
+    test_pattern = ('/tmp/2019/03/29/*.tfrecords')
+
     train = Train()
     train.create_model()
 
     train.do_train(train_pattern, test_pattern)
 
-#    train.do_train('/tmp/2019/T/*.tfrecords', '/tmp/2019/T/*.tfrecords')
+
 
 #train.do_train(train_pattern, test_pattern)
 

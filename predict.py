@@ -24,17 +24,16 @@ if __name__ == '__main__':
 
     result = train.predict(boards)
 
-
     print(result)
 
     score = np.zeros((5, 5))
     
     for i in range(0,len(ba)):
-        print(ba[i], result[i])
         score[np.argmax(ba[i])][np.argmax(result[i])] += 1
 
+    print('----> prediction ---->')
+
     print(score)
-        
 
 
 
