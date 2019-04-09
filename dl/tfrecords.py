@@ -107,6 +107,7 @@ def calc_class_weight(tffile):
 
 
     print(score, count)
+
     weight = {0:0.0, 1:0.0, 2:0.0, 3:0.0, 4:0.0}
 
     for i in range(0,5):

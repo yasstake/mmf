@@ -32,6 +32,7 @@ class Train:
         self.model.add(keras.layers.Conv2D(128, (2, 2), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH), padding='same'))
         self.model.add(keras.layers.Flatten())
         self.model.add(keras.layers.Dropout(0.4))
+        self.model.add(keras.layers.BatchNormalization())
         self.model.add(Dense(units=5, activation='softmax'))
 
         self.model.summary()

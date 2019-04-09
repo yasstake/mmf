@@ -4,7 +4,11 @@ import tensorflow as tf
 import tensorflow.python.keras as keras
 from dl.train import Train
 import numpy as np
+from dl.tfrecords import calc_class_weight
+
+
 class TFFileTest(unittest.TestCase):
+
 
     def test_train_data_set(self):
         input_dataset = tf.data.Dataset.list_files('/tmp/**/*.tfrecords')
@@ -83,3 +87,10 @@ class TFFileTest(unittest.TestCase):
 
         with tf.Session() as sess:
             print(sess.run(next_element))
+
+    def test_calc_class_weight(self):
+        weight = calc_class_weight('/tmp/2019/03/22/*.tfrecords')
+
+        print(weight)
+
+
