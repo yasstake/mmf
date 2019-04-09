@@ -489,6 +489,39 @@ class LogDb:
 
         return market_order_sell, market_order_buy, fix_order_sell, fix_order_buy
 
+
+    def select_best_order_prices(self, time, width):
+        select_sql = """select max(market_order_sell) from order_book where ? <= time and time <= ?"""
+        self.cursor.execute(select_sql, (time, time + width))
+        rec = self.cursor.fetchone()
+        if rec == None:
+            return None
+        market_order_sell = rec[0]
+
+        select_sql = """select max(fix_order_sell) from order_book where ? <= time and time <= ?"""
+        self.cursor.execute(select_sql, (time,time + width))
+        rec = self.cursor.fetchone()
+        if rec == None:
+            return None
+        fix_order_sell = rec[0]
+
+        select_sql = """select min(market_order_buy) from order_book where ? <= time and time <= ?"""
+        self.cursor.execute(select_sql, (time, time + width))
+        rec = self.cursor.fetchone()
+        if rec == None:
+            return None
+        market_order_buy = rec[0]
+
+        select_sql = """select min(fix_order_buy) from order_book where ? <= time and time <= ?"""
+        self.cursor.execute(select_sql, (time, time + width))
+        rec = self.cursor.fetchone()
+        if rec == None:
+            return None
+        fix_order_buy = rec[0]
+
+        return market_order_sell, market_order_buy, fix_order_sell, fix_order_buy
+
+
     def update_all_best_action(self, force=False):
         if force:
             time_sql = """select time from order_book"""
@@ -507,7 +540,7 @@ class LogDb:
 
             market_order_sell, market_order_buy, fix_order_sell, fix_order_buy = rec
 
-            rec = self.select_order_prices(time + constant.FORCAST_TIME)
+            rec = self.select_best_order_prices(time + 10, constant.FORCAST_TIME)
             if rec == None:
                 continue
 
@@ -537,7 +570,7 @@ class LogDb:
     def best_action(self, market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f,
                         market_order_buy_f, fix_order_sell_f, fix_order_buy_f):
 
-        MARGIN = 0
+        MARGIN = constant.PRICE_MARGIN
         MAKER_BUY = (1 - (0.00025))
         TAKER_BUY = (1.00075)
 
