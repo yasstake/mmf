@@ -38,8 +38,6 @@ def read_tfrecord(serialized):
 
     time = features['time']
 
-    print('ba->', ba, ' ', end="")
-
     return board, ba, time
 
 

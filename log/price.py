@@ -282,16 +282,15 @@ class PriceBoardDB(PriceBoard):
         tf_writer = None
         while time < end_time:
 
-            file = (int(time / width) * width)
+            file_time = (int(time / width) * width)
 
             board = PriceBoardDB.load_from_connected_db(time, db)
 
             if not board:
                 time += 1
-                print("ERROR to skip load", time)
                 continue
 
-            if board and file == time or tf_writer is None:
+            if board and file_time == time or tf_writer is None:
                 if tf_writer:
                     tf_writer.close()
 
@@ -301,13 +300,12 @@ class PriceBoardDB(PriceBoard):
                 if root_dir.startswith('/') and not os.path.exists(file_dir):
                     os.makedirs(file_dir)
 
-                file_path = file_dir + '/{:010d}-{:02d}-{:02d}-{:02d}-{:02d}.{:02d}.tfrecords'.format(time, time_object.month, time_object.day, time_object.hour, time_object.minute, board.best_action)
+                file_path = file_dir + '/{:010d}-{:02d}-{:02d}-{:02d}-{:02d}.tfrecords'.format(time, time_object.month, time_object.day, time_object.hour, time_object.minute)
 
                 print(time, file_path)
                 tf_writer = PriceBoard.get_tf_writer(file_path)
 
             time += 1
-
 
             board.save_tf_to_writer(tf_writer)
 
@@ -342,13 +340,27 @@ class PriceBoardDB(PriceBoard):
 
 
     @staticmethod
-    def load_from_connected_db(time, db):
+    def load_from_connected_db(time, db, skip_null_ba = True):
 
         board = PriceBoardDB()
 
         board.set_origin_time(time)
 
-        retry = 10
+        board.best_action = db.select_best_action(time)
+        if skip_null_ba and board.best_action is None: # skip
+            print('skip->', time)
+            return None
+
+        ba_nop, ba_buy, ba_buy_now, ba_sell, ba_sell_now = db.calc_best_actions(time)
+
+        board.ba_nop = ba_nop
+        board.ba_buy = ba_buy
+        board.ba_buy_now = ba_buy_now
+        board.ba_sell = ba_sell
+        board.ba_sell_now = ba_sell_now
+
+
+        retry = 1
         center_price = None
         while retry:
             center_price = db.select_center_price(time)
@@ -410,15 +422,6 @@ class PriceBoardDB(PriceBoard):
             board.funding = 0
 
         #load action
-        board.best_action = db.select_best_action(time)
-
-        ba_nop, ba_buy, ba_buy_now, ba_sell, ba_sell_now = db.calc_best_actions(time)
-
-        board.ba_nop = ba_nop
-        board.ba_buy = ba_buy
-        board.ba_buy_now = ba_buy_now
-        board.ba_sell = ba_sell
-        board.ba_sell_now = ba_sell_now
 
         if 10 < error_count:
             return None
@@ -440,7 +443,7 @@ class PriceBoardDB(PriceBoard):
         #load order book
         order_book = None
 
-        max_retry = 100
+        max_retry = 10
         if time_window < max_retry:
             max_retry = time_window + 50
 
@@ -448,7 +451,6 @@ class PriceBoardDB(PriceBoard):
         while(not order_book and retry < max_retry):
             order_book = db.select_order_book(query_time - retry)
             retry = retry + 1
-
 
         if order_book:
             t, sell_min, sell_book, buy_max, buy_book = order_book
@@ -467,11 +469,11 @@ class PriceBoardDB(PriceBoard):
     def save_to_img(time, img_dir, db, frame_no = None):
         t = time
 
-        board = PriceBoardDB.load_from_connected_db(time, db)
+        board = PriceBoardDB.load_from_connected_db(time, db, False)
 
         fig = plt.figure()
 
-        if board.best_action == ACTION.NOP:
+        if board.best_action == ACTION.NOP or board.best_action is None:
             fig.text(0.05, 0.05, '|' +  str(board.best_action) + '|', fontsize=28)
         elif board.best_action == ACTION.BUY:
             fig.text(0.05, 0.05, str(board.best_action) + '-> ', fontsize=28)
@@ -506,7 +508,7 @@ class PriceBoardDB(PriceBoard):
         sub.matshow(array, vmin=0, vmax=100)
         fig.text(0.75, 0.95, 'SELL TRAN')
 
-        if frame_no == None:
+        if frame_no is None:
             img_file = img_dir + '/{:d}-{:02d}.png'.format(t, board.best_action)
         else:
             img_file = img_dir + '/{:06d}.png'.format(frame_no)
@@ -540,7 +542,7 @@ class PriceBoardDB(PriceBoard):
             PriceBoardDB.save_to_img(time, img_dir, db, frame_no)
             time += 1
 
-            if not frame_no == None:
+            if not frame_no is None:
                 frame_no += 1
 
         db.close()

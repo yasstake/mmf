@@ -29,7 +29,8 @@ if __name__ == '__main__':
 
     db.update_all_order_prices(False)
     db.update_all_best_action(False)
-
+    skip_number = db.skip_nop_close_to_action()
+    print('skip rec->', skip_number)
     db.close()
 
     db = LogDb()

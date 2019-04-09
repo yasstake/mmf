@@ -29,21 +29,14 @@ class Train:
     def create_model(self):
         self.model = Sequential()
 
-        self.model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH), padding='same'))
-        self.model.add(keras.layers.MaxPooling2D((2,2)))
-
-        self.model.add(keras.layers.Conv2D(128, (2, 2), activation='relu', padding='same'))
-        self.model.add(keras.layers.MaxPooling2D((2,2)))
-
+        self.model.add(keras.layers.Conv2D(128, (2, 2), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH), padding='same'))
         self.model.add(keras.layers.Flatten())
-        self.model.add(keras.layers.Dropout(0.4))
-        self.model.add(Dense(units=32, activation='relu'))
         self.model.add(keras.layers.Dropout(0.4))
         self.model.add(Dense(units=5, activation='softmax'))
 
         self.model.summary()
 
-        self.model.compile(loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+        self.model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 
     def train_data_set(self, file_pattern):
@@ -74,6 +67,8 @@ class Train:
 
     def do_train(self, train_pattern, test_pattern):
         weight = calc_class_weight(train_pattern)
+
+        print('weight->', weight)
 
         train_dataset = self.train_data_set(train_pattern)
         test_dataset  = self.test_data_set(test_pattern)

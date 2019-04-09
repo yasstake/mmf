@@ -301,12 +301,12 @@ class LogDb:
 
         self.cursor.execute(sql, (time,))
 
-        ba = self.cursor.fetchone()[0]
+        ba = self.cursor.fetchone()
 
         if ba:
-            return ba
+            return ba[0]
         else:
-            return constant.ACTION.NOP
+            return None
 
 
     def calc_best_actions(self, time):
@@ -465,12 +465,12 @@ class LogDb:
             time, sell_min = rec
 
             market_order_sell = self.calc_market_order_sell(time, sell_min)
-            if market_order_sell == None:
+            if market_order_sell is None:
                 print("cont")
                 continue
 
             market_order_buy  = self.calc_market_order_buy(time, sell_min)
-            if market_order_buy == None:
+            if market_order_buy is None:
                 continue
 
             fix_order_sell = self.calc_fixed_order_sell(time, sell_min)
@@ -483,7 +483,7 @@ class LogDb:
         select_order_sql = """select market_order_sell, market_order_buy, fix_order_sell, fix_order_buy from order_book where time = ?"""
         self.cursor.execute(select_order_sql, (time,))
         rec = self.cursor.fetchone()
-        if rec == None:
+        if rec is None:
             return None
         market_order_sell, market_order_buy, fix_order_sell, fix_order_buy = rec
 
@@ -494,28 +494,28 @@ class LogDb:
         select_sql = """select max(market_order_sell) from order_book where ? <= time and time <= ?"""
         self.cursor.execute(select_sql, (time, time + width))
         rec = self.cursor.fetchone()
-        if rec == None:
+        if rec is None:
             return None
         market_order_sell = rec[0]
 
         select_sql = """select max(fix_order_sell) from order_book where ? <= time and time <= ?"""
         self.cursor.execute(select_sql, (time,time + width))
         rec = self.cursor.fetchone()
-        if rec == None:
+        if rec is None:
             return None
         fix_order_sell = rec[0]
 
         select_sql = """select min(market_order_buy) from order_book where ? <= time and time <= ?"""
         self.cursor.execute(select_sql, (time, time + width))
         rec = self.cursor.fetchone()
-        if rec == None:
+        if rec is None:
             return None
         market_order_buy = rec[0]
 
         select_sql = """select min(fix_order_buy) from order_book where ? <= time and time <= ?"""
         self.cursor.execute(select_sql, (time, time + width))
         rec = self.cursor.fetchone()
-        if rec == None:
+        if rec is None:
             return None
         fix_order_buy = rec[0]
 
@@ -527,6 +527,7 @@ class LogDb:
             time_sql = """select time from order_book"""
         else:
             time_sql = """select time from order_book where ba is NULL"""
+
         update_sql = """update order_book set ba = ? where time = ?"""
 
         self.cursor.execute(time_sql)
@@ -535,13 +536,13 @@ class LogDb:
             time = rec[0]
 
             rec = self.select_order_prices(time)
-            if rec  == None:
+            if rec is None:
                 continue
 
             market_order_sell, market_order_buy, fix_order_sell, fix_order_buy = rec
 
             rec = self.select_best_order_prices(time + 10, constant.FORCAST_TIME)
-            if rec == None:
+            if rec is None:
                 continue
 
             market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_order_buy_f = rec
@@ -636,6 +637,39 @@ class LogDb:
                     action = constant.ACTION.BUY
 
         return action
+
+
+    def skip_nop_close_to_action(self):
+        clear_sql = """update order_book set ba = NULL where time = ?"""
+
+        start_time, end_time = self.get_db_info()
+
+        time = start_time
+        skip_flag = 0
+        skip_number = 0
+        while time <= end_time:
+            best_action = self.select_best_action(time)
+            if best_action is None:
+                time += 1
+                continue
+
+            best_action_next = self.select_best_action(time + ORDER_TIME_WIDTH)
+
+            if best_action != constant.ACTION.NOP or best_action_next != constant.ACTION.NOP:
+                skip_flag = ORDER_TIME_WIDTH
+
+            if skip_flag and best_action == constant.ACTION.NOP:
+                skip_number += 1
+
+                self.cursor.execute(clear_sql, (time,))
+
+            if skip_flag:
+                skip_flag -= 1
+
+            time += 1
+
+        return skip_number
+
 
     def action_stat(self):
         sql = '''select ba, count(*) from order_book group by ba'''
