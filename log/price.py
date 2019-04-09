@@ -401,8 +401,11 @@ class PriceBoardDB(PriceBoard):
             board.market_sell_price = market_order_sell
             board.market_buy_price = market_order_buy
 
-            board.fix_sell_price = fix_order_sell
-            board.fix_buy_price = fix_order_buy
+            if fix_order_sell:
+                board.fix_sell_price = fix_order_sell
+
+            if fix_order_buy:
+                board.fix_buy_price = fix_order_buy
 
         #load funding
         funding = db.select_funding(time)

@@ -23,6 +23,15 @@ if __name__ == '__main__':
 
     print(db_file, export_dir)
 
+    db = LogDb(db_file)
+    db.connect()
+    db.create_cursor()
+
+    db.update_all_order_prices(True)
+    db.update_all_best_action(True)
+
+    db.close()
+
     db = LogDb()
     db.connect()
     db.create_cursor()
@@ -30,4 +39,6 @@ if __name__ == '__main__':
     db.import_db(db_file)
 
     PriceBoardDB.export_board_to_blob(db_object=db)
+
+    db.close()
 
