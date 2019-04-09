@@ -477,7 +477,16 @@ class PriceBoardDB(PriceBoard):
 
         fig = plt.figure()
 
-        fig.text(0.05, 0.05, board.best_action, fontsize=28)
+        if board.best_action == ACTION.NOP:
+            fig.text(0.05, 0.05, '|' +  str(board.best_action) + '|', fontsize=28)
+        elif board.best_action == ACTION.BUY:
+            fig.text(0.05, 0.05, str(board.best_action) + '-> ', fontsize=28)
+        elif board.best_action == ACTION.BUY_NOW:
+            fig.text(0.05, 0.05, str(board.best_action) + '-->', fontsize=28)
+        elif board.best_action == ACTION.SELL:
+            fig.text(0.05, 0.05, ' <-' + str(board.best_action), fontsize=28)
+        elif board.best_action == ACTION.SELL_NOW:
+            fig.text(0.05, 0.05, '<--' + str(board.best_action), fontsize=28)
 
         fig.text(0.2, 0.05, board.market_buy_price)
         fig.text(0.4, 0.05, board.center_price)
