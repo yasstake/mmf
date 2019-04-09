@@ -470,14 +470,14 @@ class PriceBoardDB(PriceBoard):
             return False
 
     @staticmethod
-    def save_to_img(time, img_dir, db):
+    def save_to_img(time, img_dir, db, frame_no = None):
         t = time
 
         board = PriceBoardDB.load_from_connected_db(time, db)
 
         fig = plt.figure()
 
-        fig.text(0.05, 0.05, board.best_action)
+        fig.text(0.05, 0.05, board.best_action, fontsize=28)
 
         fig.text(0.2, 0.05, board.market_buy_price)
         fig.text(0.4, 0.05, board.center_price)
@@ -503,13 +503,16 @@ class PriceBoardDB(PriceBoard):
         sub.matshow(array, vmin=0, vmax=100)
         fig.text(0.75, 0.95, 'SELL TRAN')
 
-        img_file = img_dir + '/{:d}-{:02d}.png'.format(t, board.best_action)
+        if frame_no == None:
+            img_file = img_dir + '/{:d}-{:02d}.png'.format(t, board.best_action)
+        else:
+            img_file = img_dir + '/{:06d}.png'.format(frame_no)
 
         plt.savefig(img_file)
         plt.close()
 
     @staticmethod
-    def export_db_to_img(db_file, img_dir):
+    def export_db_to_img(db_file, img_dir, frame_no = None):
         DAY_MIN = 24 * 60 * 60
 
         db = logdb.LogDb(db_file)
@@ -527,10 +530,15 @@ class PriceBoardDB(PriceBoard):
 
         print('time->', time)
 
+
+
         while time < end_time:
             print('db->', db)
-            PriceBoardDB.save_to_img(time, img_dir, db)
+            PriceBoardDB.save_to_img(time, img_dir, db, frame_no)
             time += 1
+
+            if not frame_no == None:
+                frame_no += 1
 
         db.close()
 

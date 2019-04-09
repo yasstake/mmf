@@ -21,5 +21,5 @@ if __name__ == '__main__':
 
     print(db_file, img_dir)
 
-    PriceBoardDB.export_db_to_img(db_file, img_dir)
+    PriceBoardDB.export_db_to_img(db_file, img_dir, 0)
 
