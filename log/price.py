@@ -235,10 +235,15 @@ class PriceBoardDB(PriceBoard):
     def export_board_to_blob(start_time=None, end_time=None, db_object=None, root_dir='/tmp'):
         DAY_MIN = 24 * 60 * 60
 
-        board = PriceBoardDB()
+        if db_object is None:
+            db = logdb.LogDb('/tmp/bitlog.db')
+            db.connect()
+            db.create_cursor()
+        else:
+            db = db_object
 
         if start_time is None or end_time is None:
-            db_start_time, db_end_time = board.start_time()
+            db_start_time, db_end_time = PriceBoardDB.start_time(db)
 
             start_time = (int(db_start_time / (DAY_MIN)) + 1) * DAY_MIN
             end_time = (int(db_end_time / (DAY_MIN))) * DAY_MIN
@@ -249,13 +254,6 @@ class PriceBoardDB(PriceBoard):
                 print('wrong data')
                 # todo do something
                 return None
-
-        if db_object is None:
-            db = logdb.LogDb('/tmp/bitlog.db')
-            db.connect()
-            db.create_cursor()
-        else:
-            db = db_object
 
         PriceBoardDB.export_db_to_blob(db, start_time, end_time, root_dir)
 
@@ -330,10 +328,6 @@ class PriceBoardDB(PriceBoard):
         start_time, end_time = db.get_db_info()
 
         return start_time, end_time
-
-    @staticmethod
-    def end_time():
-        pass
 
     @staticmethod
     def load_from_db(time, db_name = "/tmp/bitlog.db"):
