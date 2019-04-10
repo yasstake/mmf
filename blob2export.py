@@ -27,10 +27,10 @@ def update_db(year, month, day):
     db.update_all_order_prices()
     db.update_all_best_action()
     #db.skip_nop_close_to_action()
-    #db.close()
+    db.close()
 
 
-def db2blob(year, month, day, root_dir='/tmp'):
+def db2blob(year, month, day, root_dir):
     db_file = '/tmp/{:04d}-{:02d}-{:02d}.db'.format(year, month, day)
 
     db = LogDb()
@@ -65,12 +65,14 @@ if __name__ == '__main__':
     month = int(sys.argv[2])
     day   = int(sys.argv[3])
 
-    if len(sys.argv) == 5:
+    if len(sys.argv) == 4:
+        base = '/tmp'
+    elif len(sys.argv) == 5:
         base = sys.argv[4]
     else:
         base = 'gs://bitboard'
 
-    print(year, month, day)
+    print('export->', year, month, day, base)
 
     log2db(year, month, day)
     update_db(year, month, day)

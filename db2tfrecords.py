@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     db.import_db(db_file)
 
-    PriceBoardDB.export_board_to_blob(db_object=db)
+    PriceBoardDB.export_board_to_blob(db_object=db, root_dir=export_dir)
 
     db.close()
 
