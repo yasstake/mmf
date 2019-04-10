@@ -472,7 +472,7 @@ class PriceBoardDB(PriceBoard):
         board = PriceBoardDB.load_from_connected_db(time, db, False)
 
         if board is None:
-            return
+            return False
 
         fig = plt.figure()
 
@@ -519,6 +519,8 @@ class PriceBoardDB(PriceBoard):
         plt.savefig(img_file)
         plt.close()
 
+        return True
+
     @staticmethod
     def export_db_to_img(db_file, img_dir, frame_no = None):
         DAY_MIN = 24 * 60 * 60
@@ -538,15 +540,12 @@ class PriceBoardDB(PriceBoard):
 
         print('time->', time)
 
-
-
         while time < end_time:
             print('db->', db)
-            PriceBoardDB.save_to_img(time, img_dir, db, frame_no)
+            result = PriceBoardDB.save_to_img(time, img_dir, db, frame_no)
             time += 1
 
-            if not frame_no is None:
+            if frame_no is not None and result:
                 frame_no += 1
 
         db.close()
-
