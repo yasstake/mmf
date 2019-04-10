@@ -40,7 +40,13 @@ class LogDb:
     def close(self):
         if self.connection:
             self.commit()
-            self.connection.execute("VACUUM")
+
+            try:
+                #vaccum may fail
+                self.connection.execute("VACUUM")
+            except:
+                pass
+
             self.connection.close()
             self.connection = None
 

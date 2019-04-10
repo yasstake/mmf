@@ -27,7 +27,7 @@ def update_db(year, month, day):
     db.update_all_order_prices()
     db.update_all_best_action()
     #db.skip_nop_close_to_action()
-    db.close()
+    #db.close()
 
 
 def db2blob(year, month, day, root_dir='/tmp'):
