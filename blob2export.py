@@ -7,7 +7,6 @@ from log.timeutil import time_sec
 
 
 
-
 def log2db(year, month, day):
     db_file = '/tmp/{:04d}-{:02d}-{:02d}.db'.format(year, month, day)
 
@@ -27,7 +26,7 @@ def update_db(year, month, day):
     db.create_cursor()
     db.update_all_order_prices()
     db.update_all_best_action()
-    db.skip_nop_close_to_action()
+    #db.skip_nop_close_to_action()
     db.close()
 
 
