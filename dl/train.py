@@ -1,20 +1,17 @@
-import glob
+
 import tensorflow as tf
-from tensorflow.python.keras.models import Sequential
-from tensorflow.python.keras.layers import Dense
-from tensorflow.python.keras.utils import to_categorical
 
-import tensorflow.python.keras as keras
+#import tensorflow.python.keras as keras
+import tensorflow.contrib.keras.api.keras as keras
+
 import numpy as np
-import random
+from sklearn.metrics import confusion_matrix
 
-from log  import constant
-from log.constant import ACTION
-from log.price import PriceBoard
+from log import constant
 from dl.tfrecords import read_tfrecord
+from dl.tfrecords import read_one_tf_file
 from dl.tfrecords import decode_buffer
 from dl.tfrecords import calc_class_weight
-
 
 class Train:
     def __init__(self):
@@ -27,13 +24,14 @@ class Train:
         #return keras.K.mean(K.abs(y_pred - y_true))
 
     def create_model(self):
-        self.model = Sequential()
+        self.model = keras.models.Sequential()
 
         self.model.add(keras.layers.Conv2D(128, (2, 2), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH), padding='same'))
+        self.model.add(keras.layers.BatchNormalization())
         self.model.add(keras.layers.Flatten())
         self.model.add(keras.layers.Dropout(0.4))
         self.model.add(keras.layers.BatchNormalization())
-        self.model.add(Dense(units=5, activation='softmax'))
+        self.model.add(keras.layers.Dense(units=5, activation='softmax'))
 
         self.model.summary()
 
@@ -59,7 +57,7 @@ class Train:
         input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         dataset = dataset.map(read_tfrecord)
-        dataset = dataset.repeat(5)
+        dataset = dataset.repeat(1)
         dataset = dataset.shuffle(buffer_size=10000)
         dataset = dataset.batch(5000)
 
@@ -93,12 +91,15 @@ class Train:
 
                     boards = np.stack(list(map(decode_buffer, board_array)))
 
-                    self.model.fit(boards, ba, batch_size=128, class_weight=weight)
+                    self.model.fit(boards, ba, batch_size=512, class_weight=weight, verbose=2)
 
                 except tf.errors.OutOfRangeError as e:
                     print('training end')
                     break
                     pass
+
+            path = '/tmp/bitmodel.h5'
+            self.model.save(path)
 
             # Evaluate
             try:
@@ -111,8 +112,16 @@ class Train:
             except tf.errors.OutOfRangeError as e:
                 pass
 
-            path = '/tmp/bitmodel.h5'
-            self.model.save(path)
+            #predict
+            boards, ba, time = read_one_tf_file(test_pattern)
+
+            result = self.predict(boards)
+
+            score = self.predict_summary(ba, result)
+
+            print('predict summary--->')
+            print(score)
+
 
     def load_model(self, path):
         self.model = keras.models.load_model(path)
@@ -122,3 +131,56 @@ class Train:
         result = self.model.predict_proba((board))
 
         return result
+
+    def predict_summary(self, answer, predict):
+        p = []
+        a = []
+        for i in range(0, len(answer)):
+            p.append(np.argmax(predict[i]))
+            a.append(np.argmax(answer[i]))
+
+        score = confusion_matrix(p, a)
+
+        return score
+
+    def print_predict_summary(self, score):
+        shape = score.shape
+
+        print(shape)
+
+        print(score)
+
+
+if __name__ == "__main__":
+
+    train_pattern = (
+        '/tmp/2019/03/22/*.tfrecords',
+        '/tmp/2019/03/23/*.tfrecords',
+        '/tmp/2019/03/24/*.tfrecords',
+        '/tmp/2019/03/25/*.tfrecords'
+    )
+
+    test_pattern = ('/tmp/2019/03/26/*.tfrecords')
+
+    train_pattern = (
+        'gs://bitboard/2019/03/22/*.tfrecords',
+        'gs://bitboard/2019/03/23/*.tfrecords',
+        'gs://bitboard/2019/03/24/*.tfrecords',
+        'gs://bitboard/2019/03/25/*.tfrecords',
+        'gs://bitboard/2019/03/26/*.tfrecords',
+        'gs://bitboard/2019/03/27/*.tfrecords',
+        'gs://bitboard/2019/03/28/*.tfrecords',
+        'gs://bitboard/2019/03/29/*.tfrecords',
+        'gs://bitboard/2019/03/30/*.tfrecords',
+        'gs://bitboard/2019/03/31/*.tfrecords'
+    )
+
+    test_pattern = ('gs://bitboard/2019/04/01/*.tfrecords')
+
+    train = Train()
+    train.create_model()
+
+    train.do_train(train_pattern, test_pattern)
+
+
+

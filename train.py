@@ -12,14 +12,11 @@ if __name__ == "__main__":
     train_pattern = (
         '/tmp/2019/03/22/*.tfrecords',
         '/tmp/2019/03/23/*.tfrecords',
-        '/tmp/2019/03/24/*.tfrecords'
+        '/tmp/2019/03/24/*.tfrecords',
         '/tmp/2019/03/25/*.tfrecords'
-        '/tmp/2019/03/26/*.tfrecords'
-        '/tmp/2019/03/27/*.tfrecords'
-        '/tmp/2019/03/28/*.tfrecords'
     )
 
-    test_pattern = ('/tmp/2019/03/29/*.tfrecords')
+    test_pattern = ('/tmp/2019/03/26/*.tfrecords')
 
     train = Train()
     train.create_model()

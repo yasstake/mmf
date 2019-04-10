@@ -1,9 +1,7 @@
 
 import tensorflow as tf
 import numpy as np
-import sys
 from log import constant
-from matplotlib import pylab as plt
 
 def read_tfrecord(serialized):
     buy = None

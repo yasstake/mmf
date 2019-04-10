@@ -3,6 +3,43 @@ import log.constant as constant
 import os
 from log.timeutil import date_path
 
+
+class BoardStorage:
+    def __init__(self, project = constant.LOG_PROJECT_NAME, bucket_name = constant.BOARD_BUCKET_NAME):
+        self.project = project
+        self.bucket_name = bucket_name
+
+    def list_dir(self, path):
+        storage_client = storage.Client(self.project)
+        bucket = storage_client.get_bucket(self.bucket_name)
+
+        bucket.list_blobs(dir, delimiter='/')
+
+        response = iter._get_next_page_response()
+        for prefix in response['prefix']:
+            print (prefix)
+
+    def create_test_set(self):
+        storage_client = storage.Client(self.project)
+        bucket = storage_client.get_bucket(self.bucket_name)
+
+        print(list(bucket.list_blobs(prefix='2019/', delimiter='/')))
+
+        years = bucket.list_blobs(prefix='bitboard/', delimiter='')
+
+        for year in years:
+            print('year->', year.name)
+            months = bucket.list_blobs(prefix=year.name, delimiter='/')
+            for month in months:
+                print(month.name)
+                days = bucket.list_blobs(prefix=month.name, delimiter='/')
+                for day in days:
+                    print(day.name)
+
+
+
+
+
 class LogStorage:
     def __init__(self,  project = constant.LOG_PROJECT_NAME, bucket_name = constant.LOG_BUCKET_NAME):
         self.project = project

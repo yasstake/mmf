@@ -1,11 +1,23 @@
 import unittest
 import log.constant as constant
-from gcp.storage import storage
+from gcp.storage import storage as gcs
 
 from gcp.storage import LogStorage
+from gcp.storage import BoardStorage
 
 
 class MyTestCase(unittest.TestCase):
+    def test_board_storage_list(self):
+        bs = BoardStorage()
+
+        print(bs.create_test_set())
+
+
+    def test_list_dir(self):
+        bs = BoardStorage()
+
+        print(bs.list_dir(''))
+
     def test_storage_year(self):
         storage = LogStorage()
         years = storage.list_dir('')
@@ -88,7 +100,8 @@ class MyTestCase(unittest.TestCase):
 
         print(storage.list_blob_names_by_date_with_padding(2019, 3,19))
 
-
+    def test_list_board_dir(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
