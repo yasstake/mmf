@@ -471,6 +471,9 @@ class PriceBoardDB(PriceBoard):
 
         board = PriceBoardDB.load_from_connected_db(time, db, False)
 
+        if board is None:
+            return
+
         fig = plt.figure()
 
         if board.best_action == ACTION.NOP or board.best_action is None:
