@@ -56,6 +56,7 @@ class Train:
 
         input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
+        dataset = dataset.cache("./tfcache")
         dataset = dataset.map(read_tfrecord)
         dataset = dataset.repeat(1)
         dataset = dataset.shuffle(buffer_size=10000)

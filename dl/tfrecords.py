@@ -46,6 +46,7 @@ def decode_buffer(buffer):
 def read_one_tf_file(tffile):
     dataset = tf.data.Dataset.list_files(tffile)
     dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
+    dataset = dataset.cache("./tfcache")
     dataset = dataset.map(read_tfrecord)
     dataset = dataset.repeat(1)
     dataset = dataset.batch(30000)
@@ -73,13 +74,14 @@ def read_one_tf_file(tffile):
 def calc_class_weight(tffile):
     dataset = tf.data.Dataset.list_files(tffile)
     dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
+    dataset = dataset.cache("./tfcache")
     dataset = dataset.map(read_tfrecord)
     dataset = dataset.repeat(1)
-    dataset = dataset.batch(1000)
+    dataset = dataset.shuffle(buffer_size=20000)
+    dataset = dataset.batch(50000)
 
     iterator = dataset.make_initializable_iterator()
     next_dataset = iterator.get_next()
-
 
     print("start session")
 
@@ -91,18 +93,15 @@ def calc_class_weight(tffile):
         sess.run(tf.global_variables_initializer())
         sess.run(iterator.initializer)
 
-        while True:
-            try:
-                board_array, ba, time = sess.run(next_dataset)
+        try:
+            board_array, ba, time = sess.run(next_dataset)
 
-                for i in range(0, len(ba)):
-                    score[np.argmax(ba[i])] += 1
-                    count += 1
+            for i in range(0, len(ba)):
+                score[np.argmax(ba[i])] += 1
+                count += 1
 
-            except tf.errors.OutOfRangeError as e:
-                print('End Data')
-                break
-
+        except tf.errors.OutOfRangeError as e:
+            print('End Data')
 
     print(score, count)
 
@@ -115,5 +114,3 @@ def calc_class_weight(tffile):
             weight[i] = 0
 
     return weight
-
-
