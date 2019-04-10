@@ -46,7 +46,7 @@ def decode_buffer(buffer):
 def read_one_tf_file(tffile):
     dataset = tf.data.Dataset.list_files(tffile)
     dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
-    dataset = dataset.cache("./tfcache")
+    #dataset = dataset.cache("./tfcache")
     dataset = dataset.map(read_tfrecord)
     dataset = dataset.repeat(1)
     dataset = dataset.batch(30000)

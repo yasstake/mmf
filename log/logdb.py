@@ -8,7 +8,9 @@ import zlib
 from log import constant
 from functools import lru_cache
 
-DB_NAME = "file::memory:?cache=shared"
+#DB_NAME = "file::memory:?cache=shared"
+DB_NAME = ":memory:"
+
 ORDER_TIME_WIDTH = 120
 
 class LogDb:
