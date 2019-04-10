@@ -14,22 +14,6 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
-def findItemByKeys(table, matchData):
-    try:
-        for item in table:
-            if item['id'] == matchData['id']:
-                return item
-    except:
-        logger.debug("findItemByKeys Error")
-        logger.debug(item)
-        logger.debug(matchData)
-    finally:
-        pass
-
-    logger.debug("Item not found")
-    return None
-
-
 class LogLoader:
     def __init__(self, order_book_tick = None, trade_tick = None, funding_tick = None):
         self.order_book_tick = order_book_tick
@@ -37,8 +21,8 @@ class LogLoader:
         self.funding_tick = funding_tick
 
         # order book
-        self.data = {}
-        self.keys = {}
+        self.data_hash = dict()
+
         self.time_stamp = 0
         self.ready = False
 
@@ -94,7 +78,6 @@ class LogLoader:
             else:
                 print("Error")
 
-
             self.trade_time = time
 
 
@@ -117,31 +100,26 @@ class LogLoader:
         if action == 'partial':
             logger.debug('partial')
             self.ready = True
-            self.data = message['data']
+            self.data_hash = {}
+            for d in message['data']:
+                self.data_hash[d['id']] = d
         elif action == 'insert' and self.ready:
-            self.data += message['data']
-            pass
+            for d in message['data']:
+                self.data_hash[d['id']] = d
         elif action == 'update' and self.ready:
-            for updateData in message['data']:
-                item = findItemByKeys(self.data, updateData)
-                if not item:
-                    return  # No item found to update. Could happen before push
-                item.update(updateData)
-            pass
+            for d in message['data']:
+                for key in d:
+                    self.data_hash[d['id']][key] = d[key]
         elif action == 'delete' and self.ready:
             # Locate the item in the collection and remove it.
             for deleteData in message['data']:
-                item = findItemByKeys(self.data, deleteData)
-                if not item:
-                    return
-                self.data.remove(item)
-            pass
+                del (self.data_hash[deleteData['id']])
         else:
             logger.debug('wait for partial')
             pass
 
     def get_market_depth(self):
-        return self.data
+        return list(self.data_hash.values())
 
     def load_line(self, line):
         table = self.on_message(line)
