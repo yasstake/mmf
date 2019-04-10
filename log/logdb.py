@@ -41,12 +41,6 @@ class LogDb:
         if self.connection:
             self.commit()
 
-            try:
-                #vaccum may fail
-                self.connection.execute("VACUUM")
-            except:
-                pass
-
             self.connection.close()
             self.connection = None
 
