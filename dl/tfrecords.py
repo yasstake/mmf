@@ -74,7 +74,7 @@ def read_one_tf_file(tffile):
 def calc_class_weight(tffile):
     dataset = tf.data.Dataset.list_files(tffile)
     dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
-    dataset = dataset.cache("./tfcache")
+    #dataset = dataset.cache("./tfcache")
     dataset = dataset.map(read_tfrecord)
     dataset = dataset.repeat(1)
     dataset = dataset.shuffle(buffer_size=20000)
