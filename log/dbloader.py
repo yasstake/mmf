@@ -36,17 +36,11 @@ class DbLoader:
     def load_file(self, log_file):
         print('Processs ' + log_file, end='')
         try:
-            start_time = timestamp()
-
             self.log_loader.load(log_file)
-
-            end_time = timestamp()
-            print('Process time =' + str(end_time - start_time))            
         except EOFError as e:
             print('error to process fileError EOF', e)
         except Exception as e:
             print('File process error SKIP', e)
-
 
     def load_dir(self, log_dir ='/tmp'):
         log_files = sorted(glob.glob(log_dir + '/' + '*.log'))
