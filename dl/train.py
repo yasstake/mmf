@@ -26,11 +26,15 @@ class Train:
     def create_model(self):
         self.model = keras.models.Sequential()
 
-        self.model.add(keras.layers.Conv2D(128, (2, 2), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH), padding='same'))
+        self.model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH), padding='same'))
+        self.model.add(keras.layers.BatchNormalization())
+        self.model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'))
+        self.model.add(keras.layers.BatchNormalization())
+        self.model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'))
         self.model.add(keras.layers.BatchNormalization())
         self.model.add(keras.layers.Flatten())
+        self.model.add(keras.layers.BatchNormalization())        
         self.model.add(keras.layers.Dropout(0.4))
-        self.model.add(keras.layers.BatchNormalization())
         self.model.add(keras.layers.Dense(units=5, activation='softmax'))
 
         self.model.summary()
@@ -154,14 +158,6 @@ class Train:
 
 if __name__ == "__main__":
 
-    train_pattern = (
-        '/tmp/2019/03/22/*.tfrecords',
-        '/tmp/2019/03/23/*.tfrecords',
-        '/tmp/2019/03/24/*.tfrecords',
-        '/tmp/2019/03/25/*.tfrecords'
-    )
-
-    test_pattern = ('/tmp/2019/03/26/*.tfrecords')
 
     train_pattern = (
         'gs://bitboard/2019/03/22/*.tfrecords',
@@ -178,6 +174,30 @@ if __name__ == "__main__":
 
     test_pattern = ('gs://bitboard/2019/04/01/*.tfrecords')
 
+    train_pattern = (
+        '/bitlog/2019/03/23/*.tfrecords')
+    
+    train_pattern = (
+        '/bitlog/2019/03/23/*.tfrecords',
+        '/bitlog/2019/03/24/*.tfrecords',
+        '/bitlog/2019/03/25/*.tfrecords',
+        '/bitlog/2019/03/26/*.tfrecords',
+        '/bitlog/2019/03/27/*.tfrecords',        
+        '/bitlog/2019/03/28/*.tfrecords',
+        '/bitlog/2019/03/29/*.tfrecords',        
+        '/bitlog/2019/03/30/*.tfrecords',
+        '/bitlog/2019/03/31/*.tfrecords',        
+        '/bitlog/2019/04/01/*.tfrecords',
+        '/bitlog/2019/04/02/*.tfrecords',
+        '/bitlog/2019/04/03/*.tfrecords',
+        '/bitlog/2019/04/04/*.tfrecords',
+        '/bitlog/2019/04/05/*.tfrecords',
+        '/bitlog/2019/04/06/*.tfrecords'
+    )
+
+
+    test_pattern = ('/bitlog/2019/04/07/*.tfrecords')
+    
     train = Train()
     train.create_model()
 
