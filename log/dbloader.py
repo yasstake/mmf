@@ -44,8 +44,8 @@ class DbLoader:
             print('Process time =' + str(end_time - start_time))            
         except EOFError as e:
             print('error to process fileError EOF', e)
-        except:
-            print('File process error SKIP')
+        except Exception as e:
+            print('File process error SKIP', e)
 
 
     def load_dir(self, log_dir ='/tmp'):
