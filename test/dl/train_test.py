@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
 from dl.train import Train
+from sklearn.metrics import confusion_matrix
 
 class MyTestCase(unittest.TestCase):
 
@@ -29,6 +30,16 @@ class MyTestCase(unittest.TestCase):
 
         array = np.array([1, 2, 3, 4])
         print(array)
+
+    def test_evaluate_model(self):
+        train = Train()
+
+        acual  = [1, 1, 2, 3, 4, 5, 6, 7, 8]
+        predict= [0, 1, 2, 3, 4, 5, 6, 7, 8]
+
+        summary = confusion_matrix(acual, predict)
+
+        print(summary)
 
 
 

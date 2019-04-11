@@ -1,9 +1,7 @@
-from setuptools import setup
-from setuptools import find_packages
+#!python3
+# -*- coding: utf-8 -*-
 
-setup(
-    name="dl",
-    version="0.1.0",
-    install_requires=['tensorflow', "scipy"],
-    packages=['dl', 'log', 'gcp']
-)
+from setuptools import setup
+
+setup()
+
