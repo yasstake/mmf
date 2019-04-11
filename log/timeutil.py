@@ -1,14 +1,16 @@
-import re
 import datetime
+import re
+
+
 #from pytz import utc
 
 
 
 def time_sec(iso_time):
     if iso_time.endswith('Z'):
-        iso_time = iso_time.replace('Z', '+00:00')
+        iso_time = iso_time.replace('Z', '+0000')
     elif not re.search('\+', iso_time):
-        iso_time = iso_time + '+00:00'
+        iso_time = iso_time + '+0000'
 
     sec = datetime.datetime.strptime(iso_time, "%Y-%m-%dT%H:%M:%S.%f%z")
 
