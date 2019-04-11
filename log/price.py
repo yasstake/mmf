@@ -27,6 +27,12 @@ class PriceBoard:
         self.sell_order = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
         self.buy_order = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
 
+        self.buy_book_price = 0
+        self.buy_book_vol   = 0
+
+        self.sell_book_price = 0
+        self.sell_book_vol   = 0
+
         self.my_sell_order = {}
         self.my_buy_order = {}
 
@@ -64,6 +70,12 @@ class PriceBoard:
 
     def set_origin_time(self,time):
         self.current_time = time
+
+    def set_board_prices(self, sell_min, sell_vol, buy_max, buy_vol):
+        self.sell_book_price = sell_min
+        self.sell_book_vol = sell_vol
+        self.buy_book_price = buy_max
+        self.buy_book_vol = buy_vol
 
     def get_origin_time(self):
         return self.current_time
@@ -183,6 +195,10 @@ class PriceBoard:
 
         record = tf.train.Example(features=tf.train.Features(feature={
             'board': self.feature_bytes(board.tobytes()),
+            'sell_book_price': self.feature_float(self.sell_book_price),
+            'sell_book_vol': self.feature_float(self.sell_book_vol),
+            'buy_book_price': self.feature_float(self.buy_book_price),
+            'buy_book_vol': self.feature_float(self.buy_book_vol),
             'market_buy_price': self.feature_float(self.market_buy_price),
             'market_sell_price': self.feature_float(self.market_sell_price),
             'fix_buy_price': self.feature_float(self.fix_buy_price),
@@ -362,8 +378,14 @@ class PriceBoardDB(PriceBoard):
 
         retry = 1
         center_price = None
+        sell_min = None
+        sell_volume = None
+        buy_max = None
+        buy_volume = None
+
         while retry:
-            center_price = db.select_center_price(time)
+            sell_min, sell_volume, buy_max, buy_volume = db.select_book_price(time)
+            center_price =  db.calc_center_price(buy_max, sell_min)
             if center_price:
                 break
             time = time + 1
@@ -374,6 +396,7 @@ class PriceBoardDB(PriceBoard):
             return None
 
         board.set_center_price(center_price)
+        board.set_board_prices(sell_min, sell_volume, buy_max, buy_volume)
 
         error_count = 0
         query_time = time

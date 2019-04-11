@@ -186,12 +186,12 @@ class LogDb:
         else:
             return min + (int((diff + constant.PRICE_UNIT)))/2
 
-    def select_board_price(self, time):
+    def select_book_price(self, time):
         """
         :param time:
         :return: time, center_price
         """
-        sql = "select sell_min, buy_max from order_book where time = ?"
+        sql = "select sell_min, sell_volume, buy_max, buy_volume from order_book where time = ?"
 
         self.cursor.execute(sql, (time,))
 
@@ -203,10 +203,10 @@ class LogDb:
             return None
 
     def select_center_price(self, time):
-        prices = self.select_board_price(time)
+        prices = self.select_book_price(time)
 
         if prices:
-            sell_min, buy_max = prices
+            sell_min, sell_vol, buy_max, buy_vol = prices
             return self.calc_center_price(buy_max, sell_min)
         else:
             return None

@@ -11,6 +11,10 @@ def read_tfrecord(serialized):
         serialized,
         features={
             'board': tf.FixedLenFeature([], tf.string),
+            'sell_book_price': tf.FixedLenFeature([], tf.float32),
+            'sell_book_vol': tf.FixedLenFeature([], tf.float32),
+            'buy_book_price': tf.FixedLenFeature([], tf.float32),
+            'buy_book_vol': tf.FixedLenFeature([], tf.float32),
             'market_buy_price': tf.FixedLenFeature([], tf.float32),
             'market_sell_price': tf.FixedLenFeature([], tf.float32),
             'fix_buy_price': tf.FixedLenFeature([], tf.float32),

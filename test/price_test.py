@@ -91,7 +91,11 @@ class MyTestCase(unittest.TestCase):
 
     def test_load_from_db_one_rec(self):
         end_time = self.calc_end_time() - 600
-        self._load_from_db_one_rec_with_time(end_time)
+        board = self._load_from_db_one_rec_with_time(end_time)
+        print(board.sell_book_price)
+        print(board.sell_book_vol)
+        print(board.buy_book_price)
+        print(board.buy_book_vol)
 
 
     def _load_from_db_one_rec_with_time(self, time):
@@ -125,6 +129,8 @@ class MyTestCase(unittest.TestCase):
             print('', end='\n')
         print(board)
 
+        return board
+
     def test_load_from_db_one(self):
         end_time = self.calc_end_time()
 
@@ -149,7 +155,11 @@ class MyTestCase(unittest.TestCase):
         retry = 600
         while retry:
             board = PriceBoardDB.load_from_connected_db(t-retry, db)
-            board.save_tf_to_writer(writer)
+
+            if board:
+                board.save_tf_to_writer(writer)
+                break
+
             retry -= 1
 
         db.close()
