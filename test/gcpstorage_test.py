@@ -1,9 +1,7 @@
 import unittest
-import log.constant as constant
-from gcp.storage import storage as gcs
 
-from gcp.storage import LogStorage
 from gcp.storage import BoardStorage
+from gcp.storage import LogStorage
 
 
 class MyTestCase(unittest.TestCase):
@@ -12,11 +10,13 @@ class MyTestCase(unittest.TestCase):
 
         print(bs.create_test_set())
 
-
-    def test_list_dir(self):
+    def test_print(self):
+        print('list board storage')
         bs = BoardStorage()
 
-        print(bs.list_dir(''))
+        files = bs.list_files('/')
+        print(files)
+
 
     def test_storage_year(self):
         storage = LogStorage()

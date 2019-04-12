@@ -1,17 +1,18 @@
 
-import tensorflow as tf
-
-#import tensorflow.python.keras as keras
-import tensorflow.contrib.keras.api.keras as keras
-
 import numpy as np
+import tensorflow as tf
+# import tensorflow.python.keras as keras
+import tensorflow.contrib.keras.api.keras as keras
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
 
-from log import constant
-from dl.tfrecords import read_tfrecord
-from dl.tfrecords import read_one_tf_file
-from dl.tfrecords import decode_buffer
 from dl.tfrecords import calc_class_weight
+from dl.tfrecords import decode_buffer
+from dl.tfrecords import read_one_tf_file
+from dl.tfrecords import read_tfrecord
+from log import constant
+
 
 class Train:
     def __init__(self):
@@ -122,10 +123,16 @@ class Train:
 
             result = self.predict(boards)
 
-            score = self.predict_summary(ba, result)
+            score, precision, recall = self.predict_summary(ba, result)
 
             print('predict summary--->')
             print(score)
+
+            print('precision--->')
+            print(precision)
+
+            print('recall--->')
+            print(recall)
 
 
     def load_model(self, path):
@@ -145,8 +152,10 @@ class Train:
             a.append(np.argmax(answer[i]))
 
         score = confusion_matrix(p, a)
+        precision = precision_score(p, a)
+        recall = recall_score(p, a)
 
-        return score
+        return score, precision, recall
 
     def print_predict_summary(self, score):
         shape = score.shape

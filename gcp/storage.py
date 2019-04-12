@@ -1,6 +1,8 @@
-from google.cloud import storage
-import log.constant as constant
 import os
+
+from google.cloud import storage
+
+import log.constant as constant
 from log.timeutil import date_path
 
 
@@ -9,15 +11,14 @@ class BoardStorage:
         self.project = project
         self.bucket_name = bucket_name
 
-    def list_dir(self, path):
+    def list_files(self, path):
         storage_client = storage.Client(self.project)
         bucket = storage_client.get_bucket(self.bucket_name)
 
-        bucket.list_blobs(dir, delimiter='/')
+        print("bucket name ->", self.bucket_name)
 
-        response = iter._get_next_page_response()
-        for prefix in response['prefix']:
-            print (prefix)
+        bucket.list_blobs(dir)
+
 
     def create_test_set(self):
         storage_client = storage.Client(self.project)
@@ -35,7 +36,6 @@ class BoardStorage:
                 days = bucket.list_blobs(prefix=month.name, delimiter='/')
                 for day in days:
                     print(day.name)
-
 
 
 
@@ -74,6 +74,9 @@ class LogStorage:
         return sorted(files)
 
     def list_blob_names_by_date_with_padding(self, year, month, date):
+        ''''
+        Process log including 1H before and 1H after the specified date.
+        '''
         #day before
         blobs = []
         blobs += self.list_blob_names(date_path(year, month, date, -1, '/') + '/A-' + date_path(year, month, date, -1, '-') + 'T23-')
