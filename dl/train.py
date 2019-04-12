@@ -50,9 +50,9 @@ class Train:
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         #dataset.cache('/tmp/data.cache')
         dataset = dataset.map(read_tfrecord)
-        dataset = dataset.repeat(1)
-        dataset = dataset.shuffle(buffer_size=10000)
-        dataset = dataset.batch(5000)
+        dataset = dataset.repeat(10)
+        dataset = dataset.shuffle(buffer_size=100000)
+        dataset = dataset.batch(50000)
 
         return dataset
 
@@ -70,10 +70,11 @@ class Train:
         return dataset
 
 
-    def do_train(self, train_pattern, test_pattern):
-        weight = calc_class_weight(train_pattern)
-
-        print('weight->', weight)
+    def do_train(self, train_pattern, test_pattern, calc_weight=True):
+        weight = None
+        if calc_weight:
+            weight = calc_class_weight(train_pattern)
+            print('weight->', weight)
 
         train_dataset = self.train_data_set(train_pattern)
         test_dataset  = self.test_data_set(test_pattern)
@@ -86,7 +87,6 @@ class Train:
 
         print("start session")
 
-                
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(train_iterator.initializer)
@@ -97,7 +97,10 @@ class Train:
 
                     boards = np.stack(list(map(decode_buffer, board_array)))
 
-                    self.model.fit(boards, ba, batch_size=512, class_weight=weight, verbose=2)
+                    if weight:
+                        self.model.fit(boards, ba, batch_size=512, class_weight=weight, verbose=2)
+                    else:
+                        self.model.fit(boards, ba, batch_size=4096, verbose=2)
 
                 except tf.errors.OutOfRangeError as e:
                     print('training end')

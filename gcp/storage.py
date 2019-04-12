@@ -17,7 +17,7 @@ class BoardStorage:
 
         print("bucket name ->", self.bucket_name)
 
-        bucket.list_blobs(dir)
+        return bucket.list_blobs(path)
 
 
     def create_test_set(self):

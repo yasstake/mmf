@@ -1,10 +1,21 @@
 import unittest
 
+from google.cloud import storage
+
 from gcp.storage import BoardStorage
 from gcp.storage import LogStorage
+from log.constant import *
 
 
 class MyTestCase(unittest.TestCase):
+
+    def test_google_storage_client(self):
+        client = storage.Client(project=LOG_PROJECT_NAME)
+        bucket = client.bucket(bucket_name=BOARD_BUCKET_NAME)
+
+        for blob in bucket.list_blobs(prefix='', delimiter='-'):
+            print(blob.name)
+
     def test_board_storage_list(self):
         bs = BoardStorage()
 
@@ -100,8 +111,6 @@ class MyTestCase(unittest.TestCase):
 
         print(storage.list_blob_names_by_date_with_padding(2019, 3,19))
 
-    def test_list_board_dir(self):
-        pass
 
 if __name__ == '__main__':
     unittest.main()
