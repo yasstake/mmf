@@ -252,16 +252,16 @@ class PriceBoard:
         non_zero_sum = np.sum(a)
         non_zero_sq_sum = np.sum(np.square(a))
 
-        variant = non_zero_sq_sum / item_no - (non_zero_sum / item_no)**2
+        variant = non_zero_sq_sum / item_no - (non_zero_sum / item_no) ** 2
 
-        return non_zero_sum/item_no, variant ** 0.5
+        return non_zero_sum/item_no, variant ** (0.5)
 
     def normalize(self):
         order_mean, order_stddev = self.calc_static(self.sell_order + self.buy_order)
         trade_mean, trade_stddev = self.calc_static(self.sell_trade + self.buy_trade)
 
-        self.buy_order = self.normalize_array(self.buy_order, order_mean + order_stddev / 2)
-        self.sell_order = self.normalize_array(self.sell_order, order_mean + order_stddev / 2)
+        self.buy_order = self.normalize_array(self.buy_order, order_mean + order_stddev)
+        self.sell_order = self.normalize_array(self.sell_order, order_mean + order_stddev)
 
         self.buy_trade = self.normalize_array(self.buy_trade, trade_mean + trade_stddev)
         self.sell_trade = self.normalize_array(self.sell_trade, trade_mean + trade_stddev)
