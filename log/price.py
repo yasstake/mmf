@@ -152,8 +152,6 @@ class PriceBoard:
             self.buy_trade[t][p] = self.buy_trade[t][p] + volume / window
 
     def add_sell_trade(self, time, price, volume, window=1):
-        print('add sellorder->', self.current_time, time , price, volume)
-
         if time == self.current_time:
             if self.sell_trade_price == 0:
                 self.sell_trade_price = price
