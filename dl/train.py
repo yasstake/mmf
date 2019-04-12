@@ -17,6 +17,7 @@ from log import constant
 class Train:
     def __init__(self):
         self.model = None
+        self.config = None
         pass
 
     @staticmethod
@@ -49,6 +50,7 @@ class Train:
         input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         #dataset.cache('/tmp/data.cache')
+        dataset.cache()
         dataset = dataset.map(read_tfrecord)
         dataset = dataset.repeat(10)
         dataset = dataset.shuffle(buffer_size=100000)
@@ -62,12 +64,21 @@ class Train:
         input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         #dataset = dataset.cache("./tfcache")
+        dataset = dataset.cache()
         dataset = dataset.map(read_tfrecord)
         dataset = dataset.repeat(1)
         dataset = dataset.shuffle(buffer_size=10000)
         dataset = dataset.batch(5000)
 
         return dataset
+
+    def set_using_gpu(self):
+        self.config = tf.ConfigProto(
+            gpu_options=tf.GPUOptions(
+                visible_device_list="0,1",  # specify GPU number
+                allow_growth=True
+            )
+        )
 
 
     def do_train(self, train_pattern, test_pattern, calc_weight=True):
@@ -87,7 +98,7 @@ class Train:
 
         print("start session")
 
-        with tf.Session() as sess:
+        with tf.Session(config=self.config) as sess:
             sess.run(tf.global_variables_initializer())
             sess.run(train_iterator.initializer)
 
