@@ -1,7 +1,9 @@
 
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
+
 from log import constant
+
 
 def read_tfrecord(serialized):
     buy = None
@@ -15,6 +17,10 @@ def read_tfrecord(serialized):
             'sell_book_vol': tf.FixedLenFeature([], tf.float32),
             'buy_book_price': tf.FixedLenFeature([], tf.float32),
             'buy_book_vol': tf.FixedLenFeature([], tf.float32),
+            'sell_trade_price': tf.FixedLenFeature([], tf.float32),
+            'sell_trade_vol': tf.FixedLenFeature([], tf.float32),
+            'buy_trade_price': tf.FixedLenFeature([], tf.float32),
+            'buy_trade_vol': tf.FixedLenFeature([], tf.float32),
             'market_buy_price': tf.FixedLenFeature([], tf.float32),
             'market_sell_price': tf.FixedLenFeature([], tf.float32),
             'fix_buy_price': tf.FixedLenFeature([], tf.float32),
@@ -50,7 +56,7 @@ def decode_buffer(buffer):
 def read_one_tf_file(tffile):
     dataset = tf.data.Dataset.list_files(tffile)
     dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
-    #dataset = dataset.cache("./tfcache")
+    dataset = dataset.cache()
     dataset = dataset.map(read_tfrecord)
     dataset = dataset.repeat(1)
     dataset = dataset.batch(30000)

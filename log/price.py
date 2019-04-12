@@ -1,11 +1,12 @@
 import os
+
 import numpy as np
 import tensorflow as tf
 from matplotlib import pylab as plt
 
-from log.timeutil import *
 import log.logdb as logdb;
 from log.constant import *
+from log.timeutil import *
 
 
 class PriceBoard:
@@ -29,9 +30,13 @@ class PriceBoard:
 
         self.buy_book_price = 0
         self.buy_book_vol   = 0
-
         self.sell_book_price = 0
         self.sell_book_vol   = 0
+
+        self.sell_trade_price = 0
+        self.sell_trade_volume = 0
+        self.buy_trade_price = 0
+        self.buy_trade_volume = 0
 
         self.my_sell_order = {}
         self.my_buy_order = {}
@@ -56,17 +61,17 @@ class PriceBoard:
         board = np.stack([self.buy_order, self.sell_order, self.buy_trade, self.sell_trade])
         return board
 
-    def add_sell_order(self, price, size):
-        if price in self.my_sell_order:
-            self.my_sell_order[price] += size
-        else:
-            self.my_sell_order[price] = size
+#    def add_sell_order(self, price, size):
+#        if price in self.my_sell_order:
+#            self.my_sell_order[price] += size
+#        else:
+#            self.my_sell_order[price] = size
 
-    def add_buy_order(self, price, size):
-        if price in self.buy_order:
-            self.my_buy_order[price] += size
-        else:
-            self.my_buy_order[price] = size
+#    def add_buy_order(self, price, size):
+#        if price in self.buy_order:
+#            self.my_buy_order[price] += size
+#        else:
+#            self.my_buy_order[price] = size
 
     def set_origin_time(self,time):
         self.current_time = time
@@ -132,12 +137,30 @@ class PriceBoard:
                 break
 
     def add_buy_trade(self, time, price, volume, window=1):
+
+
+        if time == self.current_time:
+            if self.buy_trade_price == 0:
+                self.buy_trade_price = price
+
+            if self.buy_trade_price == price:
+                self.buy_trade_volume += volume
+
         pos = self.get_position(time, price)
         if pos:
             t, p = pos
             self.buy_trade[t][p] = self.buy_trade[t][p] + volume / window
 
     def add_sell_trade(self, time, price, volume, window=1):
+        print('add sellorder->', self.current_time, time , price, volume)
+
+        if time == self.current_time:
+            if self.sell_trade_price == 0:
+                self.sell_trade_price = price
+
+            if self.sell_trade_price == price:
+                self.sell_trade_volume += volume
+
         pos = self.get_position(time, price)
         if pos:
             t, p = pos
@@ -199,6 +222,10 @@ class PriceBoard:
             'sell_book_vol': self.feature_float(self.sell_book_vol),
             'buy_book_price': self.feature_float(self.buy_book_price),
             'buy_book_vol': self.feature_float(self.buy_book_vol),
+            'sell_trade_price': self.feature_float(self.sell_trade_price),
+            'sell_trade_vol': self.feature_float(self.sell_trade_volume),
+            'buy_trade_price': self.feature_float(self.buy_trade_price),
+            'buy_trade_vol': self.feature_float(self.buy_trade_volume),
             'market_buy_price': self.feature_float(self.market_buy_price),
             'market_sell_price': self.feature_float(self.market_sell_price),
             'fix_buy_price': self.feature_float(self.fix_buy_price),
@@ -375,7 +402,6 @@ class PriceBoardDB(PriceBoard):
         board.ba_sell = ba_sell
         board.ba_sell_now = ba_sell_now
 
-
         retry = 1
         center_price = None
         sell_min = None
@@ -456,11 +482,11 @@ class PriceBoardDB(PriceBoard):
     def load_from_db_time(db, board, time_origin, offset, query_time, time_window=1):
 
         #load sell order
-        for t, price, volume in db.select_sell_trade(query_time, time_window):
+        for price, volume in db.select_sell_trade(query_time, time_window):
             board.add_sell_trade(time_origin - offset, price, volume / time_window)
 
         #load buy order
-        for t, price, volume in db.select_buy_trade(query_time, time_window):
+        for price, volume in db.select_buy_trade(query_time, time_window):
             board.add_buy_trade(time_origin - offset, price, volume / time_window)
 
         #load order book

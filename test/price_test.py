@@ -1,10 +1,13 @@
 import unittest
-from matplotlib import pylab as plt
+
 import numpy as np
+from matplotlib import pylab as plt
+
+from log.logdb import LogDb
 from log.price import PriceBoard
 from log.price import PriceBoardDB
-from log.logdb import LogDb
 from log.timeutil import *
+
 
 class MyTestCase(unittest.TestCase):
     def test_add_buy_order(self):
@@ -91,11 +94,17 @@ class MyTestCase(unittest.TestCase):
 
     def test_load_from_db_one_rec(self):
         end_time = self.calc_end_time() - 600
+
         board = self._load_from_db_one_rec_with_time(end_time)
-        print(board.sell_book_price)
-        print(board.sell_book_vol)
-        print(board.buy_book_price)
-        print(board.buy_book_vol)
+
+        print('sell_book_price', board.sell_book_price)
+        print('sell_book_vol', board.sell_book_vol)
+        print('sell_book_price', board.buy_book_price)
+        print('buy_book_vol', board.buy_book_vol)
+        print('sell_trade_price', board.sell_trade_price)
+        print('sell_trade_volume', board.sell_trade_volume)
+        print('buy_trade_price', board.buy_trade_price)
+        print('buy_trace_volume', board.buy_trade_volume)
 
 
     def _load_from_db_one_rec_with_time(self, time):
@@ -208,7 +217,7 @@ class MyTestCase(unittest.TestCase):
         db.connect()
         db.create_cursor()
 
-        return db.get_db_info()[1]
+        return int(db.get_db_info()[1])
 
     def test_db_stat_time(self):
         DAY_MIN = 24 * 60 * 60

@@ -1,12 +1,8 @@
-
-import sys
-import os
-import glob
 import sqlite3
-import log.bitws
 import zlib
-from log import constant
 from functools import lru_cache
+
+from log import constant
 
 #DB_NAME = "file::memory:?cache=shared"
 DB_NAME = ":memory:"
@@ -238,7 +234,7 @@ class LogDb:
         :param time:
         :return: sell_trade_list
         """
-        sql = "select time, price, volume from sell_trade where ? < time and time <= ? order by price"
+        sql = "select price, volume from sell_trade where ? < time and time <= ? order by price"
 
         return self.cursor.execute(sql,(time - window, time)).fetchall()
 
@@ -248,7 +244,7 @@ class LogDb:
         :param time:
         :return: buy_trade list
         """
-        sql = "select time, price, volume from buy_trade where ? < time and time <= ? order by price desc"
+        sql = "select price, volume from buy_trade where ? < time and time <= ? order by price desc"
 
         return self.cursor.execute(sql,(time - window, time)).fetchall()
 
