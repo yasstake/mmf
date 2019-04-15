@@ -51,7 +51,6 @@ class Train:
         dataset = dataset.shuffle(buffer_size=100000)
         dataset = dataset.batch(50000)
 
-
         return dataset
 
     def test_data_set(self, file_pattern):
@@ -64,7 +63,6 @@ class Train:
         dataset = dataset.repeat(1)
         dataset = dataset.shuffle(buffer_size=10000)
         dataset = dataset.batch(5000)
-
 
         return dataset
 
@@ -94,9 +92,9 @@ class Train:
             boards = tf.reshape(boards, [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
 
             if weight:
-                self.model.fit(boards, ba, batch_size=512, class_weight=weight, verbose=2)
+                self.model.fit(boards, ba, batch_size=512, class_weight=weight, verbose=1)
             else:
-                self.model.fit(boards, ba, batch_size=4096, verbose=2)
+                self.model.fit(boards, ba, batch_size=4096, verbose=1)
 
             path = '/tmp/bitmodel.h5'
             self.model.save(path)
@@ -207,7 +205,6 @@ if __name__ == "__main__":
     )
 
     test_pattern = ('/tmp/2019/03/22/*.tfrecords')
-
 
     train = Train()
     train.create_model()

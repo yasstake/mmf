@@ -99,35 +99,35 @@ def read_one_tf_file(tffile):
 
 
 def calc_class_weight(tffile):
-    dataset = tf.data.Dataset.list_files(tffile)
-    dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
-    dataset = dataset.map(read_tfrecord)
-    dataset = dataset.repeat(1)
-    dataset = dataset.shuffle(buffer_size=20000)
-    dataset = dataset.batch(50000)
+    with tf.device('/CPU:0'):
+        dataset = tf.data.Dataset.list_files(tffile)
+        dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
+        dataset = dataset.map(read_tfrecord)
+        dataset = dataset.repeat(1)
+        dataset = dataset.shuffle(buffer_size=20000)
+        dataset = dataset.batch(50000)
 
+        print("start session")
 
-    print("start session")
+        boards = None
+        score = np.zeros(5)
+        count = 0
 
-    boards = None
-    score = np.zeros(5)
-    count = 0
+        for data in dataset:
+            board_array, ba, time = data
 
-    for data in dataset:
-        board_array, ba, time = data
+            for i in range(0, len(ba)):
+                score[np.argmax(ba[i])] += 1
+                count += 1
 
-        for i in range(0, len(ba)):
-            score[np.argmax(ba[i])] += 1
-            count += 1
+        print(score, count)
 
-    print(score, count)
+        weight = {0:0.0, 1:0.0, 2:0.0, 3:0.0, 4:0.0}
 
-    weight = {0:0.0, 1:0.0, 2:0.0, 3:0.0, 4:0.0}
+        for i in range(0,5):
+            if score[i]:
+                weight[i] = count / score[i]
+            else:
+                weight[i] = 0
 
-    for i in range(0,5):
-        if score[i]:
-            weight[i] = count / score[i]
-        else:
-            weight[i] = 0
-
-    return weight
+        return weight
