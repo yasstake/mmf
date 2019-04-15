@@ -1,14 +1,11 @@
 
 import numpy as np
 import tensorflow as tf
-# import tensorflow.python.keras as keras
-import tensorflow.contrib.keras.api.keras as keras
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 
 from dl.tfrecords import calc_class_weight
-from dl.tfrecords import decode_buffer
 from dl.tfrecords import read_one_tf_file
 from dl.tfrecords import read_tfrecord
 from log import constant
@@ -23,21 +20,20 @@ class Train:
     @staticmethod
     def loss_function(y_true, y_pred):
         pass
-        #return keras.K.mean(K.abs(y_pred - y_true))
 
     def create_model(self):
-        self.model = keras.models.Sequential()
+        self.model = tf.keras.models.Sequential()
 
-        self.model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH), padding='same'))
-        self.model.add(keras.layers.BatchNormalization())
-        self.model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'))
-        self.model.add(keras.layers.BatchNormalization())
-        self.model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'))
-        self.model.add(keras.layers.BatchNormalization())
-        self.model.add(keras.layers.Flatten())
-        self.model.add(keras.layers.BatchNormalization())        
-        self.model.add(keras.layers.Dropout(0.4))
-        self.model.add(keras.layers.Dense(units=5, activation='softmax'))
+        self.model.add(tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH), padding='same'))
+        self.model.add(tf.keras.layers.BatchNormalization())
+        self.model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'))
+        self.model.add(tf.keras.layers.BatchNormalization())
+        self.model.add(tf.keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'))
+        self.model.add(tf.keras.layers.BatchNormalization())
+        self.model.add(tf.keras.layers.Flatten())
+        self.model.add(tf.keras.layers.BatchNormalization())
+        self.model.add(tf.keras.layers.Dropout(0.4))
+        self.model.add(tf.keras.layers.Dense(units=5, activation='softmax'))
 
         self.model.summary()
 
@@ -49,12 +45,12 @@ class Train:
 
         input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
-        #dataset.cache('/tmp/data.cache')
         dataset.cache()
         dataset = dataset.map(read_tfrecord)
         dataset = dataset.repeat(10)
         dataset = dataset.shuffle(buffer_size=100000)
         dataset = dataset.batch(50000)
+
 
         return dataset
 
@@ -63,23 +59,22 @@ class Train:
 
         input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
-        #dataset = dataset.cache("./tfcache")
         dataset = dataset.cache()
         dataset = dataset.map(read_tfrecord)
         dataset = dataset.repeat(1)
         dataset = dataset.shuffle(buffer_size=10000)
         dataset = dataset.batch(5000)
 
+
         return dataset
 
     def set_using_gpu(self):
         self.config = tf.ConfigProto(
             gpu_options=tf.GPUOptions(
-                visible_device_list="0,1",  # specify GPU number
+                visible_device_list="0",  # specify GPU number
                 allow_growth=True
             )
         )
-
 
     def do_train(self, train_pattern, test_pattern, calc_weight=True):
         weight = None
@@ -90,50 +85,35 @@ class Train:
         train_dataset = self.train_data_set(train_pattern)
         test_dataset  = self.test_data_set(test_pattern)
 
-        train_iterator = train_dataset.make_initializable_iterator()
-        train_next_dataset = train_iterator.get_next()
+        print("start training loop ")
 
-        test_iterator = test_dataset.make_one_shot_iterator()
-        test_next_dataset = test_iterator.get_next()
+        for data in train_dataset:
+            boards, ba, time = data
 
-        print("start session")
+            boards = tf.io.decode_raw(boards, tf.uint8)
+            boards = tf.reshape(boards, [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
 
-        with tf.Session(config=self.config) as sess:
-            sess.run(tf.global_variables_initializer())
-            sess.run(train_iterator.initializer)
-
-            while True:
-                try:
-                    board_array, ba, time = sess.run(train_next_dataset)
-
-                    boards = np.stack(list(map(decode_buffer, board_array)))
-
-                    if weight:
-                        self.model.fit(boards, ba, batch_size=512, class_weight=weight, verbose=2)
-                    else:
-                        self.model.fit(boards, ba, batch_size=4096, verbose=2)
-
-                except tf.errors.OutOfRangeError as e:
-                    print('training end')
-                    break
-                    pass
+            if weight:
+                self.model.fit(boards, ba, batch_size=512, class_weight=weight, verbose=2)
+            else:
+                self.model.fit(boards, ba, batch_size=4096, verbose=2)
 
             path = '/tmp/bitmodel.h5'
             self.model.save(path)
 
-            # Evaluate
-            try:
-                board_array, ba, time = sess.run(test_next_dataset)
-                boards = np.stack(list(map(decode_buffer, board_array)))
+        for data in test_dataset:
+            boards, ba, time = data
 
-                loss, acc = self.model.evaluate(boards, ba)
-                print('evaluation->', loss, acc)
+            boards = tf.io.decode_raw(boards, tf.uint8)
+            boards = tf.reshape(boards, [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
 
-            except tf.errors.OutOfRangeError as e:
-                pass
-
+            loss, acc = self.model.evaluate(boards, ba)
+            print('evaluation->', loss, acc)
             #predict
             boards, ba, time = read_one_tf_file(test_pattern)
+
+            boards = tf.io.decode_raw(boards, tf.uint8)
+            boards = tf.reshape(boards, [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
 
             result = self.predict(boards)
 
@@ -150,7 +130,7 @@ class Train:
 
 
     def load_model(self, path):
-        self.model = keras.models.load_model(path)
+        self.model = tf.keras.models.load_model(path)
 
     def predict(self, board):
 
@@ -205,11 +185,11 @@ if __name__ == "__main__":
         '/bitlog/2019/03/24/*.tfrecords',
         '/bitlog/2019/03/25/*.tfrecords',
         '/bitlog/2019/03/26/*.tfrecords',
-        '/bitlog/2019/03/27/*.tfrecords',        
+        '/bitlog/2019/03/27/*.tfrecords',
         '/bitlog/2019/03/28/*.tfrecords',
-        '/bitlog/2019/03/29/*.tfrecords',        
+        '/bitlog/2019/03/29/*.tfrecords',
         '/bitlog/2019/03/30/*.tfrecords',
-        '/bitlog/2019/03/31/*.tfrecords',        
+        '/bitlog/2019/03/31/*.tfrecords',
         '/bitlog/2019/04/01/*.tfrecords',
         '/bitlog/2019/04/02/*.tfrecords',
         '/bitlog/2019/04/03/*.tfrecords',
@@ -220,11 +200,17 @@ if __name__ == "__main__":
 
 
     test_pattern = ('/bitlog/2019/04/07/*.tfrecords')
-    
+
+
+    train_pattern = (
+        '/tmp/2019/03/22/*.tfrecords'
+    )
+
+    test_pattern = ('/tmp/2019/03/22/*.tfrecords')
+
+
     train = Train()
     train.create_model()
 
     train.do_train(train_pattern, test_pattern)
-
-
 

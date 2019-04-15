@@ -5,36 +5,57 @@ import tensorflow as tf
 from log import constant
 
 
+#def decode_buffer(buffer):
+#    return np.frombuffer(buffer, dtype=np.uint8).reshape(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)
+
+def decode_buffer(buffer):
+    return np.frombuffer(buffer, dtype=np.uint8).reshape(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)
+
+
 def read_tfrecord(serialized):
     buy = None
     time = None
 
-    features = tf.parse_single_example(
+    features = tf.io.parse_single_example(
         serialized,
         features={
-            'board': tf.FixedLenFeature([], tf.string),
-            'sell_book_price': tf.FixedLenFeature([], tf.float32),
-            'sell_book_vol': tf.FixedLenFeature([], tf.float32),
-            'buy_book_price': tf.FixedLenFeature([], tf.float32),
-            'buy_book_vol': tf.FixedLenFeature([], tf.float32),
-            'sell_trade_price': tf.FixedLenFeature([], tf.float32),
-            'sell_trade_vol': tf.FixedLenFeature([], tf.float32),
-            'buy_trade_price': tf.FixedLenFeature([], tf.float32),
-            'buy_trade_vol': tf.FixedLenFeature([], tf.float32),
-            'market_buy_price': tf.FixedLenFeature([], tf.float32),
-            'market_sell_price': tf.FixedLenFeature([], tf.float32),
-            'fix_buy_price': tf.FixedLenFeature([], tf.float32),
-            'fix_sell_price': tf.FixedLenFeature([], tf.float32),
-            'ba': tf.FixedLenFeature([], tf.int64),
-            'ba_nop': tf.FixedLenFeature([], tf.int64),
-            'ba_sell': tf.FixedLenFeature([], tf.int64),
-            'ba_buy': tf.FixedLenFeature([], tf.int64),
-            'ba_sell_now': tf.FixedLenFeature([], tf.int64),
-            'ba_buy_now': tf.FixedLenFeature([], tf.int64),
-            'time': tf.FixedLenFeature([], tf.int64)
+            'board': tf.io.FixedLenFeature([], tf.string),
+            'sell_book_price': tf.io.FixedLenFeature([], tf.float32),
+            'sell_book_vol': tf.io.FixedLenFeature([], tf.float32),
+            'buy_book_price': tf.io.FixedLenFeature([], tf.float32),
+            'buy_book_vol': tf.io.FixedLenFeature([], tf.float32),
+            'sell_trade_price': tf.io.FixedLenFeature([], tf.float32),
+            'sell_trade_vol': tf.io.FixedLenFeature([], tf.float32),
+            'buy_trade_price': tf.io.FixedLenFeature([], tf.float32),
+            'buy_trade_vol': tf.io.FixedLenFeature([], tf.float32),
+            'market_buy_price': tf.io.FixedLenFeature([], tf.float32),
+            'market_sell_price': tf.io.FixedLenFeature([], tf.float32),
+            'fix_buy_price': tf.io.FixedLenFeature([], tf.float32),
+            'fix_sell_price': tf.io.FixedLenFeature([], tf.float32),
+            'ba': tf.io.FixedLenFeature([], tf.int64),
+            'ba_nop': tf.io.FixedLenFeature([], tf.int64),
+            'ba_sell': tf.io.FixedLenFeature([], tf.int64),
+            'ba_buy': tf.io.FixedLenFeature([], tf.int64),
+            'ba_sell_now': tf.io.FixedLenFeature([], tf.int64),
+            'ba_buy_now': tf.io.FixedLenFeature([], tf.int64),
+            'time': tf.io.FixedLenFeature([], tf.int64),
         })
 
     board = features['board']
+#    board = tf.numpy(board)
+
+    print(board)
+    print(board.shape)
+
+
+
+    print(board)
+    print(board.shape)
+
+
+#    np.array(board, dtype=np.uint8)
+
+
 
     ba_nop = features['ba_nop']
     ba_sell = features['ba_sell']
@@ -49,10 +70,6 @@ def read_tfrecord(serialized):
     return board, ba, time
 
 
-def decode_buffer(buffer):
-    return np.frombuffer(buffer, dtype=np.uint8).reshape(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)
-
-
 def read_one_tf_file(tffile):
     dataset = tf.data.Dataset.list_files(tffile)
     dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
@@ -61,37 +78,34 @@ def read_one_tf_file(tffile):
     dataset = dataset.repeat(1)
     dataset = dataset.batch(30000)
 
-    iterator = dataset.make_one_shot_iterator()
-    next_dataset = iterator.get_next()
-
     print("start session")
 
     boards = None
 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
+    for data in dataset.take(1):
+        board_array, ba, time = data
 
-        try:
-            board_array, ba, time = sess.run(next_dataset)
+        print('-----')
+        print(board_array)
 
-            boards = np.stack(list(map(decode_buffer, board_array)))
-        except tf.errors.OutOfRangeError as e:
-            print('End Data')
+        print('-----')
 
-    return boards, ba, time
+        boards = None
+#        boards = decode_buffer(board_array)
+
+        return boards, ba, time
+
+    return None
 
 
 def calc_class_weight(tffile):
     dataset = tf.data.Dataset.list_files(tffile)
     dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
-    #dataset = dataset.cache("./tfcache")
     dataset = dataset.map(read_tfrecord)
     dataset = dataset.repeat(1)
     dataset = dataset.shuffle(buffer_size=20000)
     dataset = dataset.batch(50000)
 
-    iterator = dataset.make_initializable_iterator()
-    next_dataset = iterator.get_next()
 
     print("start session")
 
@@ -99,19 +113,12 @@ def calc_class_weight(tffile):
     score = np.zeros(5)
     count = 0
 
-    with tf.Session() as sess:
-        sess.run(tf.global_variables_initializer())
-        sess.run(iterator.initializer)
+    for data in dataset:
+        board_array, ba, time = data
 
-        try:
-            board_array, ba, time = sess.run(next_dataset)
-
-            for i in range(0, len(ba)):
-                score[np.argmax(ba[i])] += 1
-                count += 1
-
-        except tf.errors.OutOfRangeError as e:
-            print('End Data')
+        for i in range(0, len(ba)):
+            score[np.argmax(ba[i])] += 1
+            count += 1
 
     print(score, count)
 

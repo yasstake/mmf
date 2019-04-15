@@ -195,8 +195,7 @@ class PriceBoard:
 
     @staticmethod
     def get_tf_writer(output_file='/tmp/data.tfrecords'):
-        pio = tf.python_io
-        writer = pio.TFRecordWriter(str(output_file), options=pio.TFRecordOptions(pio.TFRecordCompressionType.GZIP))
+        writer = tf.io.TFRecordWriter(str(output_file), options=tf.io.TFRecordOptions(tf.io.TFRecordCompressionType.GZIP))
 
         return writer
 
