@@ -2,7 +2,7 @@
 
 sudo apt-get update -y
 sudo apt-get install -y git gzip curl wget python lsb-release gnupg apt-utils
-sudo apt-get install -y python3.7 python3-distutils
+sudo apt-get install -y python3 python3-distutils
 sudo apt-get install -y docker.io
 sudo apt-get install -y curl wget
 export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
@@ -11,12 +11,11 @@ export CLOUD_SDK_REPO="cloud-sdk-$(lsb_release -c -s)" && \
         sudo apt-get update -y && sudo apt-get install google-cloud-sdk -y
 cd /tmp; wget https://bootstrap.pypa.io/get-pip.py && sudo /usr/bin/python3.7 get-pip.py
 
-sudo /usr/bin/python3.7 -m pip install websocket-client==0.47
+sudo python3 -m pip install websocket-client==0.47
 
-sudo /usr/bin/python3.7 -m pip install --upgrade google-cloud-storage
-sudo /usr/bin/python3.7 -m pip install gym
-sudo /usr/bin/python3.7 -m pip install numpy
-sudo /usr/bin/python3.7 -m pip install matplotlib
-sudo /usr/bin/python3.7 -m pip install --upgrade tensorflow
-sudo /usr/bin/python3.7 -m pip install --upgrade sklearn
+sudo python3 -m pip install --upgrade google-cloud-storage
+sudo python3 -m pip install gym
+sudo python3 -m pip install numpy
+sudo python3 -m pip install matplotlib
+sudo python3 -m pip install --upgrade sklearn
 
