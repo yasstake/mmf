@@ -2,8 +2,6 @@
 import numpy as np
 import tensorflow as tf
 from sklearn.metrics import confusion_matrix
-from sklearn.metrics import precision_score
-from sklearn.metrics import recall_score
 
 from dl.tfrecords import calc_class_weight
 from dl.tfrecords import read_one_tf_file
@@ -12,12 +10,17 @@ from log import constant
 
 tf.enable_v2_behavior()
 
+STEPS_PER_EPOC = 32
+
+
+
 class Train:
     def __init__(self):
         self.model = None
         self.config = None
-        self.dataset = None
-        pass
+        self.train_dataset = None
+        self.evaluate_dataset = None
+        self.ba = None
 
     @staticmethod
     def loss_function(y_true, y_pred):
@@ -51,7 +54,7 @@ class Train:
         dataset = dataset.map(read_tfrecord)
         dataset = dataset.repeat(10)
         dataset = dataset.shuffle(buffer_size=10000)
-        dataset = dataset.batch(1024)
+        dataset = dataset.batch(STEPS_PER_EPOC)
 
         return dataset
 
@@ -77,16 +80,41 @@ class Train:
         )
 
 
-    def data_generator(self):
-        for data in self.dataset:
+    def train_data_generator(self):
+        for data in self.train_dataset:
             boards, ba, time = data
 
             boards = tf.io.decode_raw(boards, tf.uint8)
-            boards = tf.reshape(boards, [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
+            boards = tf.reshape(boards,
+                                [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
 
-            print('shape', boards.shape)
+            yield (boards, ba)
 
-            yield  (boards, ba)
+
+    def train_data_generator(self):
+        for data in self.train_dataset:
+            boards, ba, time = data
+
+            boards = tf.io.decode_raw(boards, tf.uint8)
+            boards = tf.reshape(boards,
+                                [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
+
+            yield (boards, ba)
+
+
+    def evaluate_data_generator(self):
+        for data in self.evaluate_dataset:
+            boards, ba, time = data
+
+            boards = tf.io.decode_raw(boards, tf.uint8)
+            boards = tf.reshape(boards,
+                                [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
+
+            print('dataset', boards.shape, time[0])
+
+            self.ba = ba
+            yield (boards, ba)
+
 
 
     def do_train(self, train_pattern, test_pattern, calc_weight=True):
@@ -100,13 +128,20 @@ class Train:
 
         print("start training loop ")
 
-        self.dataset = train_dataset
+        self.train_dataset = train_dataset
 
-        self.model.fit_generator(generator=self.data_generator(), steps_per_epoch=10, class_weight=weight, verbose=1)
+        self.evaluate_dataset = test_dataset
+        self.model.fit_generator(generator=self.train_data_generator(), steps_per_epoch=STEPS_PER_EPOC, class_weight=weight, verbose=1)
 
         path = '/tmp/bitmodel.h5'
         self.model.save(path)
 
+        result = self.model.predict_generator(generator=self.evaluate_data_generator(), steps=STEPS_PER_EPOC, verbose=1)
+
+        score = self.predict_summary(self.ba, result)
+
+        print('predict summary--->')
+        print(score)
 
 
     def do_train2(self, train_pattern, test_pattern, calc_weight=True):
@@ -157,16 +192,11 @@ class Train:
 
             result = self.predict(boards)
 
-            score, precision, recall = self.predict_summary(ba, result)
+            score = self.predict_summary(ba, result)
 
             print('predict summary--->')
             print(score)
 
-            print('precision--->')
-            print(precision)
-
-            print('recall--->')
-            print(recall)
 
 
     def load_model(self, path):
@@ -186,10 +216,10 @@ class Train:
             a.append(np.argmax(answer[i]))
 
         score = confusion_matrix(p, a)
-        precision = precision_score(p, a)
-        recall = recall_score(p, a)
+        #precision = precision_score(p, a)
+        #recall = recall_score(p, a)
 
-        return score, precision, recall
+        return score
 
     def print_predict_summary(self, score):
         shape = score.shape
