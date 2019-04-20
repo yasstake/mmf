@@ -73,28 +73,21 @@ def read_tfrecord(serialized):
 def read_one_tf_file(tffile):
     dataset = tf.data.Dataset.list_files(tffile)
     dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
-    dataset = dataset.cache()
     dataset = dataset.map(read_tfrecord)
     dataset = dataset.repeat(1)
-    dataset = dataset.batch(30000)
+    dataset = dataset.batch(3000)
 
     print("start session")
 
     boards = None
 
-    for data in dataset.take(1):
-        board_array, ba, time = data
-
-        print('-----')
-        print(board_array)
-
-        print('-----')
-
-        boards = None
-#        boards = decode_buffer(board_array)
+    for data in dataset:
+        boards, ba, time = data
+        boards = tf.io.decode_raw(boards, tf.uint8)
+        boards = tf.reshape(boards, [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
 
         return boards, ba, time
-
+    
     return None
 
 

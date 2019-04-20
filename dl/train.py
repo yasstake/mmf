@@ -10,8 +10,7 @@ from log import constant
 
 tf.enable_v2_behavior()
 
-STEPS_PER_EPOC = 32
-
+STEPS_PER_EPOC = 1000000
 
 
 class Train:
@@ -52,9 +51,9 @@ class Train:
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         dataset.cache()
         dataset = dataset.map(read_tfrecord)
-        dataset = dataset.repeat(10)
+        dataset = dataset.repeat(100)
         dataset = dataset.shuffle(buffer_size=10000)
-        dataset = dataset.batch(STEPS_PER_EPOC)
+        dataset = dataset.batch(1024)
 
         return dataset
 
@@ -66,8 +65,7 @@ class Train:
         dataset = dataset.cache()
         dataset = dataset.map(read_tfrecord)
         dataset = dataset.repeat(1)
-        dataset = dataset.shuffle(buffer_size=10000)
-        dataset = dataset.batch(1024)
+        dataset = dataset.batch(2014)
 
         return dataset
 
@@ -91,17 +89,6 @@ class Train:
             yield (boards, ba)
 
 
-    def train_data_generator(self):
-        for data in self.train_dataset:
-            boards, ba, time = data
-
-            boards = tf.io.decode_raw(boards, tf.uint8)
-            boards = tf.reshape(boards,
-                                [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
-
-            yield (boards, ba)
-
-
     def evaluate_data_generator(self):
         for data in self.evaluate_dataset:
             boards, ba, time = data
@@ -109,8 +96,6 @@ class Train:
             boards = tf.io.decode_raw(boards, tf.uint8)
             boards = tf.reshape(boards,
                                 [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
-
-            print('dataset', boards.shape, time[0])
 
             self.ba = ba
             yield (boards, ba)
@@ -136,12 +121,14 @@ class Train:
         path = '/tmp/bitmodel.h5'
         self.model.save(path)
 
-        result = self.model.predict_generator(generator=self.evaluate_data_generator(), steps=STEPS_PER_EPOC, verbose=1)
+        result = self.model.evaluate_generator(generator=self.evaluate_data_generator(), steps=STEPS_PER_EPOC, verbose=1)
 
-        score = self.predict_summary(self.ba, result)
+        print(result)
 
-        print('predict summary--->')
-        print(score)
+        #        score = self.predict_summary(self.ba, result)
+
+#        print('predict summary--->')
+#        print(score)
 
 
     def do_train2(self, train_pattern, test_pattern, calc_weight=True):
@@ -198,13 +185,12 @@ class Train:
             print(score)
 
 
-
     def load_model(self, path):
         self.model = tf.keras.models.load_model(path)
+        self.model.summary()        
 
     def predict(self, board):
-
-        result = self.model.predict_proba((board))
+        result = self.model.predict_on_batch(board)
 
         return result
 
@@ -253,7 +239,7 @@ if __name__ == "__main__":
     train_pattern = (
         '/bitlog/2019/03/23/*.tfrecords',
         '/bitlog/2019/03/24/*.tfrecords',
-        '/bitlog/2019/03/25/*.tfrecords',
+
         '/bitlog/2019/03/26/*.tfrecords',
         '/bitlog/2019/03/27/*.tfrecords',
         '/bitlog/2019/03/28/*.tfrecords',
@@ -266,17 +252,20 @@ if __name__ == "__main__":
         '/bitlog/2019/04/04/*.tfrecords',
         '/bitlog/2019/04/05/*.tfrecords',
         '/bitlog/2019/04/06/*.tfrecords'
+        '/bitlog/2019/04/07/*.tfrecords'
+        '/bitlog/2019/04/08/*.tfrecords'
+        '/bitlog/2019/04/09/*.tfrecords'                
     )
 
 
-    test_pattern = ('/bitlog/2019/04/07/*.tfrecords')
+    test_pattern = ('/bitlog/2019/04/11/*.tfrecords')
 
 
-    train_pattern = (
-        '/tmp/2019/03/22/*.tfrecords'
-    )
+#    train_pattern = (
+#        '/tmp/2019/03/22/*.tfrecords'
+#    )
 
-    test_pattern = ('/tmp/2019/03/22/*.tfrecords')
+#    test_pattern = ('/tmp/2019/03/22/*.tfrecords')
 
     train = Train()
     train.create_model()
