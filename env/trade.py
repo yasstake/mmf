@@ -1,5 +1,7 @@
 import gym
+import numpy as np
 
+from log.constant import *
 
 
 class Trade(gym.Env):
@@ -22,12 +24,16 @@ class Trade(gym.Env):
         super().__init__()
 
         self.action_space = gym.spaces.Discrete(5) #5 actions nop, buy, BUY, sell, SELL
+        self.done = False
+
+        self.board = np.ndarray(NUMBER_OF_LAYERS, BOARD_TIME_WIDTH,  BOARD_WIDTH)
+
 
     def _reset(self):
         pass
 
     def _step(self, action):
-        observation = None
+
         reward = 0
 
 
@@ -43,7 +49,7 @@ class Trade(gym.Env):
 
 
          # retrun (xxxxxx,xxxx,xxxx,xxxx)
-        return observation, reward, self.done, {}
+        return self.board, reward, self.done, {}
 
     def _render(self, mode='human', close=False):
         pass

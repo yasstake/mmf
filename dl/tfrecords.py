@@ -98,7 +98,12 @@ def read_one_tf_file(tffile):
     return None
 
 
+
 def calc_class_weight(tffile):
+    return {0: 2.4694093218139344, 1: 18.310268982266415, 2: 8.403705676990592, 3: 5.04184874727142, 4: 4.482382766782457}
+
+
+def _calc_class_weight(tffile):
     with tf.device('/CPU:0'):
         dataset = tf.data.Dataset.list_files(tffile)
         dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')

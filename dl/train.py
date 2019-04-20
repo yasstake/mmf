@@ -10,11 +10,13 @@ from dl.tfrecords import read_one_tf_file
 from dl.tfrecords import read_tfrecord
 from log import constant
 
+tf.enable_v2_behavior()
 
 class Train:
     def __init__(self):
         self.model = None
         self.config = None
+        self.dataset = None
         pass
 
     @staticmethod
@@ -48,8 +50,8 @@ class Train:
         dataset.cache()
         dataset = dataset.map(read_tfrecord)
         dataset = dataset.repeat(10)
-        dataset = dataset.shuffle(buffer_size=100000)
-        dataset = dataset.batch(50000)
+        dataset = dataset.shuffle(buffer_size=10000)
+        dataset = dataset.batch(1024)
 
         return dataset
 
@@ -62,7 +64,7 @@ class Train:
         dataset = dataset.map(read_tfrecord)
         dataset = dataset.repeat(1)
         dataset = dataset.shuffle(buffer_size=10000)
-        dataset = dataset.batch(5000)
+        dataset = dataset.batch(1024)
 
         return dataset
 
@@ -74,7 +76,40 @@ class Train:
             )
         )
 
+
+    def data_generator(self):
+        for data in self.dataset:
+            boards, ba, time = data
+
+            boards = tf.io.decode_raw(boards, tf.uint8)
+            boards = tf.reshape(boards, [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
+
+            print('shape', boards.shape)
+
+            yield  (boards, ba)
+
+
     def do_train(self, train_pattern, test_pattern, calc_weight=True):
+        weight = None
+        if calc_weight:
+            weight = calc_class_weight(train_pattern)
+            print('weight->', weight)
+
+        train_dataset = self.train_data_set(train_pattern)
+        test_dataset  = self.test_data_set(test_pattern)
+
+        print("start training loop ")
+
+        self.dataset = train_dataset
+
+        self.model.fit_generator(generator=self.data_generator(), steps_per_epoch=10, class_weight=weight, verbose=1)
+
+        path = '/tmp/bitmodel.h5'
+        self.model.save(path)
+
+
+
+    def do_train2(self, train_pattern, test_pattern, calc_weight=True):
         weight = None
         if calc_weight:
             weight = calc_class_weight(train_pattern)
@@ -88,16 +123,23 @@ class Train:
         for data in train_dataset:
             boards, ba, time = data
 
+            print(boards.shape)
+
             boards = tf.io.decode_raw(boards, tf.uint8)
+
+            print(boards.shape)
+
             boards = tf.reshape(boards, [-1, constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH])
 
+            print(boards.shape)
+
             if weight:
-                self.model.fit(boards, ba, batch_size=512, class_weight=weight, verbose=1)
+                self.model.fit(boards, ba, batch_size=2, class_weight=weight, verbose=1)
             else:
                 self.model.fit(boards, ba, batch_size=4096, verbose=1)
 
-            path = '/tmp/bitmodel.h5'
-            self.model.save(path)
+        path = '/tmp/bitmodel.h5'
+        self.model.save(path)
 
         for data in test_dataset:
             boards, ba, time = data
