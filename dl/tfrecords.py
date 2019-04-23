@@ -42,20 +42,6 @@ def read_tfrecord(serialized):
         })
 
     board = features['board']
-#    board = tf.numpy(board)
-
-    print(board)
-    print(board.shape)
-
-
-
-    print(board)
-    print(board.shape)
-
-
-#    np.array(board, dtype=np.uint8)
-
-
 
     ba_nop = features['ba_nop']
     ba_sell = features['ba_sell']

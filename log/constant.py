@@ -24,6 +24,7 @@ BOARD_WIDTH = 30
 BOARD_TIME_WIDTH = TIME_WIDTH
 NUMBER_OF_LAYERS = 4
 
+BOARD_IN_FILE = 600
 
 class ACTION:
     NOP =      0
@@ -31,3 +32,5 @@ class ACTION:
     BUY_NOW =  2
     SELL =     3
     SELL_NOW = 4
+
+DEFAULT_TF_DATA_DIR = '/bitlog'
