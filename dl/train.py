@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix
 
 from dl.tfrecords import calc_class_weight
 from dl.tfrecords import read_one_tf_file
-from dl.tfrecords import read_tfrecord
+from dl.tfrecords import read_tfrecord_board_ba
 from log import constant
 
 tf.enable_v2_behavior()
@@ -50,7 +50,7 @@ class Train:
         input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         dataset.cache()
-        dataset = dataset.map(read_tfrecord)
+        dataset = dataset.map(read_tfrecord_board_ba)
         dataset = dataset.repeat(100)
         dataset = dataset.shuffle(buffer_size=10000)
         dataset = dataset.batch(1024)
@@ -63,7 +63,7 @@ class Train:
         input_dataset = tf.data.Dataset.list_files(file_pattern)
         dataset = tf.data.TFRecordDataset(input_dataset, compression_type='GZIP')
         dataset = dataset.cache()
-        dataset = dataset.map(read_tfrecord)
+        dataset = dataset.map(read_tfrecord_board_ba)
         dataset = dataset.repeat(1)
         dataset = dataset.batch(2014)
 

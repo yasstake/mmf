@@ -50,10 +50,29 @@ class MyTestCase(unittest.TestCase):
 
         episode = trade.new_episode()
 
+        num_of_records = 0
         for data in episode:
-            board, ba, time = data
 
-            print(time)
+            board = trade.decode_dataset(data)
+
+            self.assertIsNotNone(board.board)
+            self.assertIsNotNone(board.buy_trade_price)
+            self.assertIsNotNone(board.sell_trade_price)
+            self.assertIsNotNone(board.buy_book_price)
+            self.assertIsNotNone(board.sell_book_vol)
+            self.assertIsNotNone(board.sell_book_price)
+            self.assertIsNotNone(board.buy_book_vol)
+            self.assertIsNotNone(board.market_sell_price)
+            self.assertIsNotNone(board.buy_trade_vol)
+            self.assertIsNotNone(board.fix_buy_price)
+            self.assertIsNotNone(board.market_buy_price)
+            self.assertIsNotNone(board.time)
+
+            print(board.time)
+
+            num_of_records += 1
+
+        print(num_of_records)
 
 
 if __name__ == '__main__':

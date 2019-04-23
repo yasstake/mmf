@@ -12,10 +12,7 @@ def decode_buffer(buffer):
     return np.frombuffer(buffer, dtype=np.uint8).reshape(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)
 
 
-def read_tfrecord(serialized):
-    buy = None
-    time = None
-
+def _parse_example(serialized):
     features = tf.io.parse_single_example(
         serialized,
         features={
@@ -40,6 +37,10 @@ def read_tfrecord(serialized):
             'ba_buy_now': tf.io.FixedLenFeature([], tf.int64),
             'time': tf.io.FixedLenFeature([], tf.int64),
         })
+    return features
+
+def read_tfrecord_board_ba(serialized):
+    features = read_tfrecord_example(serialized)
 
     board = features['board']
 
@@ -56,10 +57,16 @@ def read_tfrecord(serialized):
     return board, ba, time
 
 
+def read_tfrecord_example(serialized):
+    features = _parse_example(serialized)
+
+    return features
+
+
 def read_one_tf_file(tffile):
     dataset = tf.data.Dataset.list_files(tffile)
     dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
-    dataset = dataset.map(read_tfrecord)
+    dataset = dataset.map(read_tfrecord_board_ba)
     dataset = dataset.repeat(1)
     dataset = dataset.batch(3000)
 
@@ -86,7 +93,7 @@ def _calc_class_weight(tffile):
     with tf.device('/CPU:0'):
         dataset = tf.data.Dataset.list_files(tffile)
         dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
-        dataset = dataset.map(read_tfrecord)
+        dataset = dataset.map(read_tfrecord_board_ba)
         dataset = dataset.repeat(1)
         dataset = dataset.shuffle(buffer_size=20000)
         dataset = dataset.batch(50000)

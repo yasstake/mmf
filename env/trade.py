@@ -2,14 +2,31 @@ import glob
 import random
 
 import gym
-import numpy as np
 import tensorflow as tf
 
-from dl.tfrecords import read_tfrecord
+from dl.tfrecords import read_tfrecord_example
 from log.constant import *
 
 EPISODE_FRAMES = 3600 * 3
 EPISODE_FILES  = int(EPISODE_FRAMES / BOARD_IN_FILE)
+
+class Record:
+    def __init__(self):
+        self.board = None
+        self.sell_book_price = None
+        self.sell_book_vol = None
+        self.buy_book_price = None
+        self.buy_book_vol = None
+        self.sell_trade_price = None
+        self.sell_trade_vol = None
+        self.buy_trade_price = None
+        self.buy_trade_vol = None
+        self.market_buy_price = None
+        self.market_sell_price = None
+        self.fix_buy_price = None
+        self.fix_sell_price = None
+        self.time = None
+
 
 class Trade(gym.Env):
     '''
@@ -33,7 +50,6 @@ class Trade(gym.Env):
         self.action_space = gym.spaces.Discrete(5) #5 actions nop, buy, BUY, sell, SELL
         self.done = False
 
-        self.board = np.ndarray((NUMBER_OF_LAYERS, BOARD_TIME_WIDTH,  BOARD_WIDTH))
         self.data_path = data_pattern
 
         self.data_files = self.list_tfdata_list(data_pattern)
@@ -92,9 +108,10 @@ class Trade(gym.Env):
 
         return new_index
 
+    '''
     def _skip_count(self):
         return int(random.random() * BOARD_IN_FILE)
-
+    '''
 
     def _new_episode_files(self):
         start = self._new_file_index()
@@ -116,9 +133,32 @@ class Trade(gym.Env):
 
         dataset = tf.data.Dataset.list_files(episode_files)
         dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
-        dataset = dataset.map(read_tfrecord)
+        dataset = dataset.map(read_tfrecord_example)
 
         return dataset
+
+
+    def decode_dataset(self, data):
+        rec = Record()
+
+        boards = tf.io.decode_raw(data['board'], tf.uint8)
+        rec.board = tf.reshape(boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
+
+        rec.sell_book_price = data['sell_book_price']
+        rec.sell_book_vol = data['sell_book_vol']
+        rec.buy_book_price = data['buy_book_price']
+        rec.buy_book_vol = data['buy_book_vol']
+        rec.sell_trade_price = data['sell_trade_price']
+        rec.sell_trade_vol = data['sell_trade_vol']
+        rec.buy_trade_price = data['buy_trade_price']
+        rec.buy_trade_vol = data['buy_trade_vol']
+        rec.market_buy_price = data['market_buy_price']
+        rec.market_sell_price = data['market_sell_price']
+        rec.fix_buy_price = data['fix_buy_price']
+        rec.fix_sell_price = data['fix_sell_price']
+        rec.time  = data['time']
+
+        return rec
 
 
     def action_nop(self):
