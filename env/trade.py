@@ -10,23 +10,6 @@ from log.constant import *
 EPISODE_FRAMES = 3600 * 3
 EPISODE_FILES  = int(EPISODE_FRAMES / BOARD_IN_FILE)
 
-class Record:
-    def __init__(self):
-        self.board = None
-        self.sell_book_price = None
-        self.sell_book_vol = None
-        self.buy_book_price = None
-        self.buy_book_vol = None
-        self.sell_trade_price = None
-        self.sell_trade_vol = None
-        self.buy_trade_price = None
-        self.buy_trade_vol = None
-        self.market_buy_price = None
-        self.market_sell_price = None
-        self.fix_buy_price = None
-        self.fix_sell_price = None
-        self.time = None
-
 
 class Trade(gym.Env):
     '''
@@ -55,32 +38,78 @@ class Trade(gym.Env):
         self.data_files = self.list_tfdata_list(data_pattern)
         self.number_of_files = len(self.data_files)
 
+        self.dataset = None
+
+        self.board = None
+        self.sell_book_price = None
+        self.sell_book_vol = None
+        self.buy_book_price = None
+        self.buy_book_vol = None
+        self.sell_trade_price = None
+        self.sell_trade_vol = None
+        self.buy_trade_price = None
+        self.buy_trade_vol = None
+        self.market_buy_price = None
+        self.market_sell_price = None
+        self.fix_buy_price = None
+        self.fix_sell_price = None
+        self.time = None
+
+        self.new_generator = self.new_sec_generator()
 
 
     def _reset(self):
         pass
 
+
+
     def _step(self, action):
 
+        observe = None
         reward = 0
+        done = False
+        text = None
 
+        if action == ACTION.NOP:
+            reward, done, text = self.action_nop()
+        elif action == ACTION.BUY:
+            reward, done, text = self.action_buy()
+        elif action == ACTION.BUY_NOW:
+            reward, done, text = self.action_buy_now()
+        elif action == ACTION.SELL:
+            reward, done, text = self.action_sell()
+        elif action == ACTION.SELL_NOW:
+            reward, done, text = self.action_sell_now()
+        else:
+            print('Unknown action no->', action)
 
-         # buy
-
-         # buy2
-
-         # Sell
-
-         # Sell2
-
-         # Nop
-
-
-         # retrun (xxxxxx,xxxx,xxxx,xxxx)
-        return self.board, reward, self.done, {}
+        return observe, reward, done, text
 
     def _render(self, mode='human', close=False):
         pass
+
+
+    def new_sec(self):
+        return next(self.new_generator)
+
+    def new_sec_generator(self):
+        for rec in self.dataset:
+            self.decode_dataset(rec)
+
+            yield True
+
+        print('newsec-> FALSE')
+        return False
+
+    def skip_sec(self, sec):
+        while sec:
+            rec_available = self.new_sec()
+
+            if not rec_available:
+                return False
+            sec -= 1
+
+        return True
 
 
     def list_tfdata_list(self, data_pattern=DEFAULT_TF_DATA_DIR + '/**/*.tfrecords'):
@@ -108,10 +137,8 @@ class Trade(gym.Env):
 
         return new_index
 
-    '''
     def _skip_count(self):
-        return int(random.random() * BOARD_IN_FILE)
-    '''
+        return int(random.random() * (BOARD_IN_FILE*0.95))
 
     def _new_episode_files(self):
         start = self._new_file_index()
@@ -129,40 +156,42 @@ class Trade(gym.Env):
         '''
         episode_files = self._new_episode_files()
 
-        print(episode_files)
-
         dataset = tf.data.Dataset.list_files(episode_files)
         dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
-        dataset = dataset.map(read_tfrecord_example)
+        self.dataset = dataset.map(read_tfrecord_example)
 
-        return dataset
+        self.new_sec()
+        self.skip_sec(self._skip_count())
+
 
 
     def decode_dataset(self, data):
-        rec = Record()
 
         boards = tf.io.decode_raw(data['board'], tf.uint8)
-        rec.board = tf.reshape(boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
+        self.board = tf.reshape(boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
 
-        rec.sell_book_price = data['sell_book_price']
-        rec.sell_book_vol = data['sell_book_vol']
-        rec.buy_book_price = data['buy_book_price']
-        rec.buy_book_vol = data['buy_book_vol']
-        rec.sell_trade_price = data['sell_trade_price']
-        rec.sell_trade_vol = data['sell_trade_vol']
-        rec.buy_trade_price = data['buy_trade_price']
-        rec.buy_trade_vol = data['buy_trade_vol']
-        rec.market_buy_price = data['market_buy_price']
-        rec.market_sell_price = data['market_sell_price']
-        rec.fix_buy_price = data['fix_buy_price']
-        rec.fix_sell_price = data['fix_sell_price']
-        rec.time  = data['time']
-
-        return rec
-
+        self.sell_book_price = data['sell_book_price']
+        self.sell_book_vol = data['sell_book_vol']
+        self.buy_book_price = data['buy_book_price']
+        self.buy_book_vol = data['buy_book_vol']
+        self.sell_trade_price = data['sell_trade_price']
+        self.sell_trade_vol = data['sell_trade_vol']
+        self.buy_trade_price = data['buy_trade_price']
+        self.buy_trade_vol = data['buy_trade_vol']
+        self.market_buy_price = data['market_buy_price']
+        self.market_sell_price = data['market_sell_price']
+        self.fix_buy_price = data['fix_buy_price']
+        self.fix_sell_price = data['fix_sell_price']
+        self.time  = data['time']
 
     def action_nop(self):
-        pass
+        data_exist = self.new_sec()
+
+        if data_exist:
+            return 0, False, {}
+        else:
+            return 0, False, {}
+
 
     def action_sell(self):
         pass

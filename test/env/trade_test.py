@@ -9,9 +9,6 @@ tf.enable_v2_behavior()
 
 
 class MyTestCase(unittest.TestCase):
-    def test_something(self):
-        self.assertEqual(True, False)
-
 
     def test_list_files(self):
         trade = Trade()
@@ -43,32 +40,55 @@ class MyTestCase(unittest.TestCase):
     def test_new_episode(self):
         trade = Trade()
 
-        print(trade.new_episode())
+        trade.new_episode()
+
+        result = trade.new_sec()
+
+        print(result)
+
+        print(trade.time)
+
+    def test_new_sec(self):
+        trade = Trade()
+
+        trade.new_episode()
+
+        trade.new_sec()
+        print(trade.time)
+
+
+        trade.new_sec()
+        print(trade.time)
+
+        trade.new_sec()
+        print(trade.time)
+
+        trade.new_sec()
+        print(trade.time)
+
 
     def test_read_one_episode(self):
         trade = Trade()
 
-        episode = trade.new_episode()
+        trade.new_episode()
 
         num_of_records = 0
-        for data in episode:
 
-            board = trade.decode_dataset(data)
+        while trade.new_sec():
+            self.assertIsNotNone(trade.board)
+            self.assertIsNotNone(trade.buy_trade_price)
+            self.assertIsNotNone(trade.sell_trade_price)
+            self.assertIsNotNone(trade.buy_book_price)
+            self.assertIsNotNone(trade.sell_book_vol)
+            self.assertIsNotNone(trade.sell_book_price)
+            self.assertIsNotNone(trade.buy_book_vol)
+            self.assertIsNotNone(trade.market_sell_price)
+            self.assertIsNotNone(trade.buy_trade_vol)
+            self.assertIsNotNone(trade.fix_buy_price)
+            self.assertIsNotNone(trade.market_buy_price)
+            self.assertIsNotNone(trade.time)
 
-            self.assertIsNotNone(board.board)
-            self.assertIsNotNone(board.buy_trade_price)
-            self.assertIsNotNone(board.sell_trade_price)
-            self.assertIsNotNone(board.buy_book_price)
-            self.assertIsNotNone(board.sell_book_vol)
-            self.assertIsNotNone(board.sell_book_price)
-            self.assertIsNotNone(board.buy_book_vol)
-            self.assertIsNotNone(board.market_sell_price)
-            self.assertIsNotNone(board.buy_trade_vol)
-            self.assertIsNotNone(board.fix_buy_price)
-            self.assertIsNotNone(board.market_buy_price)
-            self.assertIsNotNone(board.time)
-
-            print(board.time)
+            print(trade.time)
 
             num_of_records += 1
 
