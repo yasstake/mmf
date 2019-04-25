@@ -110,6 +110,7 @@ class Trade(gym.Env):
             print('Unknown action no->', action)
 
         self.evaluate()
+
         observe = Observation(self)
 
         if result:
@@ -262,6 +263,8 @@ class Trade(gym.Env):
         if time_count <= 0:
             return False
 
+        print('ACTION:sell')
+
         return True
 
 
@@ -276,6 +279,8 @@ class Trade(gym.Env):
             self.sell_order_price = volume * TAKER_SELL
         else:
             self.sell_order_price = (volume - PRICE_UNIT) * TAKER_SELL
+
+        print('ACTION:sell now')
 
         return True
 
@@ -305,6 +310,8 @@ class Trade(gym.Env):
         if time_count <= 0:
             return False
 
+        print('ACTION:buy')
+
         return True
 
 
@@ -319,6 +326,8 @@ class Trade(gym.Env):
             self.buy_order_price = volume * TAKER_BUY
         else:
             self.buy_order_price = (volume + PRICE_UNIT) * TAKER_BUY
+
+        print('ACTION:buy now')
 
         return True
 

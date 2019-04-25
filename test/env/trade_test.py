@@ -201,7 +201,11 @@ class MyTestCase(unittest.TestCase):
         print(trade.time)
         print(trade.margin)
 
+    def test_actions(self):
+        trade = Trade()
+        trade.new_episode()
 
+        print(trade.action_space)
 
 
 
