@@ -4,6 +4,7 @@ import unittest
 import tensorflow as tf
 
 from env.trade import Trade
+from log.constant import ACTION
 
 tf.enable_v2_behavior()
 
@@ -93,6 +94,117 @@ class MyTestCase(unittest.TestCase):
             num_of_records += 1
 
         print(num_of_records)
+
+
+    def test_env_step(self):
+        trade = Trade()
+        trade.new_episode()
+
+        trade.step(ACTION.NOP)
+        trade.step(ACTION.BUY)
+        trade.step(ACTION.BUY_NOW)
+        trade.step(ACTION.SELL)
+        trade.step(ACTION.SELL_NOW)
+
+    def test_env_buy(self):
+        trade = Trade()
+        trade.new_episode()
+
+        print(trade.time)
+        trade.step(ACTION.BUY)
+        print(trade.time)
+
+
+    def test_env_buy_sell(self):
+        trade = Trade()
+        trade.new_episode()
+
+        print(trade.time)
+        trade.step(ACTION.BUY_NOW)
+        print(trade.time)
+        print(trade.buy_order_price)
+        print(trade.margin)
+
+        # close transaction
+        print(trade.time)
+        trade.step(ACTION.SELL_NOW)
+        print(trade.time)
+        print(trade.margin)
+
+
+    def test_env_sell_buy(self):
+        trade = Trade()
+        trade.new_episode()
+
+        print(trade.time)
+        trade.step(ACTION.SELL_NOW)
+        print(trade.time)
+        print(trade.sell_order_price)
+        print(trade.margin)
+
+        # close transaction
+        print(trade.time)
+        trade.step(ACTION.BUY_NOW)
+        print(trade.time)
+        print(trade.margin)
+
+    def test_sell_order(self):
+        trade = Trade()
+        trade.new_episode()
+
+        print(trade.time)
+        trade.step(ACTION.SELL)
+        print(trade.time)
+        print(trade.sell_order_price)
+        print(trade.margin)
+
+
+    def test_sell_order_buy(self):
+        trade = Trade()
+        trade.new_episode()
+
+        print(trade.time)
+        trade.step(ACTION.SELL)
+        print(trade.time)
+        print(trade.sell_order_price)
+        print(trade.margin)
+
+        print(trade.time)
+        trade.step(ACTION.BUY)
+        print(trade.time)
+        print(trade.margin)
+
+
+    def test_buy_order(self):
+        trade = Trade()
+        trade.new_episode()
+
+        print(trade.time)
+        trade.step(ACTION.BUY)
+        print(trade.time)
+        print(trade.buy_order_price)
+        print(trade.margin)
+
+    def test_buy_order_sell(self):
+        trade = Trade()
+        trade.new_episode()
+
+        print(trade.time)
+        trade.step(ACTION.BUY)
+        print(trade.time)
+        print(trade.buy_order_price)
+        print(trade.margin)
+
+
+        print(trade.time)
+        trade.step(ACTION.SELL)
+        print(trade.time)
+        print(trade.margin)
+
+
+
+
+
 
 
 if __name__ == '__main__':

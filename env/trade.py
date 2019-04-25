@@ -22,21 +22,30 @@ class Observation:
 
 
 class Trade(gym.Env):
-    '''
-    When implementing an environment, override the following methods
-    in your subclass:
-        _step
-        _reset
-        _render
-        _close
-        _configure
-        _seed
+    """The main OpenAI Gym class. It encapsulates an environment with
+    arbitrary behind-the-scenes dynamics. An environment can be
+    partially or fully observed.
+
+    The main API methods that users of this class need to know are:
+
+        step
+        reset
+        render
+        close
+        seed
+
     And set the following attributes:
+
         action_space: The Space object corresponding to valid actions
         observation_space: The Space object corresponding to valid observations
         reward_range: A tuple corresponding to the min and max possible rewards
 
-    '''
+    Note: a default reward range set to [-inf,+inf] already exists. Set it if you want a narrower range.
+
+    The methods are accessed publicly as "step", "reset", etc.. The
+    non-underscored versions are wrapper methods to which we may add
+    functionality over time.
+    """
     def __init__(self, data_pattern=DEFAULT_TF_DATA_DIR + '/**/*.tfrecords'):
         super().__init__()
 
@@ -74,11 +83,11 @@ class Trade(gym.Env):
 
 
 
-    def _reset(self):
+    def reset(self):
         self.new_episode()
 
 
-    def _step(self, action):
+    def step(self, action):
 
         observe = None
         reward = 0
@@ -114,7 +123,7 @@ class Trade(gym.Env):
     def _calc_reward(self):
         return self.margin
 
-    def _render(self, mode='human', close=False):
+    def render(self, mode='human', close=False):
         pass
 
 
@@ -128,13 +137,11 @@ class Trade(gym.Env):
 
         return data_available
 
-
     def new_sec_generator(self):
         for rec in self.dataset:
             self.decode_dataset(rec)
 
             yield True
-
         yield False
 
     def skip_sec(self, sec):
@@ -240,7 +247,7 @@ class Trade(gym.Env):
 
         time_count = TRAN_TIMEOUT
 
-        while self.new_sec():
+        while self.new_sec() and time_count:
             if self.buy_trade_price <= self.sell_book_price:
                 volume -= self.buy_trade_vol
 
