@@ -2,7 +2,7 @@ import sqlite3
 import zlib
 from functools import lru_cache
 
-from log import constant
+from log.constant import *
 
 #DB_NAME = "file::memory:?cache=shared"
 DB_NAME = ":memory:"
@@ -122,14 +122,14 @@ class LogDb:
                     buy_vol = volume
 
         buy_list = []
-        for i in range(constant.BOOK_DEPTH):
-            index = buy_max - i * constant.PRICE_UNIT
+        for i in range(BOOK_DEPTH):
+            index = buy_max - i * PRICE_UNIT
             if index in buy:
                 buy_list.append(buy[index])
 
         sell_list = []
-        for i in range(constant.BOOK_DEPTH):
-            index = sell_min + i * constant.PRICE_UNIT
+        for i in range(BOOK_DEPTH):
+            index = sell_min + i * PRICE_UNIT
             if index in sell:
                 sell_list.append(sell[index])
 
@@ -177,10 +177,10 @@ class LogDb:
 
     def calc_center_price(self, min, max):
         diff = max - min
-        if diff == constant.PRICE_UNIT:
+        if diff == PRICE_UNIT:
             return max
         else:
-            return min + (int((diff + constant.PRICE_UNIT)))/2
+            return min + (int((diff + PRICE_UNIT)))/2
 
     def select_book_price(self, time):
         """
@@ -319,15 +319,15 @@ class LogDb:
         ba_sell = 0
         ba_sell_now = 0
 
-        if best_action == constant.ACTION.NOP or best_action is None:
+        if best_action == ACTION.NOP or best_action is None:
             ba_nop = 1
-        elif best_action == constant.ACTION.SELL:
+        elif best_action == ACTION.SELL:
             ba_sell = 1
-        elif best_action == constant.ACTION.SELL_NOW:
+        elif best_action == ACTION.SELL_NOW:
             ba_sell_now = 1
-        elif best_action == constant.ACTION.BUY:
+        elif best_action == ACTION.BUY:
             ba_buy = 1
-        elif best_action == constant.ACTION.BUY_NOW:
+        elif best_action == ACTION.BUY_NOW:
             ba_buy_now = 1
 
         return (ba_nop, ba_buy, ba_buy_now, ba_sell, ba_sell_now)
@@ -349,7 +349,7 @@ class LogDb:
         if order_volume * 1.5 < sell_volume: # 1.5 means enough margin
             return sell_min
         else:
-            return sell_min + constant.PRICE_UNIT
+            return sell_min + PRICE_UNIT
 
     def calc_market_order_sell(self, time, order_volume):
         """
@@ -367,7 +367,7 @@ class LogDb:
         if order_volume * 1.5 < buy_volume: # 2 means enough margin
             return buy_max
         else:
-            return buy_max - constant.PRICE_UNIT
+            return buy_max - PRICE_UNIT
 
 
     def is_suceess_fixed_order_sell(self, time, price, volume, time_width = ORDER_TIME_WIDTH):
@@ -539,7 +539,7 @@ class LogDb:
 
             market_order_sell, market_order_buy, fix_order_sell, fix_order_buy = rec
 
-            rec = self.select_best_order_prices(time + 10, constant.FORCAST_TIME)
+            rec = self.select_best_order_prices(time + 10, FORCAST_TIME)
             if rec is None:
                 continue
 
@@ -547,18 +547,18 @@ class LogDb:
 
             best_action = self.best_action(market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f, market_order_buy_f, fix_order_sell_f, fix_order_buy_f)
 
-            if best_action != constant.ACTION.NOP:
+            if best_action != ACTION.NOP:
                 print(time, ' ', end='')
                 print("fob  {}, mob  {}, fos  {}, mos  {} / ".format(fix_order_buy, market_order_buy, fix_order_sell, market_order_sell), end='')
                 print("fobF {}, mobF {}, fosF {}, mosF {}".format(fix_order_buy_f, market_order_buy_f, fix_order_sell_f, market_order_sell_f), end='')
 
-                if best_action == constant.ACTION.SELL:
+                if best_action == ACTION.SELL:
                     print(' sell', end='')
-                if best_action == constant.ACTION.SELL_NOW:
+                if best_action == ACTION.SELL_NOW:
                     print(' SELL', end='')
-                if best_action == constant.ACTION.BUY:
+                if best_action == ACTION.BUY:
                     print(' buy', end='')
-                if best_action == constant.ACTION.BUY_NOW:
+                if best_action == ACTION.BUY_NOW:
                     print(' BUY', end='')
 
                 print("")
@@ -569,12 +569,6 @@ class LogDb:
     def best_action(self, market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f,
                         market_order_buy_f, fix_order_sell_f, fix_order_buy_f):
 
-        MARGIN = constant.PRICE_MARGIN
-        MAKER_BUY = (1 - (0.00025))
-        TAKER_BUY = (1.00075)
-
-        MAKER_SELL = (1 + (0.00025))
-        TAKER_SELL = (1 - 0.00075)
 
         if market_order_sell:
             market_order_sell = market_order_sell * TAKER_SELL
@@ -600,39 +594,39 @@ class LogDb:
         if fix_order_buy_f:
             fix_order_buy_f = fix_order_buy_f * MAKER_BUY
 
-        action = constant.ACTION.NOP
+        action = ACTION.NOP
 
         if market_order_sell:
             if fix_order_buy_f:
-                if market_order_sell > fix_order_buy_f + MARGIN:
-                    action = constant.ACTION.SELL_NOW
+                if market_order_sell > fix_order_buy_f + PRICE_MARGIN:
+                    action = ACTION.SELL_NOW
             if market_order_buy_f:
-                if market_order_sell > market_order_buy_f + MARGIN:
-                    action = constant.ACTION.SELL_NOW
+                if market_order_sell > market_order_buy_f + PRICE_MARGIN:
+                    action = ACTION.SELL_NOW
 
         if fix_order_sell:
             if fix_order_buy_f:
-                if fix_order_sell > fix_order_buy_f + MARGIN:
-                    action = constant.ACTION.SELL
+                if fix_order_sell > fix_order_buy_f + PRICE_MARGIN:
+                    action = ACTION.SELL
             if market_order_buy_f:
-                if fix_order_sell > market_order_buy_f + MARGIN:
-                    action = constant.ACTION.SELL
+                if fix_order_sell > market_order_buy_f + PRICE_MARGIN:
+                    action = ACTION.SELL
 
         if market_order_buy:
             if fix_order_sell_f:
-                if market_order_buy + MARGIN < fix_order_sell_f:
-                    action = constant.ACTION.BUY_NOW
+                if market_order_buy + PRICE_MARGIN < fix_order_sell_f:
+                    action = ACTION.BUY_NOW
             if market_order_sell_f:
-                if market_order_buy + MARGIN < market_order_sell_f:
-                    action = constant.ACTION.BUY_NOW
+                if market_order_buy + PRICE_MARGIN < market_order_sell_f:
+                    action = ACTION.BUY_NOW
 
         if fix_order_buy:
             if fix_order_sell_f:
-                if fix_order_buy + MARGIN < fix_order_sell_f:
-                    action = constant.ACTION.BUY
+                if fix_order_buy + PRICE_MARGIN < fix_order_sell_f:
+                    action = ACTION.BUY
             if market_order_sell_f:
-                if fix_order_buy + MARGIN < market_order_sell_f:
-                    action = constant.ACTION.BUY
+                if fix_order_buy + PRICE_MARGIN < market_order_sell_f:
+                    action = ACTION.BUY
 
         return action
 
@@ -653,10 +647,10 @@ class LogDb:
 
             best_action_next = self.select_best_action(time + ORDER_TIME_WIDTH)
 
-            if best_action != constant.ACTION.NOP or best_action_next != constant.ACTION.NOP:
+            if best_action != ACTION.NOP or best_action_next != ACTION.NOP:
                 skip_flag = ORDER_TIME_WIDTH
 
-            if skip_flag and best_action == constant.ACTION.NOP:
+            if skip_flag and best_action == ACTION.NOP:
                 skip_number += 1
 
                 self.cursor.execute(clear_sql, (time,))

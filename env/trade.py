@@ -10,6 +10,16 @@ from log.constant import *
 EPISODE_FRAMES = 3600 * 3
 EPISODE_FILES  = int(EPISODE_FRAMES / BOARD_IN_FILE)
 
+ONE_ORDER_SIZE = 1.0
+
+
+class Observation:
+    def __init__(self, env):
+        self.board = env.board
+        self.sell_order_price = env.sell_order_price
+        self.buy_order_price = env.buy_order_price
+        self.margin = env.margin
+
 
 class Trade(gym.Env):
     '''
@@ -54,43 +64,70 @@ class Trade(gym.Env):
         self.fix_buy_price = None
         self.fix_sell_price = None
         self.time = None
+        self.episode_done = False
 
-        self.new_generator = self.new_sec_generator()
+        self.sell_order_price = 0
+        self.buy_order_price = 0
+        self.margin = 0
+
+        self.new_generator = None
+
 
 
     def _reset(self):
-        pass
-
+        self.new_episode()
 
 
     def _step(self, action):
 
         observe = None
         reward = 0
-        done = False
-        text = None
+        text = {}
 
+        self.new_sec()
+
+        result = False
         if action == ACTION.NOP:
-            reward, done, text = self.action_nop()
+            result = self.action_nop()
         elif action == ACTION.BUY:
-            reward, done, text = self.action_buy()
+            result = self.action_buy()
         elif action == ACTION.BUY_NOW:
-            reward, done, text = self.action_buy_now()
+            result = self.action_buy_now()
         elif action == ACTION.SELL:
-            reward, done, text = self.action_sell()
+            result = self.action_sell()
         elif action == ACTION.SELL_NOW:
-            reward, done, text = self.action_sell_now()
+            result = self.action_sell_now()
         else:
             print('Unknown action no->', action)
 
-        return observe, reward, done, text
+        self.evaluate()
+        observe = Observation(self)
+
+        if result:
+            reward = self._calc_reward()
+        else:
+            reward = 0
+
+        return observe, reward, self.episode_done, text
+
+
+    def _calc_reward(self):
+        return self.margin
 
     def _render(self, mode='human', close=False):
         pass
 
 
     def new_sec(self):
-        return next(self.new_generator)
+        data_available = next(self.new_generator)
+
+        if data_available:
+            self.episode_done = False
+        else:
+            self.episode_done = True
+
+        return data_available
+
 
     def new_sec_generator(self):
         for rec in self.dataset:
@@ -98,8 +135,7 @@ class Trade(gym.Env):
 
             yield True
 
-        print('newsec-> FALSE')
-        return False
+        yield False
 
     def skip_sec(self, sec):
         while sec:
@@ -160,8 +196,13 @@ class Trade(gym.Env):
         dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
         self.dataset = dataset.map(read_tfrecord_example)
 
-        self.new_sec()
+        self.new_generator = self.new_sec_generator()
+
         self.skip_sec(self._skip_count())
+
+        self.sell_order_price = 0
+        self.buy_order_price = 0
+
 
 
 
@@ -185,22 +226,104 @@ class Trade(gym.Env):
         self.time  = data['time']
 
     def action_nop(self):
-        data_exist = self.new_sec()
-
-        if data_exist:
-            return 0, False, {}
-        else:
-            return 0, False, {}
-
+        return False
 
     def action_sell(self):
-        pass
+        if self.sell_order_price:  # sell order exist(cannot sell twice at one time)
+            return False
+
+        self.new_sec()
+
+        volume = self.sell_book_price * ONE_ORDER_SIZE
+        order_price = volume * MAKER_SELL
+        volume += self.sell_book_vol
+
+        time_count = TRAN_TIMEOUT
+
+        while self.new_sec():
+            if self.buy_trade_price <= self.sell_book_price:
+                volume -= self.buy_trade_vol
+
+            if volume <= 0:
+                self.sell_order_price = order_price
+                break
+
+            if time_count <= 0:
+                break
+            time_count -= 1
+
+        if time_count <= 0:
+            return False
+
+        return True
+
 
     def action_sell_now(self):
-        pass
+        if self.sell_order_price: # sell order exist(cannot sell twice at one time)
+            return False
+
+        self.new_sec()
+        volume = self.buy_book_price * ONE_ORDER_SIZE
+
+        if volume < self.buy_book_vol:
+            self.sell_order_price = volume * TAKER_SELL
+        else:
+            self.sell_order_price = (volume - PRICE_UNIT) * TAKER_SELL
+
+        return True
+
 
     def action_buy(self):
-        pass
+        if self.buy_order_price: # buy order exist(cannot sell twice at one time)
+            return False
+
+        self.new_sec()
+
+        order_price = self.buy_book_price
+        volume = order_price * ONE_ORDER_SIZE
+        volume += self.buy_book_vol
+
+        time_count = TRAN_TIMEOUT
+
+        while self.new_sec() and time_count:
+            if self.sell_trade_price <= order_price:
+                volume -= self.sell_trade_vol
+
+            if volume <= 0:
+                self.buy_order_price = order_price * MAKER_BUY
+                break
+
+            time_count -= 1
+
+        if time_count <= 0:
+            return False
+
+        return True
+
 
     def action_buy_now(self):
-        pass
+        if self.buy_order_price: # buy order exist(cannot sell twice at one time)
+            return False
+
+        self.new_sec()
+        volume = self.sell_book_price * ONE_ORDER_SIZE
+
+        if volume < self.sell_book_vol:
+            self.buy_order_price = volume * TAKER_BUY
+        else:
+            self.buy_order_price = (volume + PRICE_UNIT) * TAKER_BUY
+
+        return True
+
+    def evaluate(self):
+        if self.buy_order_price and self.sell_order_price:
+            self.margin = self.sell_order_price - self.buy_order_price
+            self.sell_order_price = 0
+            self.buy_order_price = 0
+            self.episode_done = True
+        elif self.buy_order_price:
+            self.margin = self.sell_book_price - self.buy_order_price
+        elif self.sell_order_price:
+            self.margin = self.sell_order_price - self.buy_book_price
+        else:
+            pass
