@@ -19,6 +19,7 @@ class BaseAgent:
 
             no_of_episode -= 1
 
+
     def one_episode(self, env: Trade):
         env.new_episode()
 

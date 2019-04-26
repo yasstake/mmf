@@ -46,6 +46,9 @@ class Trade(gym.Env):
     non-underscored versions are wrapper methods to which we may add
     functionality over time.
     """
+
+    data_file_sets = None
+
     def __init__(self, data_pattern=DEFAULT_TF_DATA_DIR + '/**/*.tfrecords'):
         super().__init__()
 
@@ -53,11 +56,15 @@ class Trade(gym.Env):
         self.done = False
 
         self.data_path = data_pattern
+        self.dataset = None
 
         self.data_files = self.list_tfdata_list(data_pattern)
         self.number_of_files = len(self.data_files)
 
-        self.dataset = None
+        if Trade.data_file_sets is None:
+            Trade.data_file_sets= []
+            for file in self.data_files:
+                Trade.data_file_sets += tf.data.Dataset.list_files(file).cache()
 
         self.board = None
         self.sell_book_price = None
@@ -164,8 +171,11 @@ class Trade(gym.Env):
         :return: board list(acc ordered in time frame)
         '''
 
-        files = glob.glob(data_pattern, recursive=True)
-        return sorted(files)
+        files = sorted(glob.glob(data_pattern, recursive=True))
+
+
+        return files
+
 
     def _new_file_index(self):
         '''
@@ -192,26 +202,25 @@ class Trade(gym.Env):
 
         return files
 
-
     def new_episode(self):
-        '''
-        reset randomly stat point of the sequence
-        :return: new dataset for one episode
-        '''
-        episode_files = self._new_episode_files()
+        start = self._new_file_index()
+        end = start + EPISODE_FILES + 1
+        skip = self._skip_count()
+        self._new_episode(start, end, skip)
 
-        dataset = tf.data.Dataset.list_files(episode_files)
-        dataset = tf.data.TFRecordDataset(dataset, compression_type='GZIP')
+    def _new_episode(self, start, end, skip = 0):
+        #print('newepisode', start, end)
+        data = Trade.data_file_sets[start:end]
+        dataset = tf.data.TFRecordDataset(data, compression_type='GZIP')
         self.dataset = dataset.map(read_tfrecord_example)
 
         self.new_generator = self.new_sec_generator()
 
-        self.skip_sec(self._skip_count())
+        if skip:
+            self.skip_sec(skip)
 
         self.sell_order_price = 0
         self.buy_order_price = 0
-
-
 
 
     def decode_dataset(self, data):
@@ -333,7 +342,7 @@ class Trade(gym.Env):
 
     def evaluate(self):
         if self.buy_order_price and self.sell_order_price:
-            self.margin = self.sell_order_price - self.buy_order_price
+            self.margin = self.sell_order_price - self.buy_order_price - self.margin
             self.sell_order_price = 0
             self.buy_order_price = 0
             self.episode_done = True

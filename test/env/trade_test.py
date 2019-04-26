@@ -207,6 +207,28 @@ class MyTestCase(unittest.TestCase):
 
         print(trade.action_space)
 
+    def test_tfrecords(self):
+        trade = Trade()
+
+        trade._new_episode(0,2)
+
+        for data in trade.dataset:
+            trade.decode_dataset(data)
+            print(trade.time)
+            break
+
+        for data in trade.dataset:
+            trade.decode_dataset(data)
+            print(trade.time)
+            break
+
+        trade._new_episode(0,2)
+
+        for data in trade.dataset:
+            trade.decode_dataset(data)
+            print(trade.time)
+            break
+
 
 
 
