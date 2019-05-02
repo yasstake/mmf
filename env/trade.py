@@ -11,6 +11,7 @@ EPISODE_FRAMES = 3600 * 3
 EPISODE_FILES  = int(EPISODE_FRAMES / BOARD_IN_FILE)
 
 ONE_ORDER_SIZE = 1.0
+MAX_DRAW_DOWN  = 10
 
 
 class Observation:
@@ -243,6 +244,14 @@ class Trade(gym.Env):
         self.time  = data['time']
 
     def action_nop(self):
+        if self.sell_order_price and self.sell_order_price - self.buy_book_price < (- MAX_DRAW_DOWN):
+            print("SELL DRAW DOWN")
+            return self.action_buy_now()
+
+        elif self.buy_order_price and self.sell_book_price - self.buy_order_price < (- MAX_DRAW_DOWN):
+            print("BUY DRAW DOWN")
+            return self.action_sell_now()
+
         return False
 
     def action_sell(self):

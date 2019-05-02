@@ -24,13 +24,24 @@ class BaseAgent:
         env.new_episode()
 
         while True:
-            action = random.choice([ACTION.NOP, ACTION.SELL, ACTION.SELL_NOW, ACTION.BUY, ACTION.BUY_NOW])
+            action = self.action(env)
             observation, reward, done, info = env.step(action)
             if done:
                 print('reward->', reward)
                 break
 
         return
+
+
+    def action(self, env: Trade):
+        action = random.choice([ACTION.NOP, ACTION.SELL, ACTION.SELL_NOW, ACTION.BUY, ACTION.BUY_NOW])
+
+        return action
+
+    def estimate(self, env: Trade):
+        return 0
+
+
 
 
 
