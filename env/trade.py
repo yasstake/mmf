@@ -17,10 +17,12 @@ MAX_DRAW_DOWN  = 10
 class Observation:
     def __init__(self, env):
         self.board = env.board
+
+        p = int((price - self.center_price) / PRICE_UNIT + BOARD_WIDTH/2)
+
         self.sell_order_price = env.sell_order_price
         self.buy_order_price = env.buy_order_price
         self.margin = env.margin
-
 
 class Trade(gym.Env):
     """The main OpenAI Gym class. It encapsulates an environment with
@@ -72,6 +74,7 @@ class Trade(gym.Env):
         self.sell_book_vol = None
         self.buy_book_price = None
         self.buy_book_vol = None
+        self.center_price = None
         self.sell_trade_price = None
         self.sell_trade_vol = None
         self.buy_trade_price = None
@@ -92,8 +95,7 @@ class Trade(gym.Env):
 
 
     def reset(self):
-        self.new_episode()
-
+        return self.new_episode()
 
     def step(self, action):
 
@@ -203,13 +205,14 @@ class Trade(gym.Env):
 
         return files
 
-    def new_episode(self):
+    def new_episode(self)->Observation:
         start = self._new_file_index()
         end = start + EPISODE_FILES + 1
         skip = self._skip_count()
-        self._new_episode(start, end, skip)
 
-    def _new_episode(self, start, end, skip = 0):
+        return self._new_episode(start, end, skip)
+
+    def _new_episode(self, start, end, skip = 0)->Observation:
         #print('newepisode', start, end)
         data = Trade.data_file_sets[start:end]
         dataset = tf.data.TFRecordDataset(data, compression_type='GZIP')
@@ -223,12 +226,15 @@ class Trade(gym.Env):
         self.sell_order_price = 0
         self.buy_order_price = 0
 
+        return Observation(self)
+
 
     def decode_dataset(self, data):
 
         boards = tf.io.decode_raw(data['board'], tf.uint8)
         self.board = tf.reshape(boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
 
+        self.center_price = data['center_price']
         self.sell_book_price = data['sell_book_price']
         self.sell_book_vol = data['sell_book_vol']
         self.buy_book_price = data['buy_book_price']

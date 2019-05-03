@@ -21,6 +21,7 @@ def _parse_example(serialized):
             'sell_book_vol': tf.io.FixedLenFeature([], tf.float32),
             'buy_book_price': tf.io.FixedLenFeature([], tf.float32),
             'buy_book_vol': tf.io.FixedLenFeature([], tf.float32),
+            'center_price': tf.io.FixedLenFeature([], tf.float32),
             'sell_trade_price': tf.io.FixedLenFeature([], tf.float32),
             'sell_trade_vol': tf.io.FixedLenFeature([], tf.float32),
             'buy_trade_price': tf.io.FixedLenFeature([], tf.float32),

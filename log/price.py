@@ -99,7 +99,7 @@ class PriceBoard:
         if p < 0 or BOARD_WIDTH <= p:
             return None
 
-        t = int(self.current_time - time)
+        t = int(self.current_time - time + 1) # first line for my order
 
         return t, p
 
@@ -219,6 +219,7 @@ class PriceBoard:
             'sell_book_vol': self.feature_float(self.sell_book_vol),
             'buy_book_price': self.feature_float(self.buy_book_price),
             'buy_book_vol': self.feature_float(self.buy_book_vol),
+            'center_price': self.feature_float(self.center_price),
             'sell_trade_price': self.feature_float(self.sell_trade_price),
             'sell_trade_vol': self.feature_float(self.sell_trade_volume),
             'buy_trade_price': self.feature_float(self.buy_trade_price),
