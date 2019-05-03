@@ -19,18 +19,18 @@ class Observation:
         self.board = env.board / 255
 
         if env.sell_order_price:
-            pos = self.calc_order_pos(env.sell_order_price)
+            pos = self.calc_order_pos(env.sell_order_price, env)
             self.board[0][0][pos] = 1
             self.board[2][0][pos] = 1
 
         if env.buy_order_price:
-            pos = self.calc_order_pos(env.buy_order_price)
+            pos = self.calc_order_pos(env.buy_order_price, env)
             self.board[1][0][pos] = 1
             self.board[3][0][pos] = 1
 
 
-    def calc_order_pos(self, price):
-        pos = int((price - self.center_price) / PRICE_UNIT + BOARD_WIDTH/2)
+    def calc_order_pos(self, price, env):
+        pos = int((price - env.center_price) / PRICE_UNIT + BOARD_WIDTH/2)
 
         if pos < 0:
             pos = 0
