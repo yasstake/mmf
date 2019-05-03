@@ -16,18 +16,18 @@ MAX_DRAW_DOWN  = 10
 
 class Observation:
     def __init__(self, env):
-        self.board = env.board / 255
+        self.board = tf.reshape(env.boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
+        self.board = self.board.numpy() / 255.0
 
         if env.sell_order_price:
             pos = self.calc_order_pos(env.sell_order_price, env)
-            self.board[0][0][pos] = 1
-            self.board[2][0][pos] = 1
+            self.board[0][0][0][pos] = 1.0
+            self.board[0][2][0][pos] = 1.0
 
         if env.buy_order_price:
             pos = self.calc_order_pos(env.buy_order_price, env)
-            self.board[1][0][pos] = 1
-            self.board[3][0][pos] = 1
-
+            self.board[0][1][0][pos] = 1.0
+            self.board[0][3][0][pos] = 1.0
 
     def calc_order_pos(self, price, env):
         pos = int((price - env.center_price) / PRICE_UNIT + BOARD_WIDTH/2)
@@ -87,7 +87,7 @@ class Trade(gym.Env):
             for file in self.data_files:
                 Trade.data_file_sets += tf.data.Dataset.list_files(file).cache()
 
-        self.board = None
+        self.boards = None
         self.sell_book_price = None
         self.sell_book_vol = None
         self.buy_book_price = None
@@ -249,8 +249,8 @@ class Trade(gym.Env):
 
     def decode_dataset(self, data):
 
-        boards = tf.io.decode_raw(data['board'], tf.uint8)
-        self.board = tf.reshape(boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
+        self.boards = tf.io.decode_raw(data['board'], tf.uint8)
+        #self.board = tf.reshape(boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
 
         self.center_price = data['center_price']
         self.sell_book_price = data['sell_book_price']
