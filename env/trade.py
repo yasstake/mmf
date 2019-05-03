@@ -16,18 +16,19 @@ MAX_DRAW_DOWN  = 10
 
 class Observation:
     def __init__(self, env):
-        self.board = tf.reshape(env.boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
+        #self.board = tf.reshape(env.boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
+        self.board = tf.reshape(env.boards, [NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
         self.board = self.board.numpy() / 255.0
 
         if env.sell_order_price:
             pos = self.calc_order_pos(env.sell_order_price, env)
-            self.board[0][0][0][pos] = 1.0
-            self.board[0][2][0][pos] = 1.0
+            self.board[LAYER_BUY_BOOK][0][pos] = 1.0
+            self.board[LAYER_BUY_TRADE][0][pos] = 1.0
 
         if env.buy_order_price:
             pos = self.calc_order_pos(env.buy_order_price, env)
-            self.board[0][1][0][pos] = 1.0
-            self.board[0][3][0][pos] = 1.0
+            self.board[LAYER_SELL_BOOK][0][pos] = 1.0
+            self.board[LAYER_SELL_TRADE][0][pos] = 1.0
 
     def calc_order_pos(self, price, env):
         pos = int((price - env.center_price) / PRICE_UNIT + BOARD_WIDTH/2)
@@ -144,7 +145,7 @@ class Trade(gym.Env):
         if result:
             reward = self._calc_reward()
         else:
-            reward = 0
+            reward = -0.001
 
         return observe, reward, self.episode_done, text
 

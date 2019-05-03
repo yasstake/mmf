@@ -11,11 +11,8 @@ tf.enable_v2_behavior()
 class BaseAgent:
     def __init__(self, epsilon=0.1):
         self.epsilon = epsilon
-        self.initialized = False
         self.estimate_probs = False
         self.actions = [ACTION.NOP, ACTION.SELL, ACTION.SELL_NOW, ACTION.BUY, ACTION.BUY_NOW]
-
-
 
     def play(self, env: Trade, no_of_episode: int):
         total_reward = 0
@@ -25,7 +22,6 @@ class BaseAgent:
             no_of_episode -= 1
 
         print('TOTAL rewards->', total_reward)
-
 
     def one_episode(self, env: Trade):
         s = env.new_episode()
@@ -41,7 +37,7 @@ class BaseAgent:
         return reward
 
     def policy(self, s):
-        if np.random.random() < self.epsilon or not self.initialized:
+        if np.random.random() < self.epsilon:
             return self.random_action()
         else:
             estimates = self.estimate(s)
@@ -56,13 +52,13 @@ class BaseAgent:
     def estimate(self, s):
         return 0.2, 0.2, 0.2, 0.2, 0.2
 
-
     def random_action(self):
         action = random.choice(self.actions)
 
         return action
 
-
+    def update(self, experiences, gamma):
+        pass
 
 if __name__ == '__main__':
     env = Trade()
