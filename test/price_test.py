@@ -12,13 +12,16 @@ from log.timeutil import *
 class MyTestCase(unittest.TestCase):
     def test_add_buy_order(self):
         board = PriceBoard()
-        board.add_buy_order(1000, 1)   # in BTC
-        board.add_buy_order(1000, 1)   # in BTC
+        board.current_time = 1000
+        board.add_buy_trade(1000, 1, 1)   # in BTC
+        board.add_buy_trade(1000, 1, 1)   # in BTC
+
 
     def test_add_sell_order(self):
         board = PriceBoard()
-        board.add_sell_order(999, 1)   # in BTC
-        board.add_sell_order(999, 1)   # in BTC
+        board.current_time = 1000
+        board.add_sell_trade(999, 1, 1)   # in BTC
+        board.add_sell_trade(999, 1, 1)   # in BTC
 
     def test_set_center_price(self):
         PRICE = 4000.5

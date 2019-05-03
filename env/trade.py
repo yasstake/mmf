@@ -16,13 +16,31 @@ MAX_DRAW_DOWN  = 10
 
 class Observation:
     def __init__(self, env):
-        self.board = env.board
+        self.board = env.board / 255
 
-        p = int((price - self.center_price) / PRICE_UNIT + BOARD_WIDTH/2)
+        if env.sell_order_price:
+            pos = self.calc_order_pos(env.sell_order_price)
+            self.board[0][0][pos] = 1
+            self.board[2][0][pos] = 1
 
-        self.sell_order_price = env.sell_order_price
-        self.buy_order_price = env.buy_order_price
-        self.margin = env.margin
+        if env.buy_order_price:
+            pos = self.calc_order_pos(env.buy_order_price)
+            self.board[1][0][pos] = 1
+            self.board[3][0][pos] = 1
+
+
+    def calc_order_pos(self, price):
+        pos = int((price - self.center_price) / PRICE_UNIT + BOARD_WIDTH/2)
+
+        if pos < 0:
+            pos = 0
+        elif BOARD_WIDTH <= pos:
+            pos = BOARD_WIDTH - 1
+
+        return pos
+
+
+
 
 class Trade(gym.Env):
     """The main OpenAI Gym class. It encapsulates an environment with

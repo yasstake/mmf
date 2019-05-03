@@ -13,10 +13,10 @@ class PriceBoard:
     """
     represent order book board and its history
 
-    Layer 1   Buy order     (0 edge)
-    Layer 2   Sell Order    (other side)
-    Layer 3   Buy Trade & funding minus (0 edge)
-    Layer 4   Sell Trade & funding plus (other side)
+    Layer 0   Buy order     (0 edge)
+    Layer 1   Sell Order    (other side)
+    Layer 2   Buy Trade & funding minus (0 edge)
+    Layer 3   Sell Trade & funding plus (other side)
 
     """
     def __init__(self):
