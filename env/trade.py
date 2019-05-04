@@ -18,7 +18,7 @@ class Observation:
     def __init__(self, env):
         #self.board = tf.reshape(env.boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
         self.board = tf.reshape(env.boards, [NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
-        self.board = self.board.numpy() / 255.0
+        self.board = self.board.numpy().astype(float) / 255.0
 
         if env.sell_order_price:
             pos = self.calc_order_pos(env.sell_order_price, env)
@@ -144,10 +144,12 @@ class Trade(gym.Env):
 
         if result:
             reward = self._calc_reward()
+            '''
             if 0 <= reward:
                 reward = 1
             else:
                 reward = -1
+            '''
         else:
             reward = 0
 
