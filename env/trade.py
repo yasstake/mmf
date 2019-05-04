@@ -122,9 +122,10 @@ class Trade(gym.Env):
         reward = 0
         text = {}
 
-        self.new_sec()
-
         result = False
+        if not self.new_sec():
+            return None, -1, True, ""
+
         if action == ACTION.NOP:
             result = self.action_nop()
         elif action == ACTION.BUY:
@@ -139,13 +140,16 @@ class Trade(gym.Env):
             print('Unknown action no->', action)
 
         self.evaluate()
-
         observe = Observation(self)
 
         if result:
             reward = self._calc_reward()
+            if 0 <= reward:
+                reward = 1
+            else:
+                reward = -1
         else:
-            reward = -0.001
+            reward = 0
 
         return observe, reward, self.episode_done, text
 
@@ -158,7 +162,11 @@ class Trade(gym.Env):
 
 
     def new_sec(self):
-        data_available = next(self.new_generator)
+        data_available = False
+        try:
+            data_available = next(self.new_generator)
+        except:
+            pass
 
         if data_available:
             self.episode_done = False
@@ -283,8 +291,6 @@ class Trade(gym.Env):
         if self.sell_order_price:  # sell order exist(cannot sell twice at one time)
             return False
 
-        self.new_sec()
-
         volume = self.sell_book_price * ONE_ORDER_SIZE
         order_price = volume * MAKER_SELL
         volume += self.sell_book_vol
@@ -315,7 +321,6 @@ class Trade(gym.Env):
         if self.sell_order_price: # sell order exist(cannot sell twice at one time)
             return False
 
-        self.new_sec()
         volume = self.buy_book_price * ONE_ORDER_SIZE
 
         if volume < self.buy_book_vol:
@@ -331,8 +336,6 @@ class Trade(gym.Env):
     def action_buy(self):
         if self.buy_order_price: # buy order exist(cannot sell twice at one time)
             return False
-
-        self.new_sec()
 
         order_price = self.buy_book_price
         volume = order_price * ONE_ORDER_SIZE
@@ -362,7 +365,6 @@ class Trade(gym.Env):
         if self.buy_order_price: # buy order exist(cannot sell twice at one time)
             return False
 
-        self.new_sec()
         volume = self.sell_book_price * ONE_ORDER_SIZE
 
         if volume < self.sell_book_vol:

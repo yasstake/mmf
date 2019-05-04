@@ -13,6 +13,7 @@ class BaseAgent:
         self.epsilon = epsilon
         self.estimate_probs = False
         self.actions = [ACTION.NOP, ACTION.SELL, ACTION.SELL_NOW, ACTION.BUY, ACTION.BUY_NOW]
+        self.initialized = False
 
     def play(self, env: Trade, no_of_episode: int):
         total_reward = 0
@@ -28,16 +29,20 @@ class BaseAgent:
 
         while True:
             action = self.policy(s)
+            print('action->', action, end='')
             next_state, reward, done, info = env.step(action)
+            print('reward->', reward)
             if done:
-                print('reward->', reward)
                 break
             s = next_state
 
         return reward
 
+    def set_initialized(self):
+        self.initialized = True
+
     def policy(self, s):
-        if np.random.random() < self.epsilon:
+        if np.random.random() < self.epsilon or not self.initialized:
             return self.random_action()
         else:
             estimates = self.estimate(s)
@@ -50,7 +55,7 @@ class BaseAgent:
             return action
 
     def estimate(self, s):
-        return 0.2, 0.2, 0.2, 0.2, 0.2
+        return np.random.random(), np.random.random(), np.random.random(), np.random.random(), np.random.random()
 
     def random_action(self):
         action = random.choice(self.actions)
@@ -58,6 +63,9 @@ class BaseAgent:
         return action
 
     def update(self, experiences, gamma):
+        pass
+
+    def update_model(self):
         pass
 
 if __name__ == '__main__':

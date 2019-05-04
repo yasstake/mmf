@@ -15,21 +15,26 @@ class Dqn(BaseAgent):
 
 
     def _create_model(self):
+
+        normal = keras.initializers.glorot_normal()
+        optimizer = keras.optimizers.Adam(clipvalue=1.0)
+
         model = keras.models.Sequential()
 
-        model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH), padding='same'))
+        model.add(keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH), padding='same', kernel_initializer=normal))
         model.add(keras.layers.BatchNormalization())
-        model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'))
+        model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer=normal))
         model.add(keras.layers.BatchNormalization())
-        model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same'))
+        model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer=normal))
         model.add(keras.layers.BatchNormalization())
         model.add(keras.layers.Flatten())
         model.add(keras.layers.BatchNormalization())
         model.add(keras.layers.Dropout(0.4))
-        model.add(keras.layers.Dense(units=5, activation='linear'))
+        model.add(keras.layers.Dense(units=5, kernel_initializer=normal))
         model.summary()
 
-        model.compile(loss='mean_squared_error', optimizer='adam', metrics=['accuracy'])
+        model.compile(loss='mse', optimizer=optimizer)
+
 
         return model
 
@@ -41,6 +46,7 @@ class Dqn(BaseAgent):
         return e
 
     def update(self, experiences, gamma):
+
         states = np.array([e.s.board for e in experiences])
         n_states = np.array([e.n_s.board for e in experiences])
 
@@ -53,10 +59,13 @@ class Dqn(BaseAgent):
 
             if not e.d:
                 reward += gamma * np.max(future[i])
+                #print('estaimated reward->', reward, e.r)
 
             estimated[i][e.a] = reward
 
+        print('train target->', estimated[0])
         loss = self.model.train_on_batch(states, estimated)
+        print("loss->", loss)
 
         return loss
 
@@ -69,4 +78,4 @@ if __name__ == '__main__':
     env = Trade()
     agent = Dqn()
 
-    trainer.train(env, agent, eposode=100)
+    trainer.train(env, agent, eposode=500)

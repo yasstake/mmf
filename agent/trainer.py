@@ -21,34 +21,38 @@ class Trainer():
             self.episode_begin(i, agent)
             s = env.reset()
 
-            done = False
-
             total_reward = 0
-            while not done:
+            while True:
                 if render:
                     env.render()
 
                 a = agent.policy(s)
                 n_state, reward, done, info = env.step(a)
-                total_reward += reward
+                #print('step->', a, 'reward->', reward)
+                if done:
+                    break
 
+                total_reward += reward
                 e = Experience(s, a, reward, n_state, done)
                 self.experiences.append(e)
 
-                if 1000 < len(self.experiences):
+                if 500 < len(self.experiences):
+                    agent.set_initialized()
                     self.experiences.popleft()
-                    loss = agent.update(self.experiences, 0.05)
-                    print('loss->', loss)
+                    batch = random.sample(self.experiences, 32)
+
+                    loss = agent.update(batch, gamma=0)
 
             print('reward->', total_reward)
-            agent.update_model()
             self.episode_end(i, agent)
 
     def episode_begin(self, i:int, agent:BaseAgent):
-        print("Episode start->", i)
+        print("-------------------Episode start---------------->", i)
 
     def episode_end(self, i:int, agent:BaseAgent):
-        print("<-Episode end", i)
+        agent.update_model()
+        print("<------------------Episode end-------------------", i)
+
 
 
 
