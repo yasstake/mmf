@@ -48,7 +48,7 @@ class Trainer():
 
     def episode_end(self, i:int, agent:BaseAgent):
         agent.update_model()
-        print("<------------------Episode end-------------------", i, self.reward)
+        print("<------------------Episode end-------------------", i, 'reward->', self.reward)
 
 
 
