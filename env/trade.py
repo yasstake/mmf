@@ -55,7 +55,7 @@ class Observation:
             else:
                 price = self.sell_book_price - PRICE_UNIT
 
-            price = price * TAKER_BUY
+            price = price * TAKER_SELL
             self.sell_now_reward = price - env.buy_order_price
 
     def is_able_to_sell(self):

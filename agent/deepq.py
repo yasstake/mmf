@@ -58,13 +58,21 @@ class Dqn(BaseAgent):
 
             estimated[i][e.a] = reward
 
-
             if e.s.is_able_to_buy():
-                estimated[i][ACTION.BUY_NOW] = e.s.get_buy_now_reward()
-
+#                estimated[i][ACTION.BUY_NOW] = e.s.get_buy_now_reward()
+                pass
+            else:
+#                estimated[i][ACTION.BUY] = 0
+#                estimated[i][ACTION.BUY_NOW] = 0
+                pass
 
             if e.s.is_able_to_sell():
-                estimated[i][ACTION.SELL_NOW] = e.s.get_sell_now_reward()
+#                estimated[i][ACTION.SELL_NOW] = e.s.get_sell_now_reward()
+                pass
+            else:
+#                estimated[i][ACTION.SELL] = 0
+#                estimated[i][ACTION.SELL_NOW] = 0
+                pass
 
         loss = self.model.train_on_batch(states, estimated)
 
