@@ -28,6 +28,8 @@ class Observation:
         self.sell_now_reward = 0
         self.buy_now_reward = 0
 
+        self.time = env.time
+
         if env.sell_order_price:
             pos = self.calc_order_pos(env.sell_order_price, env)
             self.board[LAYER_BUY_BOOK][0][pos] = 1.0
@@ -152,8 +154,6 @@ class Trade(gym.Env):
         self.margin = 0
 
         self.new_generator = None
-
-
 
     def reset(self):
         return self.new_episode()
