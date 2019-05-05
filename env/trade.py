@@ -20,15 +20,57 @@ class Observation:
         self.board = tf.reshape(env.boards, [NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
         self.board = self.board.numpy().astype(float) / 255.0
 
+        self.sell_book_price = env.sell_book_price
+        self.sell_book_vol = env.sell_book_vol
+        self.buy_book_price = env.buy_book_price
+        self.buy_book_vol = env.buy_book_vol
+
+        self.sell_now_reward = 0
+        self.buy_now_reward = 0
+
         if env.sell_order_price:
             pos = self.calc_order_pos(env.sell_order_price, env)
             self.board[LAYER_BUY_BOOK][0][pos] = 1.0
             self.board[LAYER_BUY_TRADE][0][pos] = 1.0
 
+            # lets buy
+            if env.sell_order_price < self.buy_book_vol: # < 1BTC
+                price = self.buy_book_price
+            else:
+                price = self.buy_book_price + PRICE_UNIT
+
+            price = price * TAKER_BUY
+            self.buy_now_reward = env.sell_order_price - price
+
         if env.buy_order_price:
             pos = self.calc_order_pos(env.buy_order_price, env)
             self.board[LAYER_SELL_BOOK][0][pos] = 1.0
             self.board[LAYER_SELL_TRADE][0][pos] = 1.0
+
+            # lets sell
+            if env.buy_order_price < self.sell_book_vol: # < 1BTC
+                price = self.sell_book_price
+            else:
+                price = self.sell_book_price - PRICE_UNIT
+
+            price = price * TAKER_BUY
+            self.sell_now_reward = price - env.buy_order_price
+
+    def is_able_to_sell(self):
+        if self.sell_now_reward:
+            return True
+        return False
+
+    def get_sell_now_reward(self):
+        return self.sell_now_reward
+
+    def is_able_to_buy(self):
+        if self.buy_now_reward:
+            return True
+        return False
+
+    def get_buy_now_reward(self):
+        return self.buy_now_reward
 
     def calc_order_pos(self, price, env):
         pos = int((price - env.center_price) / PRICE_UNIT + BOARD_WIDTH/2)

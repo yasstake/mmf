@@ -15,7 +15,7 @@ class Trainer():
         self.buffer_size = buffer_size
         self.reward = 0
 
-    def train(self, env: Env, agent, eposode=200, observe_interval=10, render=False):
+    def train(self, env: Env, agent, eposode=200, observe_interval=10, render=False, min_buffer_size=100):
         self.experiences = deque(maxlen=self.buffer_size)
 
         for i in range(eposode):
@@ -35,10 +35,9 @@ class Trainer():
                 e = Experience(s, a, reward, n_state, done)
                 self.experiences.append(e)
 
-                if 5000 < len(self.experiences):
+                if min_buffer_size < len(self.experiences):
                     agent.set_initialized()
                     batch = random.sample(self.experiences, 64)
-
                     loss = agent.update(batch, gamma=0.95)
 
             self.episode_end(i, agent)
