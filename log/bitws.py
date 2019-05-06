@@ -1,10 +1,11 @@
-import json
-import os
 import atexit
+import json
+import logging
+import os
 
 # needs install
 import websocket
-import logging
+
 from log.timeutil import *
 
 logger = logging.getLogger()
@@ -20,13 +21,12 @@ try:
     import thread
 except ImportError:
     import _thread as thread
-import time
 
 
 class BitWs:
     '''logging utility using bitmex realtime(websockets) API'''
 
-    def __init__(self, log_file_dir=os.sep + "tmp", flag_file_name = os.sep + "tmp" + os.sep + "BITWS-FLG", id = None):
+    def __init__(self, log_file_dir=os.sep + "tmp", flag_file_name = os.sep + "tmp" + os.sep + "BITWS-FLG", id = None, fix_file=None):
         self.last_action = None
         self.log_file_root_name = None
         self.log_file_name = None
@@ -36,15 +36,18 @@ class BitWs:
         self.compress = True
         self.terminate_count = 200
         self.terminated_by_peer = False
+        self.fix_file = fix_file
         if id:
             self.pid = id
         else:
             self.pid = str(os.getpid())
 
         self.reset()
-        self.rotate_file()
+
         self.flag_file_name = flag_file_name
 
+        if not self.fix_file:
+            self.rotate_file()
 
     def __del__(self):
         # self.dump_message()
@@ -93,7 +96,6 @@ class BitWs:
         if self.log_file_name:
             if os.path.isfile(self.log_file_name):
                 os.rename(self.log_file_name, self.log_file_root_name)
-                print("---- roate file ----", self.log_file_name, self.log_file_root_name)
 
         timestring = time_stamp_string().replace(":", "-").replace('+', '-')
 
@@ -111,7 +113,12 @@ class BitWs:
     def dump_message_line(self, message):
         message['TIME'] = self.last_time
 
-        with open(self.log_file_name, "a") as file:
+        if self.fix_file:
+            file_name = self.fix_file
+        else:
+            file_name = self.log_file_name
+
+        with open(file_name, "a") as file:
             json_string = json.dumps(message, separators=(',', ':'))
 
             if self.compress:
@@ -223,10 +230,8 @@ class BitWs:
 
 
 if __name__ == "__main__":
-    bitmex = BitWs()
+    bitmex = BitWs(fix_file='/tmp/bit.log')
     atexit.register(bitmex.rotate_file)
     bitmex.start()
 
-    if bitmex.terminated_by_peer:
-        print("teminated by peer")
 

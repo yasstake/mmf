@@ -170,30 +170,37 @@ class Trade(gym.Env):
 
         if action == ACTION.NOP:
             result = self.action_nop()
+            if not result:
+                pass
         elif action == ACTION.BUY:
             result = self.action_buy()
+            if not result:
+                reward = -0.00001
+                pass
         elif action == ACTION.BUY_NOW:
             result = self.action_buy_now()
+            if not result:
+                reward = -0.00001
+                pass
         elif action == ACTION.SELL:
             result = self.action_sell()
+            if not result:
+                reward = -0.00001
+                pass
         elif action == ACTION.SELL_NOW:
             result = self.action_sell_now()
+            if not result:
+                reward = -0.00001
+                pass
         else:
             print('Unknown action no->', action)
 
         self.evaluate()
-        observe = Observation(self)
 
-        if result:
-            reward = self._calc_reward()
-            '''
-            if 0 <= reward:
-                reward = 1
-            else:
-                reward = -1
-            '''
-        else:
-            reward = 0
+        if self.done:
+            reward += self._calc_reward()
+
+        observe = Observation(self)
 
         return observe, reward, self.episode_done, text
 

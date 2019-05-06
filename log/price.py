@@ -137,8 +137,6 @@ class PriceBoard:
                 break
 
     def add_buy_trade(self, time, price, volume, window=1):
-
-
         if time == self.current_time:
             if self.buy_trade_price == 0:
                 self.buy_trade_price = price

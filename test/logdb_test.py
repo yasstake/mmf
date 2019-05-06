@@ -1,11 +1,10 @@
-import unittest
-from log.logdb import LogDb
-from log.dbloader import DbLoader
-
-import test.data as data
 import json
+import unittest
 
 import log.constant as constant
+import test.data as data
+from log.dbloader import DbLoader
+from log.logdb import LogDb
 
 
 class LogDbTest(unittest.TestCase):
@@ -36,7 +35,7 @@ class LogDbTest(unittest.TestCase):
         log_db = LogDb()
 
         message = json.loads(data.order_book_depth_05)
-        list = log_db.message_to_list(message)
+        list = LogLoder.message_to_list(message)
         print(list)
 
     @staticmethod
@@ -544,10 +543,6 @@ class LogDbTest(unittest.TestCase):
         db.import_db()
 
         print(db.get_db_info())
-
-
-
-
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@ import zlib
 from functools import lru_cache
 
 from log.constant import *
+from log.loader import LogLoader
 
 #DB_NAME = "file::memory:?cache=shared"
 DB_NAME = ":memory:"
@@ -96,45 +97,6 @@ class LogDb:
 
 
 
-
-    def message_to_list(self, message):
-        sell_min = 999999999
-        sell = {}
-        sell_vol = 0
-
-        buy_max = 0
-        buy = {}
-        buy_vol = 0
-
-        for item in message:
-            volume = item['size']
-            price = item['price']
-
-            if item['side'] == 'Sell':
-                sell[price] = volume
-                if price < sell_min:
-                    sell_min = price
-                    sell_vol = volume
-            else:
-                buy[price] = volume
-                if buy_max < price:
-                    buy_max = price
-                    buy_vol = volume
-
-        buy_list = []
-        for i in range(BOOK_DEPTH):
-            index = buy_max - i * PRICE_UNIT
-            if index in buy:
-                buy_list.append(buy[index])
-
-        sell_list = []
-        for i in range(BOOK_DEPTH):
-            index = sell_min + i * PRICE_UNIT
-            if index in sell:
-                sell_list.append(sell[index])
-
-        return sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list
-
     def list_to_zip_string(self, message_list):
         message_string = ''
         for m in message_list:
@@ -149,7 +111,7 @@ class LogDb:
         return list(map(int, message_array))
 
     def insert_order_book_message(self, time, message):
-        sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list = self.message_to_list(message)
+        sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list = LogLoader.message_to_list(message)
         self.insert_order_book(time, sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list)
 
     def insert_order_book(self, time, sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list):
