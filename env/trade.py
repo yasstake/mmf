@@ -28,6 +28,8 @@ class Observation:
         self.sell_oder_price = env.sell_order_price
         self.buy_order_price = env.buy_order_price
 
+        self.margin = env.margin
+
         self.sell_now_reward = 0
         self.buy_now_reward = 0
 
@@ -440,4 +442,4 @@ class Trade(gym.Env):
         elif self.sell_order_price:
             self.margin = self.sell_order_price - self.buy_book_price
         else:
-            pass
+            self.margin = 0
