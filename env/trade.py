@@ -172,8 +172,7 @@ class Trade(gym.Env):
 
         if action == ACTION.NOP:
             result = self.action_nop()
-            if not result:
-                pass
+            reward = -0.0000001
         elif action == ACTION.BUY:
             result = self.action_buy()
             if not result:
