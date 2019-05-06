@@ -52,7 +52,8 @@ class BaseAgent:
             else:
                 action = np.argmax(estimates)
 
-            print(estimates, action)
+            print('{: 3.5f} {: 3.5f} {: 3.5f} {: 3.5f} {: 3.5f}   a{:1}  BP{:5.1f} SP{:5.1f}'
+                  .format(estimates[0], estimates[1], estimates[2], estimates[3], estimates[4], action, s.buy_order_price, s.sell_oder_price))
 
             return action
 

@@ -176,22 +176,22 @@ class Trade(gym.Env):
         elif action == ACTION.BUY:
             result = self.action_buy()
             if not result:
-                reward = -0.000001
+                reward = -0.00001
                 pass
         elif action == ACTION.BUY_NOW:
             result = self.action_buy_now()
             if not result:
-                reward = -0.000001
+                reward = -0.00001
                 pass
         elif action == ACTION.SELL:
             result = self.action_sell()
             if not result:
-                reward = -0.000001
+                reward = -0.00001
                 pass
         elif action == ACTION.SELL_NOW:
             result = self.action_sell_now()
             if not result:
-                reward = -0.000001
+                reward = -0.00001
                 pass
         else:
             print('Unknown action no->', action)

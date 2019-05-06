@@ -51,7 +51,8 @@ class Trainer():
                 s = n_state
 
                 if done:
-                    self.end_time = s.time
+                    if s:
+                        self.end_time = s.time
                     break
 
             self.episode_end(i, agent, s)

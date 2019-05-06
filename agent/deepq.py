@@ -9,7 +9,7 @@ from log.constant import *
 
 class Dqn(BaseAgent):
 
-    def __init__(self,epsilon=0.05):
+    def __init__(self,epsilon=0.005):
         super().__init__(epsilon)
 
         #        self.model = self._create_model()
