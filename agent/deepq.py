@@ -40,6 +40,7 @@ class Dqn(BaseAgent):
     def estimate(self, s):
         e = self.model.predict(np.expand_dims(s.board, axis=0))[0]
 
+        """
         if s.is_able_to_buy():
             e[ACTION.BUY_NOW] = s.get_buy_now_reward()
             pass
@@ -47,7 +48,7 @@ class Dqn(BaseAgent):
         if s.is_able_to_sell():
             e[ACTION.SELL_NOW] = s.get_sell_now_reward()
             pass
-
+        """
         return e
 
 
