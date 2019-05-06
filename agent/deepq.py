@@ -65,7 +65,6 @@ class Dqn(BaseAgent):
         n_states = np.array([e.n_s.board for e in experiences])
 
         estimated = self.model.predict(states)
-
         future = self.teacher_model.predict(n_states)
 
         for i, e in enumerate(experiences):

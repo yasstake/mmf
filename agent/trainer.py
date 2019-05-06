@@ -46,7 +46,7 @@ class Trainer():
                     agent.set_initialized()
 
                     batch = random.sample(self.experiences, 64)
-                    self.loss = agent.update(batch, gamma=0.99)
+                    self.loss = agent.update(batch, gamma=0.90)
 
                 s = n_state
 
