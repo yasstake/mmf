@@ -15,6 +15,7 @@ class Trainer():
         self.buffer_size = buffer_size
         self.reward = 0
         self.start_time = 0
+        self.end_time = 0
         self.loss = None
         self.ave_sec_reward = 0
         self.duration = 0
@@ -24,7 +25,11 @@ class Trainer():
 
         for i in range(eposode):
             s = env.reset()
+
             self.episode_begin(i, agent, s)
+
+            self.reward = 0
+            self.start_time = s.time
 
             while True:
                 if render:
@@ -32,34 +37,33 @@ class Trainer():
 
                 a = agent.policy(s)
                 n_state, reward, done, info = env.step(a)
-                if done:
-                    break
+                self.reward += reward
 
                 e = Experience(s, a, reward, n_state, done)
                 self.experiences.append(e)
 
                 if min_buffer_size < len(self.experiences):
                     agent.set_initialized()
-                    self.reward += reward
+
                     batch = random.sample(self.experiences, 64)
-                    self.loss = agent.update(batch, gamma=0.9)
+                    self.loss = agent.update(batch, gamma=0.99)
 
                 s = n_state
+
+                if done:
+                    self.end_time = s.time
+                    break
 
             self.episode_end(i, agent, s)
 
     def episode_begin(self, i:int, agent:BaseAgent, s):
-        self.start_time = s.time
+        pass
 
     def episode_end(self, i:int, agent:BaseAgent, s):
-        if self.loss is not None:
-            self.duration += float(s.time) - float(self.start_time)
-        if self.duration:
-            sec_reward = self.reward / self.duration
-        else:
-            sec_reward = 0
+        self.duration = float(self.end_time) - float(self.start_time)
+        sec_reward = self.reward / self.duration
         self.ave_sec_reward = (self.ave_sec_reward * 9 + sec_reward) / 10
-        print("<----Episode end--", i, 'loss->', self.loss, 'reward->', self.reward, 'duration', self.duration, 'reward/sec', sec_reward,'/', self.ave_sec_reward, 'buffer', len(self.experiences))
+        print("<-Episode end--", i, 'loss->', self.loss, 'reward->', self.reward, 'duration', self.duration, 'reward/sec', sec_reward,'/', self.ave_sec_reward, 'buffer', len(self.experiences))
 
         agent.update_model()
         

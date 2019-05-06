@@ -39,7 +39,25 @@ class Dqn(BaseAgent):
 
     def estimate(self, s):
         e = self.model.predict(np.expand_dims(s.board, axis=0))[0]
+
+        if s.is_able_to_buy():
+            e[ACTION.BUY_NOW] = s.get_buy_now_reward()
+            pass
+        else:
+            e[ACTION.BUY] = 0
+            e[ACTION.BUY_NOW] = 0
+            pass
+
+        if s.is_able_to_sell():
+            e[ACTION.SELL_NOW] = s.get_sell_now_reward()
+            pass
+        else:
+            e[ACTION.SELL] = 0
+            e[ACTION.SELL_NOW] = 0
+            pass
+
         return e
+
 
     def update(self, experiences, gamma):
 
@@ -59,7 +77,7 @@ class Dqn(BaseAgent):
             estimated[i][e.a] = reward
 
             if e.s.is_able_to_buy():
-#                estimated[i][ACTION.BUY_NOW] = e.s.get_buy_now_reward()
+                estimated[i][ACTION.BUY_NOW] = e.s.get_buy_now_reward()
                 pass
             else:
 #                estimated[i][ACTION.BUY] = 0
@@ -67,7 +85,7 @@ class Dqn(BaseAgent):
                 pass
 
             if e.s.is_able_to_sell():
-#                estimated[i][ACTION.SELL_NOW] = e.s.get_sell_now_reward()
+                estimated[i][ACTION.SELL_NOW] = e.s.get_sell_now_reward()
                 pass
             else:
 #                estimated[i][ACTION.SELL] = 0
@@ -87,4 +105,4 @@ if __name__ == '__main__':
     env = Trade()
     agent = Dqn()
 
-    trainer.train(env, agent, eposode=50000, min_buffer_size=1000)
+    trainer.train(env, agent, eposode=50000, min_buffer_size=500)

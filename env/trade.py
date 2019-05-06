@@ -25,6 +25,9 @@ class Observation:
         self.buy_book_price = env.buy_book_price
         self.buy_book_vol = env.buy_book_vol
 
+        self.sell_oder_price = env.sell_order_price
+        self.buy_order_price = env.buy_order_price
+
         self.sell_now_reward = 0
         self.buy_now_reward = 0
 
@@ -59,17 +62,17 @@ class Observation:
             self.sell_now_reward = price - env.buy_order_price
 
     def is_able_to_sell(self):
-        if self.sell_now_reward:
-            return True
-        return False
+        if self.sell_oder_price:
+            return False
+        return True
 
     def get_sell_now_reward(self):
         return self.sell_now_reward
 
     def is_able_to_buy(self):
-        if self.buy_now_reward:
-            return True
-        return False
+        if self.buy_order_price:
+            return False
+        return True
 
     def get_buy_now_reward(self):
         return self.buy_now_reward
@@ -119,7 +122,6 @@ class Trade(gym.Env):
         super().__init__()
 
         self.action_space = gym.spaces.Discrete(5) #5 actions nop, buy, BUY, sell, SELL
-        self.done = False
 
         self.data_path = data_pattern
         self.dataset = None
@@ -166,7 +168,7 @@ class Trade(gym.Env):
 
         result = False
         if not self.new_sec():
-            return None, -1, True, ""
+            return None, -0.1, True, ""
 
         if action == ACTION.NOP:
             result = self.action_nop()
@@ -175,30 +177,30 @@ class Trade(gym.Env):
         elif action == ACTION.BUY:
             result = self.action_buy()
             if not result:
-                reward = -0.00001
+                reward = -0.000001
                 pass
         elif action == ACTION.BUY_NOW:
             result = self.action_buy_now()
             if not result:
-                reward = -0.00001
+                reward = -0.000001
                 pass
         elif action == ACTION.SELL:
             result = self.action_sell()
             if not result:
-                reward = -0.00001
+                reward = -0.000001
                 pass
         elif action == ACTION.SELL_NOW:
             result = self.action_sell_now()
             if not result:
-                reward = -0.00001
+                reward = -0.000001
                 pass
         else:
             print('Unknown action no->', action)
 
         self.evaluate()
 
-        if self.done:
-            reward += self._calc_reward()
+        if self.episode_done:
+            reward = self._calc_reward()
 
         observe = Observation(self)
 
@@ -206,6 +208,7 @@ class Trade(gym.Env):
 
 
     def _calc_reward(self):
+        print('reward->', self.margin)
         return self.margin
 
     def render(self, mode='human', close=False):
@@ -363,7 +366,7 @@ class Trade(gym.Env):
         if time_count <= 0:
             return False
 
-        print('ACTION:sell')
+        print('ACTION:sell', self.sell_order_price)
 
         return True
 
@@ -379,7 +382,7 @@ class Trade(gym.Env):
         else:
             self.sell_order_price = (volume - PRICE_UNIT) * TAKER_SELL
 
-        print('ACTION:sell now')
+        print('ACTION:sell now', self.sell_order_price)
 
         return True
 
@@ -407,7 +410,7 @@ class Trade(gym.Env):
         if time_count <= 0:
             return False
 
-        print('ACTION:buy')
+        print('ACTION:buy', self.buy_order_price)
 
         return True
 
@@ -423,13 +426,13 @@ class Trade(gym.Env):
         else:
             self.buy_order_price = (volume + PRICE_UNIT) * TAKER_BUY
 
-        print('ACTION:buy now')
+        print('ACTION:buy now', self.buy_order_price)
 
         return True
 
     def evaluate(self):
         if self.buy_order_price and self.sell_order_price:
-            self.margin = self.sell_order_price - self.buy_order_price - self.margin
+            self.margin = self.sell_order_price - self.buy_order_price
             self.sell_order_price = 0
             self.buy_order_price = 0
             self.episode_done = True
