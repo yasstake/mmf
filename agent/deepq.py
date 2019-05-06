@@ -28,6 +28,8 @@ class Dqn(BaseAgent):
         model.add(keras.layers.Conv2D(64, (3, 3), activation='relu', padding='same', kernel_initializer=normal))
         #model.add(keras.layers.BatchNormalization())
         model.add(keras.layers.Flatten())
+        model.add(keras.layers.Dropout(0.4))
+        model.add(keras.layers.Dense(units=128))
         #model.add(keras.layers.BatchNormalization())
         model.add(keras.layers.Dropout(0.4))
         model.add(keras.layers.Dense(units=5, kernel_initializer=normal))
@@ -89,4 +91,4 @@ if __name__ == '__main__':
     env = Trade()
     agent = Dqn()
 
-    trainer.train(env, agent, eposode=50000, min_buffer_size=500)
+    trainer.train(env, agent, eposode=50000, min_buffer_size=5000)
