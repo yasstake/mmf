@@ -52,6 +52,8 @@ class BaseAgent:
             else:
                 action = np.argmax(estimates)
 
+            print(estimates, action)
+
             return action
 
     def estimate(self, s):
