@@ -9,7 +9,7 @@ from log.constant import ACTION
 tf.enable_v2_behavior()
 
 class BaseAgent:
-    def __init__(self, epsilon=0.05):
+    def __init__(self, epsilon=0.0005):
         self.epsilon = epsilon
         self.estimate_probs = False
         self.actions = [ACTION.NOP, ACTION.SELL, ACTION.SELL_NOW, ACTION.BUY, ACTION.BUY_NOW]

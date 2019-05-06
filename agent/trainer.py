@@ -17,8 +17,9 @@ class Trainer():
         self.start_time = 0
         self.end_time = 0
         self.loss = None
-        self.ave_sec_reward = 0
+        self.total_reward = 0
         self.duration = 0
+        #self.logger = Logger()
 
     def train(self, env: Env, agent, eposode=200, observe_interval=10, render=False, min_buffer_size=100):
         self.experiences = deque(maxlen=self.buffer_size)
@@ -46,7 +47,7 @@ class Trainer():
                     agent.set_initialized()
 
                     batch = random.sample(self.experiences, 64)
-                    self.loss = agent.update(batch, gamma=0.90)
+                    self.loss = agent.update(batch, gamma=0.995)
 
                 s = n_state
 
@@ -63,10 +64,18 @@ class Trainer():
     def episode_end(self, i:int, agent:BaseAgent, s):
         self.duration = float(self.end_time) - float(self.start_time)
         sec_reward = self.reward / self.duration
-        self.ave_sec_reward = (self.ave_sec_reward * 9 + sec_reward) / 10
-        print("<-Episode end--", i, 'loss->', self.loss, 'reward->', self.reward, 'duration', self.duration, 'reward/sec', sec_reward,'/', self.ave_sec_reward, 'buffer', len(self.experiences))
-
+        self.total_reward += self.reward
+        print("<-Episode end--", i, 'loss->', self.loss, 'reward->', self.reward, 'duration', self.duration, 'reward/sec', sec_reward,'/', self.total_reward, 'buffer', len(self.experiences))
         agent.update_model()
+
+        '''
+        self.logger.write(i, 'loss', self.loss)
+        self.logger.write(i, 'reward', self.reward)
+        self.logger.write(i, 'total reward', self.total_reward)
+        '''
+
+
+
         
 
 if __name__ == '__main__':
