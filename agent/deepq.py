@@ -1,4 +1,3 @@
-import tensorflow as tf
 import tensorflow.keras as keras
 
 from agent.base import *
@@ -25,17 +24,18 @@ class Dqn(BaseAgent):
     def _create_duel_model(self):
 
         l_input = keras.layers.Input(shape=(NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH))
-        conv2d = keras.layers.Conv2D(32, 8, strides=(4, 4), activation='relu', data_format="channels_first", padding='same')(l_input)
-        conv2d = keras.layers.Conv2D(64, 4, strides=(2, 2), activation='relu', data_format="channels_first", padding='same')(conv2d)
-        conv2d = keras.layers.Conv2D(64, 3, strides=(1, 1), activation='relu', data_format="channels_first", padding='same')(conv2d)
+        conv2d = keras.layers.Conv2D(32, (4, 4), activation='relu', padding='same')(l_input)
+        conv2d = keras.layers.Conv2D(64, (2, 2), activation='relu', padding='same')(conv2d)
+        conv2d = keras.layers.Conv2D(64, (1, 1), activation='relu', padding='same')(conv2d)
         fltn = keras.layers.Flatten()(conv2d)
         v = keras.layers.Dense(units=512, activation='relu')(fltn)
         v = keras.layers.Dense(1)(v)
         adv = keras.layers.Dense(512, activation='relu')(fltn)
         adv = keras.layers.Dense(self.number_of_actions)(adv)
         y = keras.layers.concatenate([v, adv])
+#        l_output = keras.layers.Dense(self.number_of_actions)(y)
         l_output = keras.layers.Lambda(
-            lambda a: keras.expand_dims(a[:, 0], -1) + a[:, 1:] - tf.stop_gradient(keras.mean(a[:, 1:], keepdims=True)),
+            lambda a: keras.backend.expand_dims(a[:, 0], -1) + a[:, 1:] - tf.stop_gradient(keras.backend.mean(a[:, 1:], keepdims=True)),
             output_shape=(self.number_of_actions,))(y)
         model = keras.Model(l_input, l_output)
 
