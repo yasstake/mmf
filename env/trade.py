@@ -184,7 +184,7 @@ class Trade(gym.Env):
         result = False
 
         if not self.new_sec():
-            return None, -10, True, ""
+            return None, -20, True, ""
 
         if self.check_draw_down():
             result = True
