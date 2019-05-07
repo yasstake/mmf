@@ -6,8 +6,6 @@ from env.trade import Observation
 from log.constant import *
 
 
-#    Conv2D, Flatten, Dense, Input, Lambda, concatenate
-
 class Dqn(BaseAgent):
 
     def __init__(self,epsilon=0.005):

@@ -15,14 +15,14 @@ class Logger:
         #self.summary = tf.summary.FileWriter(log_dir)
         self.summary = tf.contrib.summary.create_file_writer(log_dir)
 
-
     def write(self, index, name, value):
-        summary = tf.Summary()
-        summary_value = summary.value.add()
-        summary_value.tag = name
-        summary_value.simple_value = value
-        self.summary.add_summary(summary, index)
-        self.summary.flush()
+        if value:
+            summary = tf.Summary()
+            summary_value = summary.value.add()
+            summary_value.tag = name
+            summary_value.simple_value = value
+#            self.summary.add_summary(summary, index)
+            self.summary.flush()
 
 
 if __name__ == '__main__':

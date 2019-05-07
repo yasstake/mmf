@@ -225,7 +225,7 @@ class Trade(gym.Env):
 
 
     def _calc_reward(self):
-        print('reward->', self.margin)
+        print('reward->', self.margin.numpy())
         return self.margin
 
     def render(self, mode='human', close=False):
@@ -386,7 +386,7 @@ class Trade(gym.Env):
         if time_count <= 0:
             return False
 
-        print('ACTION:sell', self.sell_order_price)
+        print('ACTION:sell', self.sell_order_price.numpy())
 
         return True
 
@@ -402,7 +402,7 @@ class Trade(gym.Env):
         else:
             self.sell_order_price = (volume - PRICE_UNIT) * TAKER_SELL
 
-        print('ACTION:sell now', self.sell_order_price)
+        print('ACTION:sell now', self.sell_order_price.numpy())
 
         return True
 
@@ -430,7 +430,7 @@ class Trade(gym.Env):
         if time_count <= 0:
             return False
 
-        print('ACTION:buy', self.buy_order_price)
+        print('ACTION:buy', self.buy_order_price.numpy())
 
         return True
 
@@ -446,7 +446,7 @@ class Trade(gym.Env):
         else:
             self.buy_order_price = (volume + PRICE_UNIT) * TAKER_BUY
 
-        print('ACTION:buy now', self.buy_order_price)
+        print('ACTION:buy now', self.buy_order_price.numpy())
 
         return True
 

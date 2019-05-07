@@ -4,6 +4,7 @@ from collections import namedtuple
 from gym import Env
 
 from agent.base import *
+from env.log import Logger
 
 BUFFER_SIZE = 20000
 
@@ -19,9 +20,9 @@ class Trainer():
         self.loss = None
         self.total_reward = 0
         self.duration = 0
-        #self.logger = Logger()
+        self.logger = Logger()
 
-    def train(self, env: Env, agent, eposode=200, observe_interval=10, render=False, min_buffer_size=100):
+    def train(self, env: Env, agent, eposode=200, observe_interval=10, render=False, min_buffer_size=100, gamma=0.95):
         for i in range(eposode):
             s = env.reset()
 
@@ -45,7 +46,7 @@ class Trainer():
                     agent.set_initialized()
 
                     batch = random.sample(self.experiences, 64)
-                    self.loss = agent.update(batch, gamma=0.995)
+                    self.loss = agent.update(batch, gamma=gamma)
 
                 s = n_state
 
@@ -69,19 +70,16 @@ class Trainer():
         print("<-- EPISODE END-- ", end='')
         print(i, end='')
         print(' // loss->', self.loss, end='')
-        print(' // reward->', self.reward, end='')
-        print(' // total reward->', self.total_reward, end='')
+        print(' // reward->', self.reward.numpy(), end='')
+        print(' // total reward->', self.total_reward.numpy(), end='')
         print(' // buffer len->', len(self.experiences))
 
         agent.update_model()
 
-        '''
+
         self.logger.write(i, 'loss', self.loss)
         self.logger.write(i, 'reward', self.reward)
         self.logger.write(i, 'total reward', self.total_reward)
-        '''
-
-
 
         
 
