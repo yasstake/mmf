@@ -11,8 +11,8 @@ Experience = namedtuple('Experience', ['s', 'a', 'r', 'n_s', 'd'])
 
 class Trainer():
     def __init__(self, buffer_size=BUFFER_SIZE):
-        self.experiences = None
         self.buffer_size = buffer_size
+        self.experiences = deque(maxlen=self.buffer_size)
         self.reward = 0
         self.start_time = 0
         self.end_time = 0
@@ -22,8 +22,6 @@ class Trainer():
         #self.logger = Logger()
 
     def train(self, env: Env, agent, eposode=200, observe_interval=10, render=False, min_buffer_size=100):
-        self.experiences = deque(maxlen=self.buffer_size)
-
         for i in range(eposode):
             s = env.reset()
 
@@ -63,9 +61,18 @@ class Trainer():
 
     def episode_end(self, i:int, agent:BaseAgent, s):
         self.duration = float(self.end_time) - float(self.start_time)
-        sec_reward = self.reward / self.duration
         self.total_reward += self.reward
-        print("<-Episode end--", i, 'loss->', self.loss, 'reward->', self.reward, 'duration', self.duration, 'reward/sec', sec_reward,'/', self.total_reward, 'buffer', len(self.experiences))
+        #        s = '<- EPISODE END ({:5d}) loss({: 4.6f}), reward({: 4.6f}) duration({: 4f}) total reward ({: 6f}) '.format(i, self.loss, self.reward, self.duration, self.total_reward)
+
+        s = '<- EPISODE END ({:5d}) '.format(i)
+
+        print("<-- EPISODE END-- ", end='')
+        print(i, end='')
+        print(' // loss->', self.loss, end='')
+        print(' // reward->', self.reward, end='')
+        print(' // total reward->', self.total_reward, end='')
+        print(' // buffer len->', len(self.experiences))
+
         agent.update_model()
 
         '''

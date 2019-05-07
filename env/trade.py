@@ -2,6 +2,7 @@ import glob
 import random
 
 import gym
+import numpy as np
 import tensorflow as tf
 
 from dl.tfrecords import read_tfrecord_example
@@ -19,6 +20,7 @@ class Observation:
         #self.board = tf.reshape(env.boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
         self.board = tf.reshape(env.boards, [NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
         self.board = self.board.numpy().astype(float) / 255.0
+        self.rewards = None
 
         self.sell_book_price = env.sell_book_price
         self.sell_book_vol = env.sell_book_vol
@@ -28,6 +30,7 @@ class Observation:
         self.sell_oder_price = env.sell_order_price
         self.buy_order_price = env.buy_order_price
 
+
         self.margin = env.margin
 
         self.sell_now_reward = 0
@@ -35,10 +38,15 @@ class Observation:
 
         self.time = env.time
 
+        buy_reward = 0
+        sell_reward = 0
+
         if env.sell_order_price:
             pos = self.calc_order_pos(env.sell_order_price, env)
             self.board[LAYER_BUY_BOOK][0][pos] = 1.0
             self.board[LAYER_BUY_TRADE][0][pos] = 1.0
+
+            sell_reward = env.sell_order_price - env.buy_book_price
 
             # lets buy
             if env.sell_order_price < self.buy_book_vol: # < 1BTC
@@ -54,6 +62,8 @@ class Observation:
             self.board[LAYER_SELL_BOOK][0][pos] = 1.0
             self.board[LAYER_SELL_TRADE][0][pos] = 1.0
 
+            buy_reward = env.sell_book_price - env.buy_order_price
+
             # lets sell
             if env.buy_order_price < self.sell_book_vol: # < 1BTC
                 price = self.sell_book_price
@@ -62,6 +72,9 @@ class Observation:
 
             price = price * TAKER_SELL
             self.sell_now_reward = price - env.buy_order_price
+
+        self.rewards = np.array([sell_reward, buy_reward])
+
 
     def is_able_to_sell(self):
         if self.sell_oder_price:
@@ -171,7 +184,7 @@ class Trade(gym.Env):
         result = False
 
         if not self.new_sec():
-            return None, -0.1, True, ""
+            return None, -10, True, ""
 
         if self.check_draw_down():
             result = True

@@ -2,6 +2,7 @@ import tensorflow.keras as keras
 
 from agent.base import *
 from agent.trainer import Trainer
+from env.trade import Observation
 from log.constant import *
 
 
@@ -27,17 +28,24 @@ class Dqn(BaseAgent):
         conv2d = keras.layers.Conv2D(32, (4, 4), activation='relu', padding='same')(l_input)
         conv2d = keras.layers.Conv2D(64, (2, 2), activation='relu', padding='same')(conv2d)
         conv2d = keras.layers.Conv2D(64, (1, 1), activation='relu', padding='same')(conv2d)
-        fltn = keras.layers.Flatten()(conv2d)
-        v = keras.layers.Dense(units=512, activation='relu')(fltn)
+        flat_view = keras.layers.Flatten()(conv2d)
+
+        margin_input = keras.layers.Input(shape=(2,))
+
+        marge_out = keras.layers.concatenate([flat_view, margin_input])
+
+        fltn = keras.layers.Dense(512, activation='relu')(marge_out)
+
+        v = keras.layers.Dense(units=256, activation='relu')(fltn)
         v = keras.layers.Dense(1)(v)
-        adv = keras.layers.Dense(512, activation='relu')(fltn)
+        adv = keras.layers.Dense(256, activation='relu')(fltn)
         adv = keras.layers.Dense(self.number_of_actions)(adv)
         y = keras.layers.concatenate([v, adv])
 #        l_output = keras.layers.Dense(self.number_of_actions)(y)
         l_output = keras.layers.Lambda(
             lambda a: keras.backend.expand_dims(a[:, 0], -1) + a[:, 1:] - tf.stop_gradient(keras.backend.mean(a[:, 1:], keepdims=True)),
             output_shape=(self.number_of_actions,))(y)
-        model = keras.Model(l_input, l_output)
+        model = keras.Model([l_input, margin_input], l_output)
 
         model.summary()
 
@@ -70,8 +78,9 @@ class Dqn(BaseAgent):
 
         return model
 
-    def estimate(self, s):
-        e = self.model.predict(np.expand_dims(s.board, axis=0))[0]
+    def estimate(self, s:Observation):
+        #e = self.model.predict([np.expand_dims(s.board, axis=0), np.expand_dims(s.reward, axis=0)])[0]
+        e = self.model.predict([np.expand_dims(s.board, axis=0), np.expand_dims(s.rewards, axis=0)])[0]
 
         """
         if s.is_able_to_buy():
@@ -88,10 +97,12 @@ class Dqn(BaseAgent):
     def update(self, experiences, gamma):
 
         states = np.array([e.s.board for e in experiences])
+        rewards = np.array([e.s.rewards for e in experiences])
         n_states = np.array([e.n_s.board for e in experiences])
+        n_rewards = np.array([e.n_s.rewards for e in experiences])
 
-        estimated = self.model.predict(states)
-        future = self.teacher_model.predict(n_states)
+        estimated = self.model.predict([states, rewards])
+        future = self.teacher_model.predict([n_states, n_rewards])
 
         for i, e in enumerate(experiences):
             reward = e.r
@@ -109,7 +120,7 @@ class Dqn(BaseAgent):
                 estimated[i][ACTION.SELL_NOW] = e.s.get_sell_now_reward()
                 pass
 
-        loss = self.model.train_on_batch(states, estimated)
+        loss = self.model.train_on_batch([states, rewards], estimated)
 
         return loss
 
@@ -122,4 +133,5 @@ if __name__ == '__main__':
     env = Trade()
     agent = Dqn()
 
-    trainer.train(env, agent, eposode=100000, min_buffer_size=5000)
+    trainer.train(env, agent, eposode=100000, min_buffer_size=128)
+#    trainer.train(env, agent, eposode=100000, min_buffer_size=5000)
