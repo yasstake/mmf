@@ -122,4 +122,4 @@ if __name__ == '__main__':
     env = Trade()
     agent = Dqn()
 
-    trainer.train(env, agent, eposode=100000, min_buffer_size=50000)
+    trainer.train(env, agent, eposode=100000, min_buffer_size=5000)

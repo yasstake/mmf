@@ -11,7 +11,7 @@ EPISODE_FRAMES = 3600 * 3
 EPISODE_FILES  = int(EPISODE_FRAMES / BOARD_IN_FILE)
 
 ONE_ORDER_SIZE = 1.0
-MAX_DRAW_DOWN  = 10
+MAX_DRAW_DOWN  = 5
 
 
 class Observation:
@@ -169,10 +169,13 @@ class Trade(gym.Env):
         text = {}
 
         result = False
+
         if not self.new_sec():
             return None, -0.1, True, ""
 
-        if action == ACTION.NOP:
+        if self.check_draw_down():
+            result = True
+        elif action == ACTION.NOP:
             result = self.action_nop()
             reward = -0.0000001
         elif action == ACTION.BUY:
@@ -331,7 +334,7 @@ class Trade(gym.Env):
         self.fix_sell_price = data['fix_sell_price']
         self.time  = data['time']
 
-    def action_nop(self):
+    def check_draw_down(self):
         if self.sell_order_price and self.sell_order_price - self.buy_book_price < (- MAX_DRAW_DOWN):
             print("SELL DRAW DOWN")
             return self.action_buy_now()
@@ -341,6 +344,9 @@ class Trade(gym.Env):
             return self.action_sell_now()
 
         return False
+
+    def action_nop(self):
+        return True
 
     def action_sell(self):
         if self.sell_order_price:  # sell order exist(cannot sell twice at one time)
