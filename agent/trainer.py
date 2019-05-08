@@ -1,4 +1,6 @@
-from agent.base import BaseAgent
+from collections import deque
+from collections import namedtuple
+
 from agent.deepq import *
 from env.log import Logger
 
