@@ -1,3 +1,4 @@
+from agent.base import BaseAgent
 from agent.deepq import *
 from env.log import Logger
 
@@ -17,7 +18,7 @@ class Trainer():
         self.duration = 0
         self.logger = Logger()
 
-    def train(self, env: Env, agent, eposode=200, observe_interval=10, render=False, min_buffer_size=100, gamma=0.95):
+    def train(self, env, agent, eposode=200, observe_interval=10, render=False, min_buffer_size=100, gamma=0.95):
         for i in range(eposode):
             s = env.reset()
 

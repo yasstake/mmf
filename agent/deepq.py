@@ -1,7 +1,9 @@
 import tensorflow.keras as keras
 
+from agent.base import BaseAgent
 from agent.trainer import *
 from env.trade import Observation
+from env.trade import Trade
 from log.constant import *
 
 
