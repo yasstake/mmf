@@ -30,7 +30,6 @@ class Observation:
         self.sell_oder_price = env.sell_order_price
         self.buy_order_price = env.buy_order_price
 
-
         self.margin = env.margin
 
         self.sell_now_reward = 0
@@ -386,7 +385,7 @@ class Trade(gym.Env):
         if time_count <= 0:
             return False
 
-        print('ACTION:sell', self.sell_order_price.numpy())
+        print('ACTION:sell', self.sell_order_price)
 
         return True
 
@@ -402,7 +401,7 @@ class Trade(gym.Env):
         else:
             self.sell_order_price = (volume - PRICE_UNIT) * TAKER_SELL
 
-        print('ACTION:sell now', self.sell_order_price.numpy())
+        print('ACTION:sell now', self.sell_order_price)
 
         return True
 
@@ -430,7 +429,7 @@ class Trade(gym.Env):
         if time_count <= 0:
             return False
 
-        print('ACTION:buy', self.buy_order_price.numpy())
+        print('ACTION:buy', self.buy_order_price)
 
         return True
 
@@ -446,7 +445,7 @@ class Trade(gym.Env):
         else:
             self.buy_order_price = (volume + PRICE_UNIT) * TAKER_BUY
 
-        print('ACTION:buy now', self.buy_order_price.numpy())
+        print('ACTION:buy now', self.buy_order_price)
 
         return True
 

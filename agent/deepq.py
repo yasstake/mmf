@@ -1,7 +1,6 @@
 import tensorflow.keras as keras
 
-from agent.base import *
-from agent.trainer import Trainer
+from agent.trainer import *
 from env.trade import Observation
 from log.constant import *
 
@@ -112,13 +111,19 @@ class Dqn(BaseAgent):
 
             if e.s.is_able_to_buy():
                 estimated[i][ACTION.BUY_NOW] = e.s.get_buy_now_reward()
-                pass
+            else:
+                estimated[i][ACTION.BUY_NOW] = 0
+                estimated[i][ACTION.BUY] = 0
 
             if e.s.is_able_to_sell():
                 estimated[i][ACTION.SELL_NOW] = e.s.get_sell_now_reward()
-                pass
+            else:
+                estimated[i][ACTION.SELL_NOW] = 0
+                estimated[i][ACTION.SELL] = 0
+
 
         loss = self.model.train_on_batch([states, rewards], estimated)
+
 
         return loss
 

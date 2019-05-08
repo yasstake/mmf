@@ -1,9 +1,4 @@
-from collections import deque
-from collections import namedtuple
-
-from gym import Env
-
-from agent.base import *
+from agent.deepq import *
 from env.log import Logger
 
 BUFFER_SIZE = 20000
@@ -76,16 +71,15 @@ class Trainer():
 
         agent.update_model()
 
-
         self.logger.write(i, 'loss', self.loss)
         self.logger.write(i, 'reward', self.reward)
         self.logger.write(i, 'total reward', self.total_reward)
 
-        
 
 if __name__ == '__main__':
     trainer = Trainer()
     env = Trade()
-    agent = BaseAgent()
+    #agent = BaseAgent()
+    agent = Dqn()
 
-    trainer.train(env, agent, eposode=10)
+    trainer.train(env, agent, eposode=1000)

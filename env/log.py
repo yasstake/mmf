@@ -3,6 +3,7 @@ import os
 import tensorflow as tf
 from tensorflow import keras
 
+tf.enable_v2_behavior()
 
 class Logger:
     def __init__(self, log_dir='/bitlog/board/'):
@@ -17,12 +18,9 @@ class Logger:
 
     def write(self, index, name, value):
         if value:
-            summary = tf.Summary()
-            summary_value = summary.value.add()
-            summary_value.tag = name
-            summary_value.simple_value = value
-#            self.summary.add_summary(summary, index)
-            self.summary.flush()
+            with self.summary.as_default():
+                tf.summary.histogram(name, value)
+
 
 
 if __name__ == '__main__':
