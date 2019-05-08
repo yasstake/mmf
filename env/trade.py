@@ -224,7 +224,7 @@ class Trade(gym.Env):
 
 
     def _calc_reward(self):
-        print('reward->', self.margin.numpy())
+        print('reward->', self.margin)
         return self.margin
 
     def render(self, mode='human', close=False):
