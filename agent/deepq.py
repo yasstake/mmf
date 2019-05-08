@@ -1,10 +1,14 @@
+import tensorflow as tf
 import tensorflow.keras as keras
+
+
+import numpy as np
 
 from agent.trainer import *
 from env.trade import Observation
 from env.trade import Trade
 from log.constant import *
-
+from agent.base import BaseAgent
 
 class Dqn(BaseAgent):
 
@@ -137,5 +141,5 @@ if __name__ == '__main__':
     env = Trade()
     agent = Dqn()
 
-    trainer.train(env, agent, eposode=100000, min_buffer_size=128)
-#    trainer.train(env, agent, eposode=100000, min_buffer_size=5000)
+#    trainer.train(env, agent, eposode=100000, min_buffer_size=128)
+    trainer.train(env, agent, eposode=200000, min_buffer_size=5000)

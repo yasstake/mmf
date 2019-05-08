@@ -1,5 +1,11 @@
+from random import sample
+
 from agent.deepq import *
 from env.log import Logger
+
+from collections import namedtuple
+from collections import deque
+
 
 BUFFER_SIZE = 20000
 
