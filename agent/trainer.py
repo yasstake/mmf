@@ -1,6 +1,3 @@
-from collections import deque
-from collections import namedtuple
-
 from agent.deepq import *
 from env.log import Logger
 
@@ -43,7 +40,7 @@ class Trainer():
                 if min_buffer_size < len(self.experiences):
                     agent.set_initialized()
 
-                    batch = random.sample(self.experiences, 64)
+                    batch = sample(self.experiences, 64)
                     self.loss = agent.update(batch, gamma=gamma)
 
                 s = n_state
