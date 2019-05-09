@@ -1,3 +1,4 @@
+from random import sample
 from collections import deque
 from collections import namedtuple
 
