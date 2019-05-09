@@ -75,6 +75,13 @@ class Trainer():
         print(' // total reward->', self.total_reward.numpy(), end='')
         print(' // buffer len->', len(self.experiences))
 
+        print("CSV, ", end='')
+        print(i, end='')
+        print(', ', self.loss, end='')
+        print(', ', self.reward.numpy(), end='')
+        print(', ', self.total_reward.numpy(), end='')
+        print(', ', len(self.experiences))
+
         agent.update_model()
 
         self.logger.write(i, 'loss', self.loss)

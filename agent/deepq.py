@@ -21,8 +21,6 @@ class Dqn(BaseAgent):
         self.model = self._create_duel_model()
         self.teacher_model = self._create_duel_model()
 
-
-
     def _create_duel_model(self):
 
         l_input = keras.layers.Input(shape=(NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH))
@@ -141,4 +139,4 @@ if __name__ == '__main__':
     agent = Dqn()
 
 #    trainer.train(env, agent, eposode=100000, min_buffer_size=128)
-    trainer.train(env, agent, eposode=200000, min_buffer_size=5000)
+    trainer.train(env, agent, eposode=500000, min_buffer_size=15000)
