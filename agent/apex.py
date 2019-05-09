@@ -63,25 +63,14 @@ class Trainer():
         self.total_reward += self.reward
         #        s = '<- EPISODE END ({:5d}) loss({: 4.6f}), reward({: 4.6f}) duration({: 4f}) total reward ({: 6f}) '.format(i, self.loss, self.reward, self.duration, self.total_reward)
 
-        try:
-            s = '<- EPISODE END ({:5d}) '.format(i)
+        s = '<- EPISODE END ({:5d}) '.format(i)
 
-            print("<-- EPISODE END-- ", end='')
-            print(i, end='')
-            print(' // loss->', self.loss, end='')
-            print(' // reward->', self.reward.numpy(), end='')
-            print(' // total reward->', self.total_reward.numpy(), end='')
-            print(' // buffer len->', len(self.experiences))
-
-            print("CSV, ", end='')
-            print(i, end='')
-            print(', ', self.loss, end='')
-            print(', ', self.reward.numpy(), end='')
-            print(', ', self.total_reward.numpy(), end='')
-            print(', ', len(self.experiences))
-        except:
-            pass
-
+        print("<-- EPISODE END-- ", end='')
+        print(i, end='')
+        print(' // loss->', self.loss, end='')
+        print(' // reward->', self.reward.numpy(), end='')
+        print(' // total reward->', self.total_reward.numpy(), end='')
+        print(' // buffer len->', len(self.experiences))
 
         agent.update_model()
 

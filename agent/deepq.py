@@ -1,13 +1,11 @@
-import tensorflow as tf
 import tensorflow.keras as keras
 
-import numpy as np
-
+from agent.base import BaseAgent
 from agent.trainer import *
 from env.trade import Observation
 from env.trade import Trade
 from log.constant import *
-from agent.base import BaseAgent
+
 
 class Dqn(BaseAgent):
 
@@ -81,15 +79,20 @@ class Dqn(BaseAgent):
         #e = self.model.predict([np.expand_dims(s.board, axis=0), np.expand_dims(s.reward, axis=0)])[0]
         e = self.model.predict([np.expand_dims(s.board, axis=0), np.expand_dims(s.rewards, axis=0)])[0]
 
-        """
+
         if s.is_able_to_buy():
             e[ACTION.BUY_NOW] = s.get_buy_now_reward()
-            pass
+        else:
+            e[ACTION.BUY_NOW] = 0
+            e[ACTION.BUY] = 0
+
 
         if s.is_able_to_sell():
             e[ACTION.SELL_NOW] = s.get_sell_now_reward()
-            pass
-        """
+        else:
+            e[ACTION.SELL_NOW] = 0
+            e[ACTION.SELL] = 0
+
         return e
 
 
