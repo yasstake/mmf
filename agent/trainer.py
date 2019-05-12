@@ -4,6 +4,7 @@ from collections import namedtuple
 
 from agent.deepq import *
 from env.log import Logger
+from agent.base import BaseAgent
 
 BUFFER_SIZE = 20000
 
@@ -26,6 +27,7 @@ class Trainer():
             s = env.reset()
 
             self.episode_begin(i, agent, s)
+            agent.episode_begin(i, self)
 
             self.reward = 0
             self.start_time = s.time
@@ -44,8 +46,7 @@ class Trainer():
                 if min_buffer_size < len(self.experiences):
                     agent.set_initialized()
 
-                    batch = sample(self.experiences, 64)
-                    self.loss = agent.update(batch, gamma=gamma)
+                    self.loss = agent.update(self.experiences, gamma=gamma)
 
                 s = n_state
 
@@ -54,7 +55,9 @@ class Trainer():
                         self.end_time = s.time
                     break
 
+            self.episode_end(i, self)
             self.episode_end(i, agent, s)
+
 
     def episode_begin(self, i:int, agent:BaseAgent, s):
         pass

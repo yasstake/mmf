@@ -39,28 +39,27 @@ class Trainer():
 
                 state = n_state
 
+    @staticmethod
+    def create_generator():
+        env = Trade()
+        agent = BaseAgent()
+        trainer = Trainer(env, agent)
+        generator = trainer.experience_generator()
 
-def create_generator():
-    env = Trade()
-    agent = BaseAgent()
-    trainer = Trainer(env, agent)
-    generator = trainer.experience_generator()
+        return generator
 
-    return generator
+    @staticmethod
+    def create_one_episode():
+        generator = Trainer.create_generator()
+
+        for state, n_state, action, reward, done, info in  generator:
+            print(action)
 
 
-NUM_OF_AGENT = 128
 
 if __name__ == '__main__':
 
-    generator = []
-    for i in range(NUM_OF_AGENT):
-        generator.append(create_generator())
-
-    experience = []
-    for i in range(NUM_OF_AGENT):
-        state, n_state, action, reward, done, info = next(generator[i])
-        experience.append((state, n_state, action, reward, done, info))
+    Trainer.create_one_episode()
 
 
 

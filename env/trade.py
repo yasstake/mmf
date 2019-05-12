@@ -8,11 +8,11 @@ import tensorflow as tf
 from dl.tfrecords import read_tfrecord_example
 from log.constant import *
 
-EPISODE_FRAMES = 3600 * 3
+EPISODE_FRAMES = 3600 * 4
 EPISODE_FILES  = int(EPISODE_FRAMES / BOARD_IN_FILE)
 
 ONE_ORDER_SIZE = 1.0
-MAX_DRAW_DOWN  = 5
+MAX_DRAW_DOWN  = 6
 
 
 class Observation:

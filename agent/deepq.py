@@ -101,10 +101,12 @@ class Dqn(BaseAgent):
 
     def update(self, experiences, gamma):
 
-        states = np.array([e.s.board for e in experiences])
-        rewards = np.array([e.s.rewards for e in experiences])
-        n_states = np.array([e.n_s.board for e in experiences])
-        n_rewards = np.array([e.n_s.rewards for e in experiences])
+        batch = sample(self.experiences, 64)
+
+        states = np.array([e.s.board for e in batch])
+        rewards = np.array([e.s.rewards for e in batch])
+        n_states = np.array([e.n_s.board for e in batch])
+        n_rewards = np.array([e.n_s.rewards for e in batch])
 
         estimated = self.model.predict([states, rewards])
         future = self.teacher_model.predict([n_states, n_rewards])
@@ -129,9 +131,7 @@ class Dqn(BaseAgent):
                 estimated[i][ACTION.SELL_NOW] = 0
                 estimated[i][ACTION.SELL] = 0
 
-
         loss = self.model.train_on_batch([states, rewards], estimated)
-
 
         return loss
 

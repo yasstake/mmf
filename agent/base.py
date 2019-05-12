@@ -74,6 +74,12 @@ class BaseAgent:
     def update_model(self):
         pass
 
+    def episode_begin(self, i, trainer):
+        pass
+
+    def episode_end(self, i, trainer):
+        pass
+
 if __name__ == '__main__':
     env = Trade()
     agent = BaseAgent()
