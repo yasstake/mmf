@@ -183,7 +183,11 @@ class Trade(gym.Env):
         result = False
 
         if not self.new_sec():
-            return None, -20, True, ""
+            if self.sell_order_price:
+                return self.action_buy_now()
+
+            if self.buy_order_price:
+                return self.action_sell_now()
 
         if self.check_draw_down():
             result = True
@@ -364,22 +368,24 @@ class Trade(gym.Env):
         if self.sell_order_price:  # sell order exist(cannot sell twice at one time)
             return False
 
-        volume = self.sell_book_price * ONE_ORDER_SIZE
-        order_price = volume * MAKER_SELL
+        order_price = self.sell_book_price
+        volume = order_price * ONE_ORDER_SIZE
         volume += self.sell_book_vol
 
         time_count = TRAN_TIMEOUT
 
         while self.new_sec() and time_count:
-            if self.buy_trade_price <= self.sell_book_price:
+            if order_price <= self.buy_trade_price:
                 volume -= self.buy_trade_vol
 
+            if self.sell_book_price < order_price:
+                self.skip_sec(60)
+                return False
+
             if volume <= 0:
-                self.sell_order_price = order_price
+                self.sell_order_price = order_price * MAKER_SELL
                 break
 
-            if time_count <= 0:
-                break
             time_count -= 1
 
         if time_count <= 0:
@@ -389,6 +395,36 @@ class Trade(gym.Env):
 
         return True
 
+    def action_buy(self):
+        if self.buy_order_price: # buy order exist(cannot sell twice at one time)
+            return False
+
+        order_price = self.buy_book_price
+        volume = order_price * ONE_ORDER_SIZE
+        volume += self.buy_book_vol
+
+        time_count = TRAN_TIMEOUT
+
+        while self.new_sec() and time_count:
+            if self.sell_trade_price <= order_price:
+                volume -= self.sell_trade_vol
+
+            if order_price < self.buy_book_price:
+                self.skip_sec(60)
+                return False
+
+            if volume <= 0:
+                self.buy_order_price = order_price * MAKER_BUY
+                break
+
+            time_count -= 1
+
+        if time_count <= 0:
+            return False
+
+        print('ACTION:buy', self.buy_order_price)
+
+        return True
 
     def action_sell_now(self):
         if self.sell_order_price: # sell order exist(cannot sell twice at one time)
@@ -405,33 +441,6 @@ class Trade(gym.Env):
 
         return True
 
-
-    def action_buy(self):
-        if self.buy_order_price: # buy order exist(cannot sell twice at one time)
-            return False
-
-        order_price = self.buy_book_price
-        volume = order_price * ONE_ORDER_SIZE
-        volume += self.buy_book_vol
-
-        time_count = TRAN_TIMEOUT
-
-        while self.new_sec() and time_count:
-            if self.sell_trade_price <= order_price:
-                volume -= self.sell_trade_vol
-
-            if volume <= 0:
-                self.buy_order_price = order_price * MAKER_BUY
-                break
-
-            time_count -= 1
-
-        if time_count <= 0:
-            return False
-
-        print('ACTION:buy', self.buy_order_price)
-
-        return True
 
 
     def action_buy_now(self):
