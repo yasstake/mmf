@@ -101,7 +101,7 @@ class Dqn(BaseAgent):
 
     def update(self, experiences, gamma):
 
-        batch = sample(self.experiences, 64)
+        batch = sample(experiences, 64)
 
         states = np.array([e.s.board for e in batch])
         rewards = np.array([e.s.rewards for e in batch])
