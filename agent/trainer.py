@@ -55,7 +55,7 @@ class Trainer():
                         self.end_time = s.time
                     break
 
-            self.episode_end(i, self)
+            agent.episode_end(i, self)
             self.episode_end(i, agent, s)
 
 

@@ -52,8 +52,13 @@ class Trainer():
     def create_one_episode():
         generator = Trainer.create_generator()
 
-        for state, n_state, action, reward, done, info in  generator:
+        for state, n_state, action, reward, done, info in generator:
             print(action)
+
+            if done:
+                break
+
+        print('episode end')
 
 
 
