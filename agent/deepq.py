@@ -111,7 +111,7 @@ class Dqn(BaseAgent):
         estimated = self.model.predict([states, rewards])
         future = self.teacher_model.predict([n_states, n_rewards])
 
-        for i, e in enumerate(experiences):
+        for i, e in enumerate(batch):
             reward = e.r
 
             if not e.d:
