@@ -48,10 +48,11 @@ class BaseAgent:
             estimates = self.estimate(s)
 
             if self.estimate_probs:
+                print('random')
                 action = np.random.choice(self.actions, size=1, p=estimates)[0]
             else:
                 action = np.argmax(estimates)
-                if estimates[action] < 0:
+                if estimates[action] <= 0:
                     action = ACTION.NOP
 
             print('{:8f} {: 4.5f} {: 4.5f} {: 4.5f} {: 4.5f} {: 4.5f}   a{:1}  BP {: 5.1f}   SP {: 5.1f} / bp {: 5.1f} sp {: 5.1f}, m {: 5.1f}'

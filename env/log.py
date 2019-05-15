@@ -14,27 +14,33 @@ class Logger:
         self._callback = keras.callbacks.TensorBoard(log_dir)
 
         #self.summary = tf.summary.FileWriter(log_dir)
-        self.summary = tf.contrib.summary.create_file_writer(log_dir)
 
-    def write(self, index, name, value):
-        if value:
-            with self.summary.as_default():
-                tf.summary.histogram(name, value)
+        # v2 mode
+        self.summary = tf.contrib.summary.create_file_writer(log_dir, flush_millis=10000)
+        self.total_timesteps = tf.train.create_global_step()
+        #  tf.contrib.summary.record_summaries_every_n_global_steps
 
+    def log_loss(self, loss, episode):
+        with self.summary.as_default(), tf.contrib.summary.always_record_summaries():
+            self.total_timesteps.assign_add(episode)
+            tf.contrib.summary.scalar('loss', loss)
+
+
+    def log_episode(self, episode, loss, reward, total_reward):
+        with self.summary.as_default(), tf.contrib.summary.always_record_summaries():
+            tf.summary.scalar('loss', reward, step=episode)
+            tf.summary.scalar('reward', reward, step=episode)
+            tf.summary.scalar('total reward', total_reward, step=episode)
 
 
 if __name__ == '__main__':
     log = Logger()
 
-    log.write(1, 'loss', 0.1)
-    log.write(1, 'reward', 0.1)
+    log.log_loss(1, 1)
+    log.log_loss(2, 2)
+    log.log_loss(3, 3)
+    log.log_loss(4, 4)
 
-    log.write(2, 'loss', 0.2)
-    log.write(2, 'reward', 0.3)
 
-    log.write(3, 'loss', 0.4)
-    log.write(3, 'reward', 0.5)
 
-    log.write(4, 'loss', 0.5)
-    log.write(4, 'reward', 0.7)
 
