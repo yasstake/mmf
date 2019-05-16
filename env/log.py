@@ -17,17 +17,18 @@ class Logger:
 
         # v2 mode
         self.summary = tf.contrib.summary.create_file_writer(log_dir, flush_millis=10000)
-        #self.total_timesteps = tf.train.create_global_step()
-        #  tf.contrib.summary.record_summaries_every_n_global_steps
+        self.total_timesteps = tf.train.create_global_step()
+        tf.contrib.summary.record_summaries_every_n_global_steps(10)
 
     def log_loss(self, loss, episode):
         with self.summary.as_default(), tf.contrib.summary.always_record_summaries():
-            #self.total_timesteps.assign_add(episode)
+            self.total_timesteps.assign(episode)
             tf.contrib.summary.scalar('loss', loss)
 
 
     def log_episode(self, episode, loss, reward, total_reward):
         with self.summary.as_default(), tf.contrib.summary.always_record_summaries():
+            self.total_timesteps.assign(episode)
             tf.contrib.summary.scalar('loss', reward, step=episode)
             tf.contrib.summary.scalar('reward', reward, step=episode)
             tf.contrib.summary.scalar('total reward', total_reward, step=episode)
@@ -36,10 +37,10 @@ class Logger:
 if __name__ == '__main__':
     log = Logger()
 
-    log.log_loss(1, 1)
-    log.log_loss(2, 2)
-    log.log_loss(3, 3)
-    log.log_loss(4, 4)
+    for i in range(100):
+        log.log_loss(i, i)
+
+
 
 
 
