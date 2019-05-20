@@ -13,6 +13,7 @@ class BaseAgent:
         self.epsilon = epsilon
         self.estimate_probs = False
         self.actions = [ACTION.NOP, ACTION.SELL, ACTION.SELL_NOW, ACTION.BUY, ACTION.BUY_NOW]
+        self.number_of_actions = len(self.actions)
         self.initialized = False
 
     def play(self, env: Trade, no_of_episode: int):

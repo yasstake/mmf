@@ -6,6 +6,8 @@ from tensorflow import keras
 tf.enable_v2_behavior()
 
 class Logger:
+    total_timesteps = tf.train.create_global_step()
+
     def __init__(self, log_dir='/bitlog/board/'):
 
         if not os.path.exists(log_dir):
@@ -17,12 +19,11 @@ class Logger:
 
         # v2 mode
         self.summary = tf.contrib.summary.create_file_writer(log_dir, flush_millis=10000)
-        self.total_timesteps = tf.train.create_global_step()
         tf.contrib.summary.record_summaries_every_n_global_steps(10)
 
     def log_loss(self, loss, episode):
         with self.summary.as_default(), tf.contrib.summary.always_record_summaries():
-            self.total_timesteps.assign(episode)
+            Logger.total_timesteps.assign(episode)
             tf.contrib.summary.scalar('loss', loss)
 
 
