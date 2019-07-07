@@ -82,16 +82,15 @@ class Dqn(BaseAgent):
         #e = self.model.predict([np.expand_dims(s.board, axis=0), np.expand_dims(s.reward, axis=0)])[0]
         e = self.model.predict([np.expand_dims(s.board, axis=0), np.expand_dims(s.rewards, axis=0)])[0]
 
-
         if s.is_able_to_buy():
-            e[ACTION.BUY_NOW] = s.get_buy_now_reward()
+            e[ACTION.BUY_NOW] = self.clip_reward((s.get_buy_now_reward()))
         else:
             e[ACTION.BUY_NOW] = 0
             e[ACTION.BUY] = 0
 
 
         if s.is_able_to_sell():
-            e[ACTION.SELL_NOW] = s.get_sell_now_reward()
+            e[ACTION.SELL_NOW] = self.clip_reward(s.get_sell_now_reward())
         else:
             e[ACTION.SELL_NOW] = 0
             e[ACTION.SELL] = 0
@@ -117,16 +116,16 @@ class Dqn(BaseAgent):
             if not e.d:
                 reward += gamma * np.max(future[i])
 
-            estimated[i][e.a] = reward
+            estimated[i][e.a] = self.clip_reward(reward)
 
             if e.s.is_able_to_buy():
-                estimated[i][ACTION.BUY_NOW] = e.s.get_buy_now_reward()
+                estimated[i][ACTION.BUY_NOW] = self.clip_reward(e.s.get_buy_now_reward())
             else:
                 estimated[i][ACTION.BUY_NOW] = 0
                 estimated[i][ACTION.BUY] = 0
 
             if e.s.is_able_to_sell():
-                estimated[i][ACTION.SELL_NOW] = e.s.get_sell_now_reward()
+                estimated[i][ACTION.SELL_NOW] = self.clip_reward(e.s.get_sell_now_reward())
             else:
                 estimated[i][ACTION.SELL_NOW] = 0
                 estimated[i][ACTION.SELL] = 0

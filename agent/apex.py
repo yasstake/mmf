@@ -140,28 +140,42 @@ class Trainer():
         :param steps:
         :return:
         '''
-        index = len(self.local_buffer)
+        buffer_size = len(self.local_buffer)
+        print('len', buffer_size)
 
         reward = 0
-        while not index:
-            index -= 1
 
-            experience = self.local_buffer[start_index + index]
+        while buffer_size:
+            buffer_size -= 1
+            steps -= 1
+
+            experience = self.local_buffer[start_index + buffer_size]
             if experience.done:
+                print('done', reward)
                 reward += gamma * experience.reward
                 break
 
-            if index == 1:
+            if buffer_size == 1 or steps <= 1:
+                print('estimate', reward)
                 reward += gamma * np.argmax(experience.estimates)
                 break
 
             reward += gamma * experience.estimates[experience.action]
 
-
         experience = self.local_buffer[start_index]
         action = experience.action
 
         self.local_buffer[start_index].q_values[action] = reward
+        self.local_buffer[start_index].q_values = self.clip_reward(self.local_buffer[start_index].q_values)
+
+    def clip_reward(self, rewards, clip = 50):
+        for i, r in enumerate(rewards):
+            if clip < r:
+                rewards[i] = clip
+            elif r < -clip:
+                rewards[i] = -clip
+
+        return rewards
 
 
     def predict_q_values(self, status):

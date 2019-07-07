@@ -9,12 +9,21 @@ from log.constant import ACTION
 tf.enable_v2_behavior()
 
 class BaseAgent:
+
     def __init__(self, epsilon=0.0005):
         self.epsilon = epsilon
         self.estimate_probs = False
         self.actions = [ACTION.NOP, ACTION.SELL, ACTION.SELL_NOW, ACTION.BUY, ACTION.BUY_NOW]
         self.number_of_actions = len(self.actions)
         self.initialized = False
+
+    def clip_reward(self, reward):
+        if reward < 0:
+            return -1
+        elif 0 < reward:
+            return 1
+        else:
+            return 0
 
     def play(self, env: Trade, no_of_episode: int):
         total_reward = 0
