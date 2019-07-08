@@ -32,7 +32,7 @@ class Logger:
             self.total_timesteps.assign(episode)
             tf.contrib.summary.scalar('loss', reward, step=episode)
             tf.contrib.summary.scalar('reward', reward, step=episode)
-            tf.contrib.summary.scalar('total reward', total_reward, step=episode)
+            tf.contrib.summary.scalar('total_reward', total_reward, step=episode)
 
 
 if __name__ == '__main__':

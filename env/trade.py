@@ -37,15 +37,15 @@ class Observation:
 
         self.time = env.time
 
-        buy_reward = 0
-        sell_reward = 0
+        self.buy_reward = 0
+        self.sell_reward = 0
 
         if env.sell_order_price:
             pos = self.calc_order_pos(env.sell_order_price, env)
             self.board[LAYER_BUY_BOOK][0][pos] = 1.0
             self.board[LAYER_BUY_TRADE][0][pos] = 1.0
 
-            sell_reward = env.sell_order_price - env.buy_book_price
+            self.sell_reward = env.sell_order_price - env.buy_book_price
 
             # lets buy
             if env.sell_order_price < self.buy_book_vol: # < 1BTC
@@ -61,7 +61,7 @@ class Observation:
             self.board[LAYER_SELL_BOOK][0][pos] = 1.0
             self.board[LAYER_SELL_TRADE][0][pos] = 1.0
 
-            buy_reward = env.sell_book_price - env.buy_order_price
+            self.buy_reward = env.sell_book_price - env.buy_order_price
 
             # lets sell
             if env.buy_order_price < self.sell_book_vol: # < 1BTC
@@ -72,7 +72,7 @@ class Observation:
             price = price * TAKER_SELL
             self.sell_now_reward = price - env.buy_order_price
 
-        self.rewards = np.array([sell_reward, buy_reward])
+        self.rewards = np.array([self.sell_reward, self.buy_reward])
 
 
     def is_able_to_sell(self):

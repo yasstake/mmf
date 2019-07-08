@@ -30,6 +30,7 @@ class Dqn(BaseAgent):
         conv2d = keras.layers.Conv2D(64, (1, 1), activation='relu', padding='same')(conv2d)
         flat_view = keras.layers.Flatten()(conv2d)
 
+        # sell_reards, buy_rewards
         margin_input = keras.layers.Input(shape=(2,))
 
         marge_out = keras.layers.concatenate([flat_view, margin_input])
@@ -104,31 +105,35 @@ class Dqn(BaseAgent):
 
         states = np.array([e.s.board for e in batch])
         rewards = np.array([e.s.rewards for e in batch])
+#        margin = np.array([e.s.margin for e in batch])
         n_states = np.array([e.n_s.board for e in batch])
         n_rewards = np.array([e.n_s.rewards for e in batch])
+#        n_margin = np.array([e.n_s.margin for e in batch])
 
-        estimated = self.model.predict([states, rewards])
+        estimated = self.teacher_model.predict([states, n_rewards])
         future = self.teacher_model.predict([n_states, n_rewards])
 
         for i, e in enumerate(batch):
-            reward = e.r
-
-            if not e.d:
-                reward += gamma * np.max(future[i])
-
-            estimated[i][e.a] = self.clip_reward(reward)
-
             if e.s.is_able_to_buy():
+                estimated[i][ACTION.BUY] = self.clip_reward(e.s.buy_reward)
                 estimated[i][ACTION.BUY_NOW] = self.clip_reward(e.s.get_buy_now_reward())
             else:
                 estimated[i][ACTION.BUY_NOW] = 0
                 estimated[i][ACTION.BUY] = 0
 
             if e.s.is_able_to_sell():
+                estimated[i][ACTION.SELL] = self.clip_reward(e.s.sell_reward)
                 estimated[i][ACTION.SELL_NOW] = self.clip_reward(e.s.get_sell_now_reward())
             else:
                 estimated[i][ACTION.SELL_NOW] = 0
                 estimated[i][ACTION.SELL] = 0
+
+            reward = e.r
+
+            if not e.d:
+                reward += gamma * np.max(future[i])
+
+            estimated[i][e.a] = self.clip_reward(reward)
 
         loss = self.model.train_on_batch([states, rewards], estimated)
 
@@ -144,4 +149,4 @@ if __name__ == '__main__':
     agent = Dqn()
 
 #    trainer.train(env, agent, eposode=100000, min_buffer_size=128)
-    trainer.train(env, agent, eposode=500000, min_buffer_size=15000)
+    trainer.train(env, agent, eposode=500000, min_buffer_size=1500)

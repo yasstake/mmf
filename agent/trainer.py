@@ -21,6 +21,7 @@ class Trainer():
         self.total_reward = 0
         self.duration = 0
         self.logger = Logger()
+        self.episode_no = 0
 
     def train(self, env, agent, eposode=200, observe_interval=10, render=False, min_buffer_size=100, gamma=0.95):
         for i in range(eposode):
@@ -81,9 +82,10 @@ class Trainer():
         except:
             pass
 
-        agent.update_model()
+        self.episode_no += 1
 
-
+        if self.episode_no % 10 == 0:
+            agent.update_model()
 
 if __name__ == '__main__':
     trainer = Trainer()
