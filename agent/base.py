@@ -18,12 +18,12 @@ class BaseAgent:
         self.initialized = False
 
     def clip_reward(self, reward):
-        if reward < 0:
+        if reward < -1:
             return -1
-        elif 0 < reward:
+        elif 1 < reward:
             return 1
         else:
-            return 0
+            return reward
 
     def play(self, env: Trade, no_of_episode: int):
         total_reward = 0
