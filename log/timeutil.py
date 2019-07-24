@@ -2,10 +2,6 @@ import datetime
 import re
 
 
-#from pytz import utc
-
-
-
 def time_sec(iso_time):
     if iso_time.endswith('Z'):
         iso_time = iso_time.replace('Z', '+0000')
@@ -16,12 +12,14 @@ def time_sec(iso_time):
 
     return sec.timestamp()
 
+
 def timestamp():
     return _timestamp()
 
 #    now = datetime.datetime.utcnow()
 #    now.astimezone(utc)
 #    return time_sec(now.isoformat() + "+00:00")
+
 
 def _timestamp():
     now = datetime.datetime.now()

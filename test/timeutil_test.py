@@ -3,6 +3,7 @@ import re
 
 from log.timeutil import *
 
+
 class MyTestCase(unittest.TestCase):
 
     def test_timestamp(self):
@@ -11,12 +12,8 @@ class MyTestCase(unittest.TestCase):
         now = datetime.datetime.utcnow()
         return int(now.timestamp())
         """
-        print ("TIMESTAMP1->", timestamp())
-
+        print("TIMESTAMP1->", timestamp())
         print("TIMESTAMP2->", time_stamp_string())
-
-
-
 
     def test_date_string(self):
         """
@@ -92,7 +89,6 @@ class MyTestCase(unittest.TestCase):
         #    {"timestamp": "2019-02-28T23:03:04.818Z", "side": "Buy", "size": 4000, "price": 3794,
         #     "tickDirection": "ZeroPlusTick"}], "TIME": 1551362584}
 
-
     def test_timestemp3_1(self):
         time1 = "2019-03-03T01:50:34.0Z"
         time2 = 1551577834
@@ -100,14 +96,11 @@ class MyTestCase(unittest.TestCase):
 
         self.assertEqual(tsec1, time2)
 
-
-
     def test_timestemp4(self):
         time1 = "2019-03-02T14:55:16.855Z"
         time2 = 1551506117
         print("TIME4->")
         print(time_stamp_string(time2))
-
 
     def test_timestemp4(self):
         print(timestamp())
@@ -121,19 +114,17 @@ class MyTestCase(unittest.TestCase):
 
         self.assertEqual(int(unixtime/10), int(unixtime2/10))
 
-
     def test_logtime(self):
         time = time_sec('2019-03-07T22:09:58.00Z')
         time2 = 1551996598
         print(time, time2)
-        self.assertEqual(time, time2)
+        self.assertTrue(int(time) == time2)
 
         time2 = time_sec('2019-03-08T13:49:10.740+00:00')
         time2 = time_sec('2019-03-08T13:49:10.740Z')
         time2 = time_sec('2019-03-08T13:49:10.740')
 
         time2 = time_sec('2019-03-08T12:00:00.000+00:00')
-
 
     def test_reg(self):
         print(re.search("\+", '2019-03-08T13:49:10.740+00:00'))

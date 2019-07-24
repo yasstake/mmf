@@ -14,9 +14,9 @@ BUFFER_SIZE = 20000
 class Experience:
     def __init__(self, state, action, reward, next_state, done, estimats, q_values=None):
         self.state = state
-        self.action= action
-        self.reward= reward
-        self.next_state= next_state
+        self.action = action
+        self.reward = reward
+        self.next_state = next_state
         self.done = done
         self.estimates = estimats
         self.q_values = q_values
@@ -177,7 +177,6 @@ class Trainer():
 
         return rewards
 
-
     def predict_q_values(self, status):
         e = self.agent.predict(status)
 
@@ -195,7 +194,6 @@ class Trainer():
 
         return e
 
-
     def one_episode(self):
         # Obtain latest network parameters
         # Initialize Environment
@@ -210,10 +208,10 @@ class Trainer():
 
 if __name__ == '__main__':
     env = Trade()
-    agent = BaseAgent()
+    agent = Agent()
 
     trainer = Trainer(env, agent)
 
     trainer.one_episode()
 
-
+    exit(0)

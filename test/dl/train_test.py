@@ -34,8 +34,8 @@ class MyTestCase(unittest.TestCase):
     def test_evaluate_model(self):
         train = Train()
 
-        acual  = [1, 1, 2, 3, 4, 5, 6, 7, 8]
-        predict= [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        acual = [1, 1, 2, 3, 4, 5, 6, 7, 8]
+        predict = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 
         summary = confusion_matrix(acual, predict)
 

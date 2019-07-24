@@ -1,5 +1,4 @@
-#!/Users/takeo/Projects/mmf/venv/bin/python3
-
+#!/Users/takeo/Projects/mmf/venv/bin/python3.7
 # -*- coding: utf-8 -*-
 import re
 import sys
