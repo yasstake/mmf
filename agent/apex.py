@@ -21,6 +21,7 @@ class Experience:
         self.estimates = estimats
         self.q_values = q_values
 
+
 class HP:
     NETWORK_UPDATE_CYCLE = 2
 
@@ -74,7 +75,9 @@ class Agent(BaseAgent):
         self.local_brain.set_weights(self.global_brain.get_weights())
 
     def estimate(self, status):
-        return self.predict(status)
+        e = self.predict(status)
+        print('esitimate', e)
+        return e
 
     def predict(self, s, use_global_brain = False):
         brain = None
@@ -131,7 +134,6 @@ class Trainer():
     def add_replay_buffer(self):
         pass
 
-
     def calc_multi_step_q_value(self, start_index, steps, gamma=0.99):
         '''
         calc q value in reverse order.
@@ -178,16 +180,20 @@ class Trainer():
         return rewards
 
     def predict_q_values(self, status):
-        e = self.agent.predict(status)
+        e = self.agent.estimate(status)
 
         if status.is_able_to_buy():
-            e[ACTION.BUY_NOW] = status.get_buy_now_reward()
+            reward = status.get_buy_now_reward()
+            if reward is not None:
+                e[ACTION.BUY_NOW] = reward
         else:
             e[ACTION.BUY_NOW] = 0
             e[ACTION.BUY] = 0
 
         if status.is_able_to_sell():
-            e[ACTION.SELL_NOW] = status.get_sell_now_reward()
+            reward = status.get_sell_now_reward()
+            if reward is not None:
+                e[ACTION.SELL_NOW] = reward
         else:
             e[ACTION.SELL_NOW] = 0
             e[ACTION.SELL] = 0
@@ -199,11 +205,32 @@ class Trainer():
         # Initialize Environment
         generator = self.create_generator()
 
+        buffer = []
+
         for state, n_state, action, reward, done, info in generator:
             estimate = self.predict_q_values(state)
-            self.local_buffer.append(Experience(state, action, reward, n_state, done, estimate, copy.copy(estimate)))
+            buffer.append(Experience(state, action, reward, n_state, done, estimate, copy.copy(estimate)))
             if done:
                 break
+
+        self.update_q_values(buffer)
+
+    def update_q_values(self, experiences):
+        experiences.reverse()
+        reward = None
+        for e in experiences:
+            if reward is None:
+                reward = e.reward
+
+            if reward is not None:
+                if e.state.is_able_to_buy() and (e.action == ACTION.BUY or e.action == ACTION.BUY_NOW) or \
+                   e.state.is_able_to_sell() and (e.action == ACTION.SELL or e.action == ACTION.SELL_NOW):
+                    e.q_values[e.action] = reward
+                else:
+                    e.q_values[ACTION.NOP] = reward
+
+            print(e.action, e.q_values)
+
 
 
 if __name__ == '__main__':

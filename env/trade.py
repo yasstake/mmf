@@ -17,7 +17,7 @@ MAX_DRAW_DOWN  = 6
 
 class Observation:
     def __init__(self, env):
-        #self.board = tf.reshape(env.boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
+        # self.board = tf.reshape(env.boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
         self.board = tf.reshape(env.boards, [NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
         self.board = self.board.numpy().astype(float) / 255.0
         self.rewards = None
@@ -32,8 +32,8 @@ class Observation:
 
         self.margin = env.margin
 
-        self.sell_now_reward = 0
-        self.buy_now_reward = 0
+        self.sell_now_reward = None
+        self.buy_now_reward = None
 
         self.time = env.time
 
@@ -42,13 +42,13 @@ class Observation:
 
         if env.sell_order_price:
             pos = self.calc_order_pos(env.sell_order_price, env)
-            self.board[LAYER_BUY_BOOK][0][pos] = 1.0
-            self.board[LAYER_BUY_TRADE][0][pos] = 1.0
+            # self.board[LAYER_BUY_BOOK][0][pos] = 1.0
+            # self.board[LAYER_BUY_TRADE][0][pos] = 1.0
 
             self.sell_reward = env.sell_order_price - env.buy_book_price
 
             # lets buy
-            if env.sell_order_price < self.buy_book_vol: # < 1BTC
+            if env.sell_order_price < self.buy_book_vol:  # < 1BTC
                 price = self.buy_book_price
             else:
                 price = self.buy_book_price + PRICE_UNIT
@@ -58,13 +58,13 @@ class Observation:
 
         if env.buy_order_price:
             pos = self.calc_order_pos(env.buy_order_price, env)
-            self.board[LAYER_SELL_BOOK][0][pos] = 1.0
-            self.board[LAYER_SELL_TRADE][0][pos] = 1.0
+            # self.board[LAYER_SELL_BOOK][0][pos] = 1.0
+            # self.board[LAYER_SELL_TRADE][0][pos] = 1.0
 
             self.buy_reward = env.sell_book_price - env.buy_order_price
 
             # lets sell
-            if env.buy_order_price < self.sell_book_vol: # < 1BTC
+            if env.buy_order_price < self.sell_book_vol:  # < 1BTC
                 price = self.sell_book_price
             else:
                 price = self.sell_book_price - PRICE_UNIT
@@ -73,7 +73,6 @@ class Observation:
             self.sell_now_reward = price - env.buy_order_price
 
         self.rewards = np.array([self.sell_reward, self.buy_reward])
-
 
     def is_able_to_sell(self):
         if self.sell_oder_price:
@@ -226,14 +225,12 @@ class Trade(gym.Env):
 
         return observe, reward, self.episode_done, text
 
-
     def _calc_reward(self):
         print('reward->', self.margin)
         return self.margin
 
     def render(self, mode='human', close=False):
         pass
-
 
     def new_sec(self):
         data_available = False
@@ -306,7 +303,7 @@ class Trade(gym.Env):
 
         return files
 
-    def new_episode(self)->Observation:
+    def new_episode(self) -> Observation:
         start = self._new_file_index()
         end = start + EPISODE_FILES + 1
         skip = self._skip_count()
@@ -314,7 +311,6 @@ class Trade(gym.Env):
         return self._new_episode(start, end, skip)
 
     def _new_episode(self, start, end, skip = 0)->Observation:
-        #print('newepisode', start, end)
         data = Trade.data_file_sets[start:end]
         dataset = tf.data.TFRecordDataset(data, compression_type='GZIP')
         self.dataset = dataset.map(read_tfrecord_example)

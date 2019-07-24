@@ -72,6 +72,7 @@ class BaseAgent:
             return action
 
     def estimate(self, s):
+        print('random esitimate')
         return np.random.random(), np.random.random(), np.random.random(), np.random.random(), np.random.random()
 
     def random_action(self):
