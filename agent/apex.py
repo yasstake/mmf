@@ -203,10 +203,18 @@ class Trainer():
     def predict_q_values(self, status):
         e = self.agent.estimate(status)
 
+        return e
+
+    # old version
+    def _predict_q_values(self, status):
+        e = self.agent.estimate(status)
+
         if status.is_able_to_buy():
             reward = status.get_buy_now_reward()
-            if reward is not None:
-                e[ACTION.BUY_NOW] = reward
+        if reward is not None:
+            e[ACTION.BUY_NOW] = reward
+
+
         else:
             e[ACTION.BUY_NOW] = 0
             e[ACTION.BUY] = 0
@@ -249,11 +257,39 @@ class Trainer():
 
         reward = None
         for e in experiences:
-            if reward is None:
-                reward = e.reward
+            if e.state.is_able_to_sell():
+                r = e.state.get_sell_now_reward()
+                if r:
+                    e.q_values[ACTION.SELL_NOW] = r
 
+                r = e.state.sell_reward
+                if r:
+                    e.q_values[ACTION.SELL] = r
+            else:
+                e.q_values[ACTION.SELL_NOW] = 0
+                e.q_values[ACTION.SELL] = 0
+
+            if e.state.is_able_to_buy():
+                r = e.state.get_buy_now_reward()
+                if r:
+                    e.q_values[ACTION.BUY_NOW] = r
+
+                r = e.state.buy_reward
+                if r:
+                    e.q_values[ACTION.BUY] = r
+            else:
+                e.q_values[ACTION.BUY_NOW] = 0
+                e.q_values[ACTION.BUY] = 0
+
+            if reward is None:
+                # todo assign max of next state value
+
+                reward = e.reward
             action = e.next_state.action
             e.q_values[action] = reward
+
+
+
             print(e.action, e.next_state.action, e.q_values)
 
         experiences.reverse()
