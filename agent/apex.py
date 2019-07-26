@@ -24,6 +24,7 @@ class Experience:
 
 class HP:
     NETWORK_UPDATE_CYCLE = 2
+    TIME_PENALTY = -0.00001
 
     def __init__(self):
         pass
@@ -76,6 +77,25 @@ class Agent(BaseAgent):
 
     def estimate(self, status):
         e = self.predict(status)
+
+        if status.is_able_to_buy():
+            if status.buy_reward:
+                e[ACTION.BUY] = status.buy_reward
+            if status.get_buy_now_reward():
+                e[ACTION.BUY_NOW] = status.get_buy_now_reward()
+        else:
+            e[ACTION.BUY_NOW] = HP.TIME_PENALTY
+            e[ACTION.BUY] = HP.TIME_PENALTY
+
+        if status.is_able_to_sell():
+            if status.sell_reward:
+                e[ACTION.SELL] = status.sell_reward
+            if status.get_sell_now_reward():
+                e[ACTION.SELL_NOW] = status.get_sell_now_reward()
+        else:
+            e[ACTION.SELL_NOW] = HP.TIME_PENALTY
+            e[ACTION.SELL] = HP.TIME_PENALTY
+
         print('esitimate', e)
         return e
 
@@ -93,6 +113,7 @@ class Agent(BaseAgent):
 
 
 class Trainer():
+
     def __init__(self, env, agent, gamma=0.99, buffer_size=BUFFER_SIZE):
         self.buffer_size = buffer_size
         self.local_buffer = deque(maxlen=self.buffer_size)
@@ -208,28 +229,36 @@ class Trainer():
         buffer = []
 
         for state, n_state, action, reward, done, info in generator:
+            print('action->', action, 'actual->', n_state.action, 'a2->', state.action)
             estimate = self.predict_q_values(state)
             buffer.append(Experience(state, action, reward, n_state, done, estimate, copy.copy(estimate)))
             if done:
                 break
 
-        self.update_q_values(buffer)
+        buffer = self.update_q_values(buffer)
+
+        print('-----')
+        for e in buffer:
+            print(e.q_values)
+
+    def calc_td_difference(self):
+        return 0
 
     def update_q_values(self, experiences):
         experiences.reverse()
+
         reward = None
         for e in experiences:
             if reward is None:
                 reward = e.reward
 
-            if reward is not None:
-                if e.state.is_able_to_buy() and (e.action == ACTION.BUY or e.action == ACTION.BUY_NOW) or \
-                   e.state.is_able_to_sell() and (e.action == ACTION.SELL or e.action == ACTION.SELL_NOW):
-                    e.q_values[e.action] = reward
-                else:
-                    e.q_values[ACTION.NOP] = reward
+            action = e.next_state.action
+            e.q_values[action] = reward
+            print(e.action, e.next_state.action, e.q_values)
 
-            print(e.action, e.q_values)
+        experiences.reverse()
+
+        return experiences
 
 
 

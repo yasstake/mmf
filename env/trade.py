@@ -21,6 +21,7 @@ class Observation:
         self.board = tf.reshape(env.boards, [NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
         self.board = self.board.numpy().astype(float) / 255.0
         self.rewards = None
+        self.action = env.action
 
         self.sell_book_price = env.sell_book_price
         self.sell_book_vol = env.sell_book_vol
@@ -147,6 +148,8 @@ class Trade(gym.Env):
             for file in self.data_files:
                 Trade.data_file_sets += tf.data.Dataset.list_files(file).cache()
 
+        self.action = None
+
         self.boards = None
         self.sell_book_price = None
         self.sell_book_vol = None
@@ -183,12 +186,12 @@ class Trade(gym.Env):
 
         if not self.new_sec():
             if self.sell_order_price:
-                return self.action_buy_now()
-
-            if self.buy_order_price:
-                return self.action_sell_now()
-
-        if self.check_draw_down():
+                action = ACTION.BUY_NOW
+                result = self.action_buy_now()
+            elif self.buy_order_price:
+                action = ACTION.SELL_NOW
+                result = self.action_sell_now()
+        elif self.check_draw_down():
             result = True
         elif action == ACTION.NOP:
             result = self.action_nop()
@@ -197,29 +200,33 @@ class Trade(gym.Env):
             result = self.action_buy()
             if not result:
                 reward = -0.00001
-                pass
         elif action == ACTION.BUY_NOW:
             result = self.action_buy_now()
             if not result:
                 reward = -0.00001
-                pass
         elif action == ACTION.SELL:
             result = self.action_sell()
             if not result:
                 reward = -0.00001
-                pass
         elif action == ACTION.SELL_NOW:
             result = self.action_sell_now()
             if not result:
                 reward = -0.00001
-                pass
         else:
             print('Unknown action no->', action)
+
+        if result:
+            self.action = action
+        else:
+            print("NOP", action)
+            self.action = ACTION.NOP
 
         self.evaluate()
 
         if self.episode_done:
             reward = self._calc_reward()
+
+        print('ACTION=', action, ' ', self.action, end=' ')
 
         observe = Observation(self)
 
