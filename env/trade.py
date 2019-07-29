@@ -28,7 +28,7 @@ class Observation:
         self.buy_book_price = env.buy_book_price
         self.buy_book_vol = env.buy_book_vol
 
-        self.sell_oder_price = env.sell_order_price
+        self.sell_order_price = env.sell_order_price
         self.buy_order_price = env.buy_order_price
 
         self.margin = env.margin
@@ -38,14 +38,17 @@ class Observation:
 
         self.time = env.time
 
+        self.buy_reward_flag = 0
         self.buy_reward = 0
+        self.sell_reward_flag = 0
         self.sell_reward = 0
 
         if env.sell_order_price:
             pos = self.calc_order_pos(env.sell_order_price, env)
-            # self.board[LAYER_BUY_BOOK][0][pos] = 1.0
-            # self.board[LAYER_BUY_TRADE][0][pos] = 1.0
+            self.board[LAYER_BUY_BOOK][0][pos] = 1.0
+            self.board[LAYER_BUY_TRADE][0][pos] = 1.0
 
+            self.sell_reward_flag = 1
             self.sell_reward = env.sell_order_price - env.buy_book_price
 
             # lets buy
@@ -59,9 +62,10 @@ class Observation:
 
         if env.buy_order_price:
             pos = self.calc_order_pos(env.buy_order_price, env)
-            # self.board[LAYER_SELL_BOOK][0][pos] = 1.0
-            # self.board[LAYER_SELL_TRADE][0][pos] = 1.0
+            self.board[LAYER_SELL_BOOK][0][pos] = 1.0
+            self.board[LAYER_SELL_TRADE][0][pos] = 1.0
 
+            self.buy_reward_flag = 1
             self.buy_reward = env.sell_book_price - env.buy_order_price
 
             # lets sell
@@ -73,10 +77,17 @@ class Observation:
             price = price * TAKER_SELL
             self.sell_now_reward = price - env.buy_order_price
 
-        self.rewards = np.array([self.sell_reward, self.buy_reward])
+        self.rewards = np.array([self.sell_reward, self.sell_reward_flag, self.buy_reward, self.buy_reward_flag])
+
+    def to_string(self):
+        s = str(self.time)
+        s += str(self.buy_order_price) + ' '
+        s += str(self.sell_order_price)
+
+        return s
 
     def is_able_to_sell(self):
-        if self.sell_oder_price:
+        if self.sell_order_price:
             return False
         return True
 
@@ -225,8 +236,6 @@ class Trade(gym.Env):
 
         if self.episode_done:
             reward = self._calc_reward()
-
-        print('ACTION=', action, ' ', self.action, end=' ')
 
         observe = Observation(self)
 
@@ -443,8 +452,6 @@ class Trade(gym.Env):
         print('ACTION:sell now', self.sell_order_price)
 
         return True
-
-
 
     def action_buy_now(self):
         if self.buy_order_price: # buy order exist(cannot sell twice at one time)

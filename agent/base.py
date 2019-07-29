@@ -67,7 +67,7 @@ class BaseAgent:
 
             print('{:8f} {: 4.5f} {: 4.5f} {: 4.5f} {: 4.5f} {: 4.5f}   a{:1}  BP {: 5.1f}   SP {: 5.1f} / bp {: 5.1f} sp {: 5.1f}, m {: 5.1f}'
                   .format(s.time, estimates[0], estimates[1], estimates[2], estimates[3], estimates[4],
-                          action, s.buy_order_price, s.sell_oder_price, s.buy_book_price, s.sell_book_price, s.margin))
+                          action, s.buy_order_price, s.sell_order_price, s.buy_book_price, s.sell_book_price, s.margin))
 
             return action
 

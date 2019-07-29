@@ -7,6 +7,7 @@ from tensorflow import keras
 
 from agent.deepq import *
 from env.log import Logger
+from random import sample
 
 BUFFER_SIZE = 20000
 
@@ -40,7 +41,6 @@ class Agent(BaseAgent):
         self.local_brain = self.create_brain()
         self.copy_brain_to_local()
 
-
     def create_brain(self):
         l_input = keras.layers.Input(shape=(NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH))
         conv2d = keras.layers.Conv2D(32, (4, 4), activation='relu', padding='same')(l_input)
@@ -48,7 +48,7 @@ class Agent(BaseAgent):
         conv2d = keras.layers.Conv2D(64, (1, 1), activation='relu', padding='same')(conv2d)
         flat_view = keras.layers.Flatten()(conv2d)
 
-        margin_input = keras.layers.Input(shape=(2,))
+        margin_input = keras.layers.Input(shape=(4,))
 
         marge_out = keras.layers.concatenate([flat_view, margin_input])
 
@@ -96,8 +96,10 @@ class Agent(BaseAgent):
             e[ACTION.SELL_NOW] = HP.TIME_PENALTY
             e[ACTION.SELL] = HP.TIME_PENALTY
 
-        print('esitimate', e)
         return e
+
+    def train(self, s, r, q):
+        return self.global_brain.train_on_batch([s, r], q)
 
     def predict(self, s, use_global_brain = False):
         brain = None
@@ -179,7 +181,6 @@ class Trainer():
                 break
 
             if buffer_size == 1 or steps <= 1:
-                print('estimate', reward)
                 reward += gamma * np.argmax(experience.estimates)
                 break
 
@@ -229,6 +230,21 @@ class Trainer():
 
         return e
 
+    def create_one_step_generator_array(self, num_of_array):
+        agents = []
+
+        for i in range(num_of_array):
+            agents.append(self.one_step_in_episode_generator())
+
+        return agents
+
+    def one_step_in_episode_generator(self):
+        while True:
+            buffer = self.one_episode()
+
+            for step in buffer:
+                yield step
+
     def one_episode(self):
         # Obtain latest network parameters
         # Initialize Environment
@@ -237,7 +253,6 @@ class Trainer():
         buffer = []
 
         for state, n_state, action, reward, done, info in generator:
-            print('action->', action, 'actual->', n_state.action, 'a2->', state.action)
             estimate = self.predict_q_values(state)
             buffer.append(Experience(state, action, reward, n_state, done, estimate, copy.copy(estimate)))
             if done:
@@ -245,9 +260,7 @@ class Trainer():
 
         buffer = self.update_q_values(buffer)
 
-        print('-----')
-        for e in buffer:
-            print(e.q_values)
+        return buffer
 
     def calc_td_difference(self):
         return 0
@@ -282,20 +295,15 @@ class Trainer():
                 e.q_values[ACTION.BUY] = 0
 
             if reward is None:
+                reward = e.reward
                 # todo assign max of next state value
 
-                reward = e.reward
             action = e.next_state.action
             e.q_values[action] = reward
-
-
-
-            print(e.action, e.next_state.action, e.q_values)
 
         experiences.reverse()
 
         return experiences
-
 
 
 if __name__ == '__main__':
@@ -304,6 +312,28 @@ if __name__ == '__main__':
 
     trainer = Trainer(env, agent)
 
-    trainer.one_episode()
+    agents = trainer.create_one_step_generator_array(1)
+
+    experiences = deque(maxlen=500000)
+
+    no_of_episode = 0
+    for step in agents[0]:
+        experiences.append(step)
+
+        no_of_episode += 1
+        if 200000 < no_of_episode and no_of_episode % 10 == 0:
+            agent.set_initialized()
+            batch = sample(experiences, 128)
+
+            states = np.array([e.state.board for e in batch])
+            rewards = np.array([e.state.rewards for e in batch])
+            q_values = np.array([e.q_values for e in batch])
+
+            loss = agent.train(states, rewards, q_values)
+            print('loss->', loss)
+
+        if no_of_episode % 1000 == 0:
+            print('---copy-brain-to-local---', no_of_episode)
+            agent.copy_brain_to_local()
 
     exit(0)

@@ -105,10 +105,10 @@ class Dqn(BaseAgent):
 
         states = np.array([e.s.board for e in batch])
         rewards = np.array([e.s.rewards for e in batch])
-#        margin = np.array([e.s.margin for e in batch])
+        #        margin = np.array([e.s.margin for e in batch])
         n_states = np.array([e.n_s.board for e in batch])
         n_rewards = np.array([e.n_s.rewards for e in batch])
-#        n_margin = np.array([e.n_s.margin for e in batch])
+        #        n_margin = np.array([e.n_s.margin for e in batch])
 
         estimated = self.teacher_model.predict([states, n_rewards])
         future = self.teacher_model.predict([n_states, n_rewards])
