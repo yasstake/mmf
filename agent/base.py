@@ -65,7 +65,7 @@ class BaseAgent:
                 if estimates[action] <= 0:
                     action = ACTION.NOP
 
-            print('{:8f} {: 4.5f} {: 4.5f} {: 4.5f} {: 4.5f} {: 4.5f}   a{:1}  BP {: 5.1f}   SP {: 5.1f} / bp {: 5.1f} sp {: 5.1f}, m {: 5.1f}'
+            print('{:8f} nop{: 4.5f} b{: 4.5f} bn{: 4.5f} s{: 4.5f} sn{: 4.5f}   a{:1}  BP {: 5.1f}   SP {: 5.1f} / bp {: 5.1f} sp {: 5.1f}, m {: 5.1f}'
                   .format(s.time, estimates[0], estimates[1], estimates[2], estimates[3], estimates[4],
                           action, s.buy_order_price, s.sell_order_price, s.buy_book_price, s.sell_book_price, s.margin))
 

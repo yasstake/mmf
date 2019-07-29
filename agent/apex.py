@@ -78,6 +78,8 @@ class Agent(BaseAgent):
     def estimate(self, status):
         e = self.predict(status)
 
+        return e
+        '''
         if status.is_able_to_buy():
             if status.buy_reward:
                 e[ACTION.BUY] = status.buy_reward
@@ -97,6 +99,7 @@ class Agent(BaseAgent):
             e[ACTION.SELL] = HP.TIME_PENALTY
 
         return e
+        '''
 
     def train(self, s, r, q):
         return self.global_brain.train_on_batch([s, r], q)
@@ -321,7 +324,7 @@ if __name__ == '__main__':
         experiences.append(step)
 
         no_of_episode += 1
-        if 200000 < no_of_episode and no_of_episode % 10 == 0:
+        if 2000 < no_of_episode and no_of_episode % 10 == 0:
             agent.set_initialized()
             batch = sample(experiences, 128)
 
