@@ -8,6 +8,7 @@ from tensorflow import keras
 from agent.deepq import *
 from env.log import Logger
 from random import sample
+from env.log import Logger
 
 BUFFER_SIZE = 20000
 
@@ -36,12 +37,72 @@ class Agent(BaseAgent):
 
     def __init__(self):
         super(Agent, self).__init__()
+        self.total_reward = 0
+
         if Agent.global_brain is None:
             Agent.global_brain = self.create_brain()
         self.local_brain = self.create_brain()
         self.copy_brain_to_local()
 
+
+
+    def create_brain_3(self):
+        l_input = keras.layers.Input(shape=(NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH))
+
+        conv2d = keras.layers.Conv2D(32, (4, 4), activation='relu', padding='same')(l_input)
+        conv2d = keras.layers.Conv2D(64, (1, 1), activation='relu', padding='same')(conv2d)
+        flat_view = keras.layers.Flatten()(conv2d)
+        flat_view = keras.layers.Dense(512, activation='relu')(flat_view)
+
+        margin_input = keras.layers.Input(shape=(4,))
+        margin_input2 = keras.layers.Dense(32, activation='relu')(margin_input)
+
+        marge_out = keras.layers.concatenate([flat_view, margin_input2])
+
+        fltn = keras.layers.Dense(512, activation='relu')(marge_out)
+        fltn = keras.layers.Dense(128, activation='relu')(fltn)
+        l_output = keras.layers.Dense(self.number_of_actions)(fltn)
+
+        model = keras.Model([l_input, margin_input], l_output)
+
+        model.summary()
+
+        model.compile(loss='mse', optimizer='adam')
+
+        return model
+
     def create_brain(self):
+        l_input = keras.layers.Input(shape=(NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH))
+
+        conv2d = keras.layers.Conv2D(32, (4, 4), activation='relu', padding='same')(l_input)
+        conv2d = keras.layers.Conv2D(64, (1, 1), activation='relu', padding='same')(conv2d)
+        flat_view = keras.layers.Flatten()(conv2d)
+        flat_view = keras.layers.Dense(1024, activation='relu')(flat_view)
+        flat_view = keras.layers.Dense(512, activation='relu')(flat_view)
+
+        margin_input = keras.layers.Input(shape=(4,))
+        margin_input2 = keras.layers.Dense(64, activation='relu')(margin_input)
+        margin_input2 = keras.layers.Dense(32, activation='relu')(margin_input2)
+
+        marge_out = keras.layers.concatenate([flat_view, margin_input2])
+
+        fltn = keras.layers.Dense(512, activation='relu')(marge_out)
+        fltn = keras.layers.Dense(256, activation='relu')(fltn)
+        fltn = keras.layers.Dense(128, activation='relu')(fltn)
+        l_output = keras.layers.Dense(self.number_of_actions)(fltn)
+
+        model = keras.Model([l_input, margin_input], l_output)
+
+        model.summary()
+
+        model.compile(loss='mse', optimizer='adam')
+
+        return model
+
+
+
+
+    def create_brain2(self):
         l_input = keras.layers.Input(shape=(NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH))
         conv2d = keras.layers.Conv2D(32, (4, 4), activation='relu', padding='same')(l_input)
         conv2d = keras.layers.Conv2D(64, (2, 2), activation='relu', padding='same')(conv2d)
@@ -135,13 +196,17 @@ class Trainer():
         self.gamma = gamma
 
     def experience_generator(self):
+        episode = 0
+        total_reward = 0
         while True:
             state = self.env.reset()
 
             while True:
                 action = self.agent.policy(state)
                 n_state, reward, done, info = self.env.step(action)
-
+                self.logger.log_reward(episode, reward, total_reward)
+                episode += 1
+                total_reward += reward
                 yield state, n_state, action, reward, done, info
 
                 if done:

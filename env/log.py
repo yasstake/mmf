@@ -26,6 +26,12 @@ class Logger:
             Logger.total_timesteps.assign(episode)
             tf.contrib.summary.scalar('loss', loss)
 
+    def log_reward(self, episode, reward, total_reward):
+        with self.summary.as_default(), tf.contrib.summary.always_record_summaries():
+            self.total_timesteps.assign(episode)
+            tf.contrib.summary.scalar('loss', reward, step=episode)
+            tf.contrib.summary.scalar('reward', reward, step=episode)
+            tf.contrib.summary.scalar('total_reward', total_reward, step=episode)
 
     def log_episode(self, episode, loss, reward, total_reward):
         with self.summary.as_default(), tf.contrib.summary.always_record_summaries():
