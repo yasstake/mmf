@@ -177,9 +177,7 @@ class Agent(BaseAgent):
 
         return e
 
-class Episode:
-    episode = 0
-    total_reward = 0
+
 
 class Trainer():
 
@@ -243,9 +241,6 @@ class Trainer():
             experience = self.local_buffer[start_index + buffer_size]
             if experience.done:
                 print('done', reward)
-                Episode.episode += 1
-                Episode.total_reward += reward
-                self.logger.log_reward(Episode.episode, reward, Episode.total_reward)
 
                 reward += gamma * experience.reward
                 break

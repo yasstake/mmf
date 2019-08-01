@@ -112,8 +112,9 @@ class Observation:
 
         return pos
 
-
-
+class Episode:
+    episode = 0
+    total_reward = 0
 
 class Trade(gym.Env):
     """The main OpenAI Gym class. It encapsulates an environment with
@@ -242,8 +243,15 @@ class Trade(gym.Env):
         return observe, reward, self.episode_done, text
 
     def _calc_reward(self):
-        print('reward->', self.margin)
-        return self.margin
+
+        reward = self.margin
+
+        Episode.episode += 1
+        Episode.total_reward += reward
+        self.logger.log_reward(Episode.episode, reward, Episode.total_reward)
+        print('reward->', reward)
+
+        return reward
 
     def render(self, mode='human', close=False):
         pass
