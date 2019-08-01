@@ -205,9 +205,6 @@ class Trainer():
             while True:
                 action = self.agent.policy(state)
                 n_state, reward, done, info = self.env.step(action)
-                Episode.episode += 1
-                Episode.total_reward += reward
-                self.logger.log_reward(Episode.episode, reward, Episode.total_reward)
                 yield state, n_state, action, reward, done, info
 
                 if done:
@@ -246,6 +243,10 @@ class Trainer():
             experience = self.local_buffer[start_index + buffer_size]
             if experience.done:
                 print('done', reward)
+                Episode.episode += 1
+                Episode.total_reward += reward
+                self.logger.log_reward(Episode.episode, reward, Episode.total_reward)
+
                 reward += gamma * experience.reward
                 break
 
