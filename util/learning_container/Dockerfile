@@ -18,6 +18,9 @@ RUN python3 -m pip install numpy
 RUN python3 -m pip install matplotlib
 RUN python3 -m pip install --upgrade sklearn
 
+CMD cd /home/yass/Projects/mmf && python3 -m agent.apex > /bitlog/learn.log
+
+
 
 
 
