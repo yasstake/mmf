@@ -8,7 +8,6 @@ from tensorflow import keras
 from agent.deepq import *
 from env.log import Logger
 from random import sample
-from env.log import Logger
 
 BUFFER_SIZE = 20000
 
@@ -190,7 +189,7 @@ class Trainer():
         self.loss = None
         self.total_reward = 0
         self.duration = 0
-        self.logger = Logger()
+
 
         self.env = env
         self.agent = agent

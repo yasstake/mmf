@@ -7,6 +7,7 @@ import tensorflow as tf
 
 from dl.tfrecords import read_tfrecord_example
 from log.constant import *
+from env.log import Logger
 
 EPISODE_FRAMES = 3600 * 4
 EPISODE_FILES  = int(EPISODE_FRAMES / BOARD_IN_FILE)
@@ -185,6 +186,9 @@ class Trade(gym.Env):
 
         self.new_generator = None
 
+        self.logger = Logger()
+
+
     def reset(self):
         return self.new_episode()
 
@@ -249,7 +253,7 @@ class Trade(gym.Env):
         Episode.episode += 1
         Episode.total_reward += reward
         self.logger.log_reward(Episode.episode, reward, Episode.total_reward)
-        print('reward->', reward)
+        print('reward,', reward)
 
         return reward
 
