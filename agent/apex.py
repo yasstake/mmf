@@ -177,6 +177,9 @@ class Agent(BaseAgent):
 
         return e
 
+class Episode:
+    episode = 0
+    total_reward = 0
 
 class Trainer():
 
@@ -196,17 +199,15 @@ class Trainer():
         self.gamma = gamma
 
     def experience_generator(self):
-        episode = 0
-        total_reward = 0
         while True:
             state = self.env.reset()
 
             while True:
                 action = self.agent.policy(state)
                 n_state, reward, done, info = self.env.step(action)
-                self.logger.log_reward(episode, reward, total_reward)
-                episode += 1
-                total_reward += reward
+                Episode.episode += 1
+                Episode.total_reward += reward
+                self.logger.log_reward(Episode.episode, reward, Episode.total_reward)
                 yield state, n_state, action, reward, done, info
 
                 if done:
@@ -380,28 +381,29 @@ if __name__ == '__main__':
 
     trainer = Trainer(env, agent)
 
-    agents = trainer.create_one_step_generator_array(1)
+
 
     experiences = deque(maxlen=500000)
 
     no_of_episode = 0
-    for step in agents[0]:
-        experiences.append(step)
 
-        no_of_episode += 1
-        if 2000 < no_of_episode and no_of_episode % 10 == 0:
-            agent.set_initialized()
-            batch = sample(experiences, 128)
+    while True:
+        agents = trainer.create_one_step_generator_array(1)
+        for step in agents[0]:
+            experiences.append(step)
 
-            states = np.array([e.state.board for e in batch])
-            rewards = np.array([e.state.rewards for e in batch])
-            q_values = np.array([e.q_values for e in batch])
+            no_of_episode += 1
+            if 2000 < no_of_episode and no_of_episode % 10 == 0:
+                agent.set_initialized()
+                batch = sample(experiences, 128)
 
-            loss = agent.train(states, rewards, q_values)
-            print('loss->', loss)
+                states = np.array([e.state.board for e in batch])
+                rewards = np.array([e.state.rewards for e in batch])
+                q_values = np.array([e.q_values for e in batch])
 
-        if no_of_episode % 1000 == 0:
-            print('---copy-brain-to-local---', no_of_episode)
-            agent.copy_brain_to_local()
+                loss = agent.train(states, rewards, q_values)
+                print('loss->', loss)
 
-    exit(0)
+            if no_of_episode % 1000 == 0:
+                print('---copy-brain-to-local---', no_of_episode)
+                agent.copy_brain_to_local()
