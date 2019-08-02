@@ -392,7 +392,7 @@ if __name__ == '__main__':
             no_of_episode += 1
             if 2000 < no_of_episode and no_of_episode % 10 == 0:
                 agent.set_initialized()
-                batch = sample(experiences, 128)
+                batch = sample(experiences, 32)
 
                 states = np.array([e.state.board for e in batch])
                 rewards = np.array([e.state.rewards for e in batch])
