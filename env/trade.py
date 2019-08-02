@@ -200,14 +200,12 @@ class Trade(gym.Env):
 
         result = False
 
-        if not self.new_sec():
-            if self.sell_order_price:
-                action = ACTION.BUY_NOW
-                result = self.action_buy_now()
-            elif self.buy_order_price:
-                action = ACTION.SELL_NOW
-                result = self.action_sell_now()
-        elif self.check_draw_down():
+        data_available = self.new_sec()
+
+        if not data_available:
+            return None
+
+        if self.check_draw_down():
             result = True
         elif action == ACTION.NOP:
             result = self.action_nop()
@@ -265,7 +263,8 @@ class Trade(gym.Env):
         try:
             data_available = next(self.new_generator)
         except:
-            pass
+            print('END OF DATA')
+            data_available = False
 
         if data_available:
             self.episode_done = False

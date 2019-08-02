@@ -13,15 +13,13 @@ BUFFER_SIZE = 20000
 
 
 class Experience:
-    def __init__(self, state, action, reward, next_state, done, estimats, q_values=None):
+    def __init__(self, state, action, reward, next_state, done, q_values=None):
         self.state = state
         self.action = action
         self.reward = reward
         self.next_state = next_state
         self.done = done
-        self.estimates = estimats
         self.q_values = q_values
-
 
 class HP:
     NETWORK_UPDATE_CYCLE = 2
@@ -201,8 +199,13 @@ class Trainer():
 
             while True:
                 action = self.agent.policy(state)
-                n_state, reward, done, info = self.env.step(action)
-                yield state, n_state, action, reward, done, info
+                result = self.env.step(action)
+
+                if result:
+                    n_state, reward, done, info = result
+                    yield state, n_state, action, reward, done, info
+                else:
+                    yield None
 
                 if done:
                     break
@@ -245,10 +248,10 @@ class Trainer():
                 break
 
             if buffer_size == 1 or steps <= 1:
-                reward += gamma * np.argmax(experience.estimates)
+                reward += gamma * np.argmax(experience.q_values)
                 break
 
-            reward += gamma * experience.estimates[experience.action]
+            reward += gamma * experience.q_values[experience.action]
 
         experience = self.local_buffer[start_index]
         action = experience.action
@@ -316,9 +319,10 @@ class Trainer():
 
         buffer = []
 
-        for state, n_state, action, reward, done, info in generator:
+        for s in generator:
+            state, n_state, action, reward, done, info = s
             estimate = self.predict_q_values(state)
-            buffer.append(Experience(state, action, reward, n_state, done, estimate, copy.copy(estimate)))
+            buffer.append(Experience(state, action, reward, n_state, done, estimate))
             if done:
                 break
 
@@ -376,9 +380,7 @@ if __name__ == '__main__':
 
     trainer = Trainer(env, agent)
 
-
-
-    experiences = deque(maxlen=500000)
+    experiences = deque(maxlen=50000)
 
     no_of_episode = 0
 
