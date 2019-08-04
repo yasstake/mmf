@@ -320,11 +320,12 @@ class Trainer():
         buffer = []
 
         for s in generator:
-            state, n_state, action, reward, done, info = s
-            estimate = self.predict_q_values(state)
-            buffer.append(Experience(state, action, reward, n_state, done, estimate))
-            if done:
-                break
+            if s:
+                state, n_state, action, reward, done, info = s
+                estimate = self.predict_q_values(state)
+                buffer.append(Experience(state, action, reward, n_state, done, estimate))
+                if done:
+                    break
 
         buffer = self.update_q_values(buffer)
 
@@ -380,9 +381,15 @@ if __name__ == '__main__':
 
     trainer = Trainer(env, agent)
 
-    experiences = deque(maxlen=50000)
+    experiences_len = 500000
+    experiences = deque(maxlen=experiences_len)
 
     no_of_episode = 0
+
+    agents = trainer.create_one_step_generator_array(1)
+    for _ in range(10000):
+        for step in agents[0]:
+            experiences.append(step)
 
     while True:
         agents = trainer.create_one_step_generator_array(1)
@@ -390,9 +397,9 @@ if __name__ == '__main__':
             experiences.append(step)
 
             no_of_episode += 1
-            if 2000 < no_of_episode and no_of_episode % 10 == 0:
+            if no_of_episode % 10 == 0:
                 agent.set_initialized()
-                batch = sample(experiences, 32)
+                batch = sample(experiences, 128)
 
                 states = np.array([e.state.board for e in batch])
                 rewards = np.array([e.state.rewards for e in batch])
