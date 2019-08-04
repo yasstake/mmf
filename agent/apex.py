@@ -387,7 +387,7 @@ if __name__ == '__main__':
     no_of_episode = 0
 
     agents = trainer.create_one_step_generator_array(1)
-    for _ in range(10000):
+    for _ in range(500):
         for step in agents[0]:
             experiences.append(step)
 
