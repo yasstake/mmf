@@ -387,27 +387,29 @@ if __name__ == '__main__':
     no_of_episode = 0
 
     agents = trainer.create_one_step_generator_array(1)
-    for _ in range(500):
-        for step in agents[0]:
-            experiences.append(step)
 
-    while True:
-        agents = trainer.create_one_step_generator_array(1)
-        for step in agents[0]:
-            experiences.append(step)
+    print('prepare')
+    for step in agents[0]:
+        experiences.append(step)
+        if 2000 < len(experiences):
+            agent.set_initialized()
+            break
 
-            no_of_episode += 1
-            if no_of_episode % 10 == 0:
-                agent.set_initialized()
-                batch = sample(experiences, 128)
+    print('action')
+    for step in agents[0]:
+        experiences.append(step)
 
-                states = np.array([e.state.board for e in batch])
-                rewards = np.array([e.state.rewards for e in batch])
-                q_values = np.array([e.q_values for e in batch])
+        no_of_episode += 1
+        if no_of_episode % 10 == 0:
+            batch = sample(experiences, 128)
 
-                loss = agent.train(states, rewards, q_values)
-                print('loss->', loss)
+            states = np.array([e.state.board for e in batch])
+            rewards = np.array([e.state.rewards for e in batch])
+            q_values = np.array([e.q_values for e in batch])
 
-            if no_of_episode % 1000 == 0:
-                print('---copy-brain-to-local---', no_of_episode)
-                agent.copy_brain_to_local()
+            loss = agent.train(states, rewards, q_values)
+            print('loss->', loss)
+
+        if no_of_episode % 1000 == 0:
+            print('---copy-brain-to-local---', no_of_episode)
+            agent.copy_brain_to_local()
