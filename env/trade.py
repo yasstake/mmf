@@ -159,7 +159,7 @@ class Trade(gym.Env):
         if Trade.data_file_sets is None:
             Trade.data_file_sets= []
             for file in self.data_files:
-                Trade.data_file_sets += tf.data.Dataset.list_files(file).cache()
+                Trade.data_file_sets += tf.data.Dataset.list_files(file)
 
         self.action = None
 
@@ -259,17 +259,8 @@ class Trade(gym.Env):
         pass
 
     def new_sec(self):
-        data_available = False
-        try:
-            data_available = next(self.new_generator)
-        except:
-            print('END OF DATA')
-            data_available = False
-
-        if data_available:
-            self.episode_done = False
-        else:
-            self.episode_done = True
+        data_available = next(self.new_generator)
+        self.episode_done = True
 
         return data_available
 
@@ -337,7 +328,7 @@ class Trade(gym.Env):
 
         return self._new_episode(start, end, skip)
 
-    def _new_episode(self, start, end, skip = 0)->Observation:
+    def _new_episode(self, start, end, skip = False)->Observation:
         data = Trade.data_file_sets[start:end]
         dataset = tf.data.TFRecordDataset(data, compression_type='GZIP')
         self.dataset = dataset.map(read_tfrecord_example)

@@ -396,20 +396,26 @@ if __name__ == '__main__':
             break
 
     print('action')
-    for step in agents[0]:
-        experiences.append(step)
 
-        no_of_episode += 1
-        if no_of_episode % 10 == 0:
-            batch = sample(experiences, 128)
+    while True:
+        try:
+            for step in agents[0]:
+                experiences.append(step)
 
-            states = np.array([e.state.board for e in batch])
-            rewards = np.array([e.state.rewards for e in batch])
-            q_values = np.array([e.q_values for e in batch])
+                no_of_episode += 1
+                if no_of_episode % 10 == 0:
+                    batch = sample(experiences, 128)
 
-            loss = agent.train(states, rewards, q_values)
-            print('loss->', loss)
+                    states = np.array([e.state.board for e in batch])
+                    rewards = np.array([e.state.rewards for e in batch])
+                    q_values = np.array([e.q_values for e in batch])
 
-        if no_of_episode % 1000 == 0:
-            print('---copy-brain-to-local---', no_of_episode)
-            agent.copy_brain_to_local()
+                    loss = agent.train(states, rewards, q_values)
+                    print('loss->', loss)
+
+                if no_of_episode % 5000 == 0:
+                    print('---copy-brain-to-local---', no_of_episode)
+                    agent.copy_brain_to_local()
+        except:
+            print('End of Data, RETRY')
+            pass
