@@ -1,7 +1,6 @@
-import copy
-
-from collections import deque
-from collections import namedtuple
+import time
+import threading
+import sys
 
 from tensorflow import keras
 
@@ -40,8 +39,6 @@ class Agent(BaseAgent):
             Agent.global_brain = self.create_brain()
         self.local_brain = self.create_brain()
         self.copy_brain_to_local()
-
-
 
     def create_brain_3(self):
         l_input = keras.layers.Input(shape=(NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH))
@@ -131,7 +128,7 @@ class Agent(BaseAgent):
         return model
 
     def copy_brain_to_local(self):
-        self.local_brain.set_weights(self.global_brain.get_weights())
+        self.local_brain.set_weights(Agent.global_brain.get_weights())
 
     def estimate(self, status):
         e = self.predict(status)
@@ -178,7 +175,10 @@ class Agent(BaseAgent):
 
 class Trainer():
 
-    def __init__(self, env, agent, gamma=0.99, buffer_size=BUFFER_SIZE):
+    experiences_len = 500000
+    experiences = deque(maxlen=experiences_len)
+
+    def __init__(self, env, agent, gamma=0.99, buffer_size=BUFFER_SIZE, name=''):
         self.buffer_size = buffer_size
         self.local_buffer = deque(maxlen=self.buffer_size)
         self.reward = 0
@@ -188,10 +188,11 @@ class Trainer():
         self.total_reward = 0
         self.duration = 0
 
-
         self.env = env
         self.agent = agent
         self.gamma = gamma
+
+        self.name = name
 
     def experience_generator(self):
         while True:
@@ -208,20 +209,14 @@ class Trainer():
                     yield None
 
                 if done:
+                    print('eposode done')
                     break
 
                 state = n_state
 
     def create_generator(self):
         generator = self.experience_generator()
-
         return generator
-
-    def compute_priority(self):
-        pass
-
-    def add_replay_buffer(self):
-        pass
 
     def calc_multi_step_q_value(self, start_index, steps, gamma=0.99):
         '''
@@ -297,20 +292,12 @@ class Trainer():
 
         return e
 
-    def create_one_step_generator_array(self, num_of_array):
-        agents = []
-
-        for i in range(num_of_array):
-            agents.append(self.one_step_in_episode_generator())
-
-        return agents
-
     def one_step_in_episode_generator(self):
         while True:
             buffer = self.one_episode()
 
-            for step in buffer:
-                yield step
+            for s in buffer:
+                yield s
 
     def one_episode(self):
         # Obtain latest network parameters
@@ -328,11 +315,7 @@ class Trainer():
                     break
 
         buffer = self.update_q_values(buffer)
-
         return buffer
-
-    def calc_td_difference(self):
-        return 0
 
     def update_q_values(self, experiences):
         experiences.reverse()
@@ -371,8 +354,43 @@ class Trainer():
             e.q_values[action] = reward
 
         experiences.reverse()
-
         return experiences
+
+    def init_buffer(self, size=200):
+        print('prepare')
+        agent = trainer.one_step_in_episode_generator()
+
+        for step in agent:
+            Trainer.experiences.append(step)
+            if size < len(Trainer.experiences):
+                self.agent.set_initialized()
+                break
+
+    def append_new_experience(self):
+        agent = trainer.one_step_in_episode_generator()
+
+        while True:
+            try:
+                for step in agent:
+                    Trainer.experiences.append(step)
+            except Exception as e:
+                tb = sys.exc_info()[2]
+                print('error in new experiences{0}'.format(e.with_traceback(tb)))
+
+    def train_global_brain(self, batch_size=32, train_loop=1000):
+        while True:
+            for _ in range(train_loop):
+                batch = sample(Trainer.experiences, batch_size)
+
+                states = np.array([e.state.board for e in batch])
+                rewards = np.array([e.state.rewards for e in batch])
+                q_values = np.array([e.q_values for e in batch])
+
+                loss = agent.train(states, rewards, q_values)
+                print('loss->', loss)
+
+            print("copy_brain to local")
+            self.agent.copy_brain_to_local()
 
 
 if __name__ == '__main__':
@@ -381,41 +399,13 @@ if __name__ == '__main__':
 
     trainer = Trainer(env, agent)
 
-    experiences_len = 500000
-    experiences = deque(maxlen=experiences_len)
+    trainer.init_buffer(300)
+    print('init end')
 
-    no_of_episode = 0
+    thread = threading.Thread(target=trainer.append_new_experience)
+    thread.start()
 
-    agents = trainer.create_one_step_generator_array(1)
+    print('start training')
+    thread2 = threading.Thread(target=trainer.train_global_brain)
+    thread2.start()
 
-    print('prepare')
-    for step in agents[0]:
-        experiences.append(step)
-        if 2000 < len(experiences):
-            agent.set_initialized()
-            break
-
-    print('action')
-
-    while True:
-        try:
-            for step in agents[0]:
-                experiences.append(step)
-
-                no_of_episode += 1
-                if no_of_episode % 10 == 0:
-                    batch = sample(experiences, 128)
-
-                    states = np.array([e.state.board for e in batch])
-                    rewards = np.array([e.state.rewards for e in batch])
-                    q_values = np.array([e.q_values for e in batch])
-
-                    loss = agent.train(states, rewards, q_values)
-                    print('loss->', loss)
-
-                if no_of_episode % 5000 == 0:
-                    print('---copy-brain-to-local---', no_of_episode)
-                    agent.copy_brain_to_local()
-        except:
-            print('End of Data, RETRY')
-            pass

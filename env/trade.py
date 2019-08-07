@@ -193,7 +193,6 @@ class Trade(gym.Env):
         return self.new_episode()
 
     def step(self, action):
-
         observe = None
         reward = 0
         text = {}
@@ -245,13 +244,12 @@ class Trade(gym.Env):
         return observe, reward, self.episode_done, text
 
     def _calc_reward(self):
-
         reward = self.margin
 
         Episode.episode += 1
         Episode.total_reward += reward
         self.logger.log_reward(Episode.episode, reward, Episode.total_reward)
-        print('reward,', reward)
+        print('reward->', Episode.episode, reward)
 
         return reward
 
@@ -260,8 +258,6 @@ class Trade(gym.Env):
 
     def new_sec(self):
         data_available = next(self.new_generator)
-        self.episode_done = True
-
         return data_available
 
     def new_sec_generator(self):
@@ -338,6 +334,7 @@ class Trade(gym.Env):
         if skip:
             self.skip_sec(skip)
 
+        self.episode_done = False
         self.sell_order_price = 0
         self.buy_order_price = 0
 
