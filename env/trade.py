@@ -145,8 +145,10 @@ class Trade(gym.Env):
 
     data_file_sets = None
 
-    def __init__(self, data_pattern=DEFAULT_TF_DATA_DIR + '/**/*.tfrecords'):
+    def __init__(self, data_pattern=DEFAULT_TF_DATA_DIR + '/**/*.tfrecords', name=''):
         super().__init__()
+
+        self.name = name
 
         self.action_space = gym.spaces.Discrete(5) #5 actions nop, buy, BUY, sell, SELL
 
@@ -249,7 +251,7 @@ class Trade(gym.Env):
         Episode.episode += 1
         Episode.total_reward += reward
         self.logger.log_reward(Episode.episode, reward, Episode.total_reward)
-        print('reward->', Episode.episode, reward)
+        print('reward->', Episode.episode, self.name, reward)
 
         return reward
 
