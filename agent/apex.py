@@ -399,13 +399,13 @@ if __name__ == '__main__':
 
     trainer = Trainer(env, agent)
 
-    trainer.init_buffer(10000)
+    trainer.init_buffer(100)
     print('init end')
 
     thread = threading.Thread(target=trainer.append_new_experience)
     thread.start()
 
-    '''
+
     env2 = Trade(name='#2')
     agent2 = Agent()
 
@@ -413,7 +413,7 @@ if __name__ == '__main__':
 
     thread2 = threading.Thread(target=trainer2.append_new_experience)
     thread2.start()
-    '''
+
     print('start training')
     thread3 = threading.Thread(target=trainer.train_global_brain)
     thread3.start()

@@ -5,11 +5,13 @@ import gym
 import numpy as np
 import tensorflow as tf
 
+tf.enable_v2_behavior()
+
 from dl.tfrecords import read_tfrecord_example
 from log.constant import *
 from env.log import Logger
 
-EPISODE_FRAMES = 3600 * 4
+EPISODE_FRAMES = 3600 * 2   # 2Hour
 EPISODE_FILES  = int(EPISODE_FRAMES / BOARD_IN_FILE)
 
 ONE_ORDER_SIZE = 1.0
@@ -263,8 +265,13 @@ class Trade(gym.Env):
         return data_available
 
     def new_sec_generator(self):
+
         for rec in self.dataset:
+            last_time = self.time
             self.decode_dataset(rec)
+
+            if last_time and MAX_SKIP_TIME < self.time - last_time:
+                break
 
             yield True
         yield False

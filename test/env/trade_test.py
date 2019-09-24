@@ -75,23 +75,24 @@ class MyTestCase(unittest.TestCase):
 
         num_of_records = 0
 
-        while trade.new_sec():
-            self.assertIsNotNone(trade.board)
-            self.assertIsNotNone(trade.buy_trade_price)
-            self.assertIsNotNone(trade.sell_trade_price)
-            self.assertIsNotNone(trade.buy_book_price)
-            self.assertIsNotNone(trade.sell_book_vol)
-            self.assertIsNotNone(trade.sell_book_price)
-            self.assertIsNotNone(trade.buy_book_vol)
-            self.assertIsNotNone(trade.market_sell_price)
-            self.assertIsNotNone(trade.buy_trade_vol)
-            self.assertIsNotNone(trade.fix_buy_price)
-            self.assertIsNotNone(trade.market_buy_price)
-            self.assertIsNotNone(trade.time)
-
-            print(trade.time)
-
-            num_of_records += 1
+        for i in range(1000):
+            if trade.new_sec():
+                self.assertIsNotNone(trade.boards)
+                self.assertIsNotNone(trade.buy_trade_price)
+                self.assertIsNotNone(trade.sell_trade_price)
+                self.assertIsNotNone(trade.buy_book_price)
+                self.assertIsNotNone(trade.sell_book_vol)
+                self.assertIsNotNone(trade.sell_book_price)
+                self.assertIsNotNone(trade.buy_book_vol)
+                self.assertIsNotNone(trade.market_sell_price)
+                self.assertIsNotNone(trade.buy_trade_vol)
+                self.assertIsNotNone(trade.fix_buy_price)
+                self.assertIsNotNone(trade.market_buy_price)
+                self.assertIsNotNone(trade.time)
+                num_of_records += 1
+                print(trade.time)
+            else:
+                break
 
         print(num_of_records)
 
@@ -206,32 +207,6 @@ class MyTestCase(unittest.TestCase):
         trade.new_episode()
 
         print(trade.action_space)
-
-    def test_tfrecords(self):
-        trade = Trade()
-
-        trade._new_episode(0,2)
-
-        for data in trade.dataset:
-            trade.decode_dataset(data)
-            print(trade.time)
-            break
-
-        for data in trade.dataset:
-            trade.decode_dataset(data)
-            print(trade.time)
-            break
-
-        trade._new_episode(0,2)
-
-        for data in trade.dataset:
-            trade.decode_dataset(data)
-            print(trade.time)
-            break
-
-
-
-
 
 if __name__ == '__main__':
     unittest.main()
