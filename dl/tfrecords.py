@@ -1,12 +1,8 @@
-
 import numpy as np
 import tensorflow as tf
 
 from log import constant
 
-
-#def decode_buffer(buffer):
-#    return np.frombuffer(buffer, dtype=np.uint8).reshape(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)
 
 def decode_buffer(buffer):
     return np.frombuffer(buffer, dtype=np.uint8).reshape(constant.NUMBER_OF_LAYERS, constant.BOARD_TIME_WIDTH, constant.BOARD_WIDTH)

@@ -1,21 +1,21 @@
 import glob
 import random
-
 import gym
 import numpy as np
 import tensorflow as tf
-
-tf.enable_v2_behavior()
-
 from dl.tfrecords import read_tfrecord_example
 from log.constant import *
 from env.log import Logger
 
+# tf.enable_v2_behavior()
+
 EPISODE_FRAMES = 3600 * 2   # 2Hour
-EPISODE_FILES  = int(EPISODE_FRAMES / BOARD_IN_FILE)
+EPISODE_FILES = int(EPISODE_FRAMES / BOARD_IN_FILE)
 
 ONE_ORDER_SIZE = 1.0
-MAX_DRAW_DOWN  = 6
+MAX_DRAW_DOWN = 6
+
+TIME_STEP_REWARD = -0.0000001
 
 
 class Observation:
@@ -147,6 +147,8 @@ class Trade(gym.Env):
 
     data_file_sets = None
 
+
+
     def __init__(self, data_pattern=DEFAULT_TF_DATA_DIR + '/**/*.tfrecords', name=''):
         super().__init__()
 
@@ -192,7 +194,6 @@ class Trade(gym.Env):
 
         self.logger = Logger()
 
-
     def reset(self):
         return self.new_episode()
 
@@ -212,23 +213,23 @@ class Trade(gym.Env):
             result = True
         elif action == ACTION.NOP:
             result = self.action_nop()
-            reward = -0.0000001
+            reward = TIME_STEP_REWARD
         elif action == ACTION.BUY:
             result = self.action_buy()
             if not result:
-                reward = -0.00001
+                reward = TIME_STEP_REWARD
         elif action == ACTION.BUY_NOW:
             result = self.action_buy_now()
             if not result:
-                reward = -0.00001
+                reward = TIME_STEP_REWARD
         elif action == ACTION.SELL:
             result = self.action_sell()
             if not result:
-                reward = -0.00001
+                reward = TIME_STEP_REWARD
         elif action == ACTION.SELL_NOW:
             result = self.action_sell_now()
             if not result:
-                reward = -0.00001
+                reward = TIME_STEP_REWARD
         else:
             print('Unknown action no->', action)
 
@@ -252,7 +253,7 @@ class Trade(gym.Env):
 
         Episode.episode += 1
         Episode.total_reward += reward
-        self.logger.log_reward(Episode.episode, reward, Episode.total_reward)
+#        self.logger.log_reward(Episode.episode, reward, Episode.total_reward)
         print('reward->', Episode.episode, self.name, reward)
 
         return reward
@@ -488,3 +489,7 @@ class Trade(gym.Env):
             self.margin = self.sell_order_price - self.buy_book_price
         else:
             self.margin = 0
+
+
+
+

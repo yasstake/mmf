@@ -3,7 +3,7 @@ import os
 import tensorflow as tf
 from tensorflow import keras
 
-tf.enable_v2_behavior()
+# tf.enable_v2_behavior()
 
 class Logger:
     total_timesteps = tf.train.create_global_step()
