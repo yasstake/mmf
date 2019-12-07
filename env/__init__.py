@@ -1,6 +1,6 @@
-from gym.envs.registration import register
+#from gym.envs.registration import register
 
-register(
-    id='mmf-v0',
-    entry_point='env.trade:Trading'
-)
+#register(
+#    id='mmf-v0',
+#    entry_point='env.trade:Trading'
+#)
