@@ -48,6 +48,8 @@ class TradeEnv(gym.Env):
         self.board = None
         self.margin = 0
 
+        self.action = ACTION.NOP
+
         self.sell_order_price = None
         self.buy_order_price = None
 
@@ -111,12 +113,12 @@ class TradeEnv(gym.Env):
         if result:
             self.evaluate()
             self.action = action
+            if self.episode_done:
+                reward = self.margin
         else:
             print("NOP", action)
             self.action = ACTION.NOP
-
-        if self.episode_done:
-            reward = self.margin
+            self.episode_done = True
 
         observation = self._observe()
 
