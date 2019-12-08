@@ -13,7 +13,6 @@ ONE_ORDER_SIZE = 1.0
 MAX_DRAW_DOWN = 6
 TIME_STEP_REWARD = -0.0000001
 
-
 class TradeEnv(gym.Env):
     """The main OpenAI Gym class. It encapsulates an environment with
     arbitrary behind-the-scenes dynamics. An environment can be
@@ -42,21 +41,25 @@ class TradeEnv(gym.Env):
     def __init__(self):
         super().__init__()
 
-        self.BOARD = np.zeros((32, 600, 6), dtype=np.uint8)
+        self.board = np.zeros((32, 600, 6), dtype=np.uint8)
 
         self.action_space = gym.spaces.Discrete(5)   # 5 actions nop, buy, BUY, sell, SELL
         self.observation_space = gym.spaces.Box(
             low=0,
             high=255,
-            shape=self.BOARD.shape,
+            shape=self.board.shape,
             dtype=np.uint8
         )
         # self.reward_range = [-255., 255.]
+
+        self.board_generator = None
 
         self.data_path = DEFAULT_TF_DATA_DIR + '/**/*.tfrecords'
         self.data_files = self._list_tfdata(self.data_path)
         self.number_of_files = len(self.data_files)
 
+        self.episode_files = None
+
         self.action = None
         self.boards = None
         self.sell_book_price = None
@@ -79,47 +82,25 @@ class TradeEnv(gym.Env):
         self.sell_order_price = 0
         self.buy_order_price = 0
         self.margin = 0
-
+        self.new_generator = None
         self.reset()
 
     def reset(self):
-        self.action = None
-        self.boards = None
-        self.sell_book_price = None
-        self.sell_book_vol = None
-        self.buy_book_price = None
-        self.buy_book_vol = None
-        self.center_price = None
-        self.sell_trade_price = None
-        self.sell_trade_vol = None
-        self.buy_trade_price = None
-        self.buy_trade_vol = None
-        self.market_buy_price = None
-        self.market_sell_price = None
-        self.fix_buy_price = None
-        self.fix_sell_price = None
-        self.time = None
-
-        self.episode_done = False
-
-        self.sell_order_price = 0
-        self.buy_order_price = 0
-        self.margin = 0
-
-        return self.BOARD.copy()
+        self.new_episode()
+        return self._observe()
 
     def step(self, action):
         '''
         :param action:
         :return: obvervation, reward, done, text
         '''
-        return self._observe(), 0, False, {}
+        return self._observe(), 0, self.episode_done, {}
 
     def render(self, mode='human', close=False):
         pass
 
     def _observe(self):
-        return self.BOARD.copy()
+        return self.board.copy()
 
     def _list_tfdata(self, data_pattern=DEFAULT_TF_DATA_DIR + '/**/*.tfrecords'):
         '''
@@ -135,63 +116,107 @@ class TradeEnv(gym.Env):
     def _new_file_index(self):
         '''
         calc start frame randomly
+        return:
         '''
         if EPISODE_FILES < self.number_of_files:
-            margin_rate = self.number_of_files - EPISODE_FILES
+            start_file_index = self.number_of_files - EPISODE_FILES
         else:
-            print("Not enough frames")
-            margin_rate = self.number_of_files
+            print("[WARN] Not enough data files")
+            start_file_index = self.number_of_files
 
-        new_index = int(random.random() * margin_rate)
+        new_index = int(start_file_index * random())
 
         return new_index
 
     def _skip_count(self):
-        return int(random.random() * (BOARD_IN_FILE*0.95))
+        '''
+        :return: number of skip frames in a data file
+        '''
+        return int((BOARD_IN_FILE*0.9) * random())
 
     def _new_episode_files(self):
+        '''
+        :return: set of new episode files
+        '''
         start = self._new_file_index()
         end = start + EPISODE_FILES + 1
+        if self.number_of_files < end:
+            end = self.number_of_files
 
         files = self.data_files[start:end]
 
         return files
 
     def new_episode(self):
-        start = self._new_file_index()
-        end = start + EPISODE_FILES + 1
-        skip = self._skip_count()
+        '''
+        reset environment with new episode
+        :return:
+        '''
+        self.action = ACTION.NOP
+        self.boards = None
+        self.sell_book_price = None
+        self.sell_book_vol = None
+        self.buy_book_price = None
+        self.buy_book_vol = None
+        self.center_price = None
+        self.sell_trade_price = None
+        self.sell_trade_vol = None
+        self.buy_trade_price = None
+        self.buy_trade_vol = None
+        self.market_buy_price = None
+        self.market_sell_price = None
+        self.fix_buy_price = None
+        self.fix_sell_price = None
+        self.time = None
 
-        return self._new_episode(start, end, skip)
+        self.episode_done = False
 
-    def _new_episode(self, start, end, skip = False):
-        data = self.data_file_sets[start:end]
-        dataset = tf.data.TFRecordDataset(data, compression_type='GZIP')
+        self.sell_order_price = None
+        self.buy_order_price = None
+        self.margin = None
+
+        self.episode_files = self._new_episode_files()
+        self._new_episode()
+
+    def _new_episode(self, skip=True):
+        '''
+        :param skip: skip a few frames from a begining
+        '''
+        dataset = tf.data.TFRecordDataset(self.episode_files, compression_type='GZIP')
         self.dataset = dataset.map(read_tfrecord_example)
 
         self.new_generator = self.new_sec_generator()
 
         if skip:
-            self.skip_sec(skip)
+            skip_time = self._skip_count()
+            self.skip_sec(skip_time)
 
         self.episode_done = False
         self.sell_order_price = 0
         self.buy_order_price = 0
 
-        return self._observe()
+    def new_sec(self):
+        data_available = next(self.new_generator)
+        return data_available
 
-    def _observation(self):
-        '''
-        TODO: not implemented
-        :return:
-        '''
-        return None
+    def skip_sec(self, skip_count):
+        while skip_count:
+            self.new_sec()
+            skip_count -= 1
 
+    def new_sec_generator(self):
+        for rec in self.dataset:
+            last_time = self.time
+            self.decode_dataset(rec)
+
+            if last_time and MAX_SKIP_TIME < self.time - last_time:
+                break
+
+            yield True
+        yield False
 
     def decode_dataset(self, data):
-
         self.boards = tf.io.decode_raw(data['board'], tf.uint8)
-        #self.board = tf.reshape(boards, [-1, NUMBER_OF_LAYERS, BOARD_TIME_WIDTH, BOARD_WIDTH])
 
         self.center_price = data['center_price']
         self.sell_book_price = data['sell_book_price']
@@ -206,7 +231,7 @@ class TradeEnv(gym.Env):
         self.market_sell_price = data['market_sell_price']
         self.fix_buy_price = data['fix_buy_price']
         self.fix_sell_price = data['fix_sell_price']
-        self.time  = data['time']
+        self.time = data['time']
 
     def check_draw_down(self):
         if self.sell_order_price and self.sell_order_price - self.buy_book_price < (- MAX_DRAW_DOWN):
@@ -326,7 +351,4 @@ class TradeEnv(gym.Env):
             self.margin = self.sell_order_price - self.buy_book_price
         else:
             self.margin = 0
-
-
-
 
