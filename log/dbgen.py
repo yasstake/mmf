@@ -46,7 +46,6 @@ class Generator:
 
         return start_time, end_time
 
-
     @staticmethod
     def _load_from_db(dbobj, time, time_width=TIME_WIDTH):
         db = dbobj
@@ -61,7 +60,12 @@ class Generator:
         buy_volume = None
 
         while retry:
-            sell_min, sell_volume, buy_max, buy_volume = db.select_book_price(time)
+            result = db.select_book_price(time)
+            if result:
+                sell_min, sell_volume, buy_max, buy_volume = result
+            else:
+                return None
+
             center_price = db.calc_center_price(buy_max, sell_min)
             if center_price:
                 break

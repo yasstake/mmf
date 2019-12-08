@@ -29,9 +29,9 @@ class PriceBoard:
         self.buy_order = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
 
         self.buy_book_price = 0
-        self.buy_book_vol   = 0
+        self.buy_book_vol = 0
         self.sell_book_price = 0
-        self.sell_book_vol   = 0
+        self.sell_book_vol = 0
 
         self.sell_trade_price = 0
         self.sell_trade_volume = 0
