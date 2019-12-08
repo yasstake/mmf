@@ -1,6 +1,6 @@
 import unittest
 from env.rl import TradeEnv
-
+from log.constant import ACTION
 
 class MyTestCase(unittest.TestCase):
     def test_create(self):
@@ -39,6 +39,17 @@ class MyTestCase(unittest.TestCase):
         print(board.current_time)
         board = env.new_sec()
         print(board.current_time)
+
+    def test_action1(self):
+        env = TradeEnv()
+        env.step(ACTION.NOP)
+        env.step(ACTION.SELL_NOW)
+        env.step(ACTION.BUY_NOW)
+
+    def test_action2(self):
+        env = TradeEnv()
+        env.step(ACTION.SELL)
+        env.step(ACTION.BUY)
 
     def test_buy(self):
         env = TradeEnv()

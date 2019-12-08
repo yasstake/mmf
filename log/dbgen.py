@@ -12,27 +12,38 @@ from random import random
 
 
 class Generator:
-    @staticmethod
-    def create(time=None, db_name = "/tmp/bitlog.db"):
-        db = logdb.LogDb(db_name)
-        db.connect()
-        db.create_cursor()
-        db_start_time, db_end_time = Generator.start_time(db)
-        print('OPENDB->', db_name, db_start_time, db_end_time)
+    def __init__(self):
+        self.db = None
+        self.db_start_time = None
+        self.db_end_time = None
+
+    def create(self, time=None, db_name = "/tmp/bitlog.db"):
+        if not self.db:
+            self.open_db(db_name)
 
         if time is None:
-            offset = int((db_end_time - db_start_time) * random())
-            time = db_start_time + offset
+            offset = int((self.db_end_time - self.db_start_time) * random())
+            time = self.db_start_time + offset
 
         while True:
-            board = Generator._load_from_db(db, time)
+            board = Generator._load_from_db(self.db, time)
             time += 1
             if not board:
                 break
             yield board
-
-        db.close()
         yield None
+
+    def open_db(self, db_name):
+        self.db = logdb.LogDb(db_name)
+        self.db.connect()
+        self.db.create_cursor()
+        self.db_start_time, self.db_end_time = Generator.start_time(self.db)
+        print('OPENDB->', db_name, self.db_start_time, self.db_end_time)
+
+    def close_db(self):
+        if self.db:
+            self.db.close()
+
 
     @staticmethod
     def start_time(db=None):

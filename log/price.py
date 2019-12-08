@@ -207,7 +207,6 @@ class PriceBoard:
 
         writer.write(record.SerializeToString())
 
-
     def _tf_example_record(self):
         board = np.stack([self.buy_order, self.sell_order, self.buy_trade, self.sell_trade])
 
@@ -236,7 +235,6 @@ class PriceBoard:
             }))
 
         return record
-
 
     def calc_static(self, a):
         """
