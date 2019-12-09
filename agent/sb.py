@@ -7,10 +7,6 @@ from stable_baselines import PPO2
 
 from env.rl import TradeEnv
 
-#env = TradeEnv()
-#env = DummyVecEnv([lambda: env])  # The algorithms require a vectorized environment to run
-
-
 def make_env(rank, seed=0):
     """
     Utility function for multiprocessed env.
@@ -28,8 +24,12 @@ def make_env(rank, seed=0):
     return _init
 
 
-num_cpu = 1
-env = SubprocVecEnv([make_env(i) for i in range(num_cpu)])
+env = TradeEnv()
+env = DummyVecEnv([lambda: env])  # The algorithms require a vectorized environment to run
+
+
+#num_cpu = 1
+#env = SubprocVecEnv([make_env(i) for i in range(num_cpu)])
 
 model = PPO2(MlpPolicy, env, verbose=1)
 model.learn(total_timesteps=10000)
