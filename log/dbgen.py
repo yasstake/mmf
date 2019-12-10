@@ -32,7 +32,10 @@ class SparseBoard:
         print("pos, offset->", pos, offset)
 
         #return self.board[:, pos: pos + BOARD_WIDTH].todense()
-        return self.board[:, pos: pos + BOARD_WIDTH]
+        extract = self.board[:, pos: pos + BOARD_WIDTH]
+        print('extract shape->', extract.shape)
+
+        return extract.toarray().reshape(TIME_WIDTH, BOARD_WIDTH)
 
     def roll(self, copy_last_data=False):
         if copy_last_data:

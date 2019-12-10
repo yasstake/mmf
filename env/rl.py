@@ -61,7 +61,7 @@ class TradeEnv(gym.Env):
         self.observation_space = gym.spaces.Box(
             low=0,
             high=255,
-            shape=(4, TIME_WIDTH, BOARD_WIDTH),
+            shape=(6, TIME_WIDTH, BOARD_WIDTH),
             dtype=np.uint8
         )
         # self.reward_range = [-255., 255.]
@@ -129,24 +129,14 @@ class TradeEnv(gym.Env):
 
     def _observe(self):
         if self.board:
-            print(self.board.sell_order.get_board().shape)
-            print(self.board.buy_order.get_board().shape)
-            print(self.sell_order.shape)
-            print(self.buy_order.shape)
-
-            return np.stack([self.board.buy_order.get_board().todense(), self.board.sell_order.get_board().todense(),
-                             self.board.buy_trade.get_board().todense(), self.board.sell_trade.get_board().todense()])
-#                             self.sell_order, self.buy_order])
+            return np.stack([self.board.buy_order.get_board(), self.board.sell_order.get_board(),
+                             self.board.buy_trade.get_board(), self.board.sell_trade.get_board(),
+                             self.sell_order, self.buy_order])
         else:
             print("ERROR in _observe")
             # todo: fix size
             return np.zeros((6, BOARD_TIME_WIDTH, BOARD_WIDTH))
 
-            '''
-            return np.stack([self.board.buy_order.get_board(), self.board.sell_order.get_board(),
-                             self.board.buy_trade.get_board(), self.board.sell_trade.get_board(),
-                             self.sell_order, self.buy_order])
-            '''
     def new_episode(self):
         '''
         reset environment with new episode

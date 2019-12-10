@@ -73,6 +73,12 @@ class MyTestCase(unittest.TestCase):
         board._add_order_line(b, 1, [5, 6], False)
         print(b)
 
+    def test_make_dense(self):
+        lil = lil_matrix(600, 100000)
+
+        cut = lil[:, 100:700]
+        cut.todense()
+
     def test_generate_board_line(self):
         board = SparseBoard()
 #        board.add_order_line(, 0, [1, 2, 3])
