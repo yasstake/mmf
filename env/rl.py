@@ -53,15 +53,15 @@ class TradeEnv(gym.Env):
         self.sell_order_price = None
         self.buy_order_price = None
 
-        self.sell_order = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
-        self.buy_order = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
+        self.sell_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
+        self.buy_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
 
         # init gym environment
         self.action_space = gym.spaces.Discrete(5)   # 5 actions nop, buy, BUY, sell, SELL
         self.observation_space = gym.spaces.Box(
             low=0,
             high=255,
-            shape=(6, BOARD_TIME_WIDTH, BOARD_WIDTH), # todo: fix size
+            shape=(4, TIME_WIDTH, BOARD_WIDTH),
             dtype=np.uint8
         )
         # self.reward_range = [-255., 255.]
@@ -129,13 +129,24 @@ class TradeEnv(gym.Env):
 
     def _observe(self):
         if self.board:
-            return np.stack([self.board.buy_order, self.board.sell_order, self.board.buy_trade, self.board.sell_trade,
-                             self.sell_order, self.board.buy_order])
+            print(self.board.sell_order.get_board().shape)
+            print(self.board.buy_order.get_board().shape)
+            print(self.sell_order.shape)
+            print(self.buy_order.shape)
+
+            return np.stack([self.board.buy_order.get_board().todense(), self.board.sell_order.get_board().todense(),
+                             self.board.buy_trade.get_board().todense(), self.board.sell_trade.get_board().todense()])
+#                             self.sell_order, self.buy_order])
         else:
             print("ERROR in _observe")
             # todo: fix size
             return np.zeros((6, BOARD_TIME_WIDTH, BOARD_WIDTH))
 
+            '''
+            return np.stack([self.board.buy_order.get_board(), self.board.sell_order.get_board(),
+                             self.board.buy_trade.get_board(), self.board.sell_trade.get_board(),
+                             self.sell_order, self.buy_order])
+            '''
     def new_episode(self):
         '''
         reset environment with new episode

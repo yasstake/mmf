@@ -15,28 +15,35 @@ MAX_PRICE = 100000
 
 
 class SparseBoard:
-    def __init__(self, time_width=TIME_WIDTH, board_width=BOARD_WIDTH, max_price=MAX_PRICE):
+    def __init__(self, time_width=TIME_WIDTH, max_price=MAX_PRICE):
         self.current_time = 0
         self.center_price = 0
-        self.board_width = board_width
+        self.time_width = time_width
 
         self.board = None
 
-        self.board = lil_matrix((board_width, max_price * 2), dtype=float)
+        self.board = lil_matrix((time_width, max_price * 2), dtype=float)
+
+        print('board shape', self.board.shape)
 
     def get_board(self):
-        pos = int((self.center_price * 2) - self.board_width / 2)
-        return self.board[:, pos: pos + self.board_width]
+        offset = int(BOARD_WIDTH / 2)
+        pos = self._pos(self.center_price) - offset
+        print("pos, offset->", pos, offset)
 
-    def roll(self):
-        self.board = self._roll(self.board)
+        #return self.board[:, pos: pos + BOARD_WIDTH].todense()
+        return self.board[:, pos: pos + BOARD_WIDTH]
 
-    def _roll(self, board):
-        # todo: set axis , not imlemented
-#        board = np.roll(board, axis=(0,), shift=1)
+    def roll(self, copy_last_data=False):
+        if copy_last_data:
+            self.board.data[-1] = self.board.data[0]
+            self.board.rows[-1] = self.board.data[0]
+        else:
+            self.board.data[-1] = list()
+            self.board.rows[-1] = list()
 
-        #board[0, :] = 0
-        return board
+        self.board.data = np.append(self.board.data[-1:], self.board.data[0:-1])
+        self.board.rows = np.append(self.board.rows[-1:], self.board.rows[0:-1])
 
     def _pos(self, price):
         return int(price * 2)
@@ -105,18 +112,11 @@ class PriceBoard:
         self.funding_ttl = 0
         self.funding = 0
 
-        self.best_action = ACTION.NOP
-        self.ba_nop = 0
-        self.ba_sell = 0
-        self.ba_buy = 0
-        self.ba_sell_now = 0
-        self.ba_buy_now =0
-
-    def next_tick(self):
-        self.buy_trade.roll()
-        self.sell_trade.roll()
-        self.buy_order.roll()
-        self.sell_order.roll()
+    def next_tick(self, copy_last_data=False):
+        self.buy_trade.roll(copy_last_data)
+        self.sell_trade.roll(copy_last_data)
+        self.buy_order.roll(copy_last_data)
+        self.sell_order.roll(copy_last_data)
 
     def get_board(self):
         order_mean, order_stddev = self.calc_static(self.sell_order + self.buy_order)
@@ -146,6 +146,11 @@ class PriceBoard:
 
     def set_center_price(self, price):
         self.center_price = price
+
+        self.sell_order.center_price = self.center_price
+        self.buy_order.center_price = self.center_price
+        self.buy_trade.center_price = self.center_price
+        self.sell_trade.center_price = self.center_price
 
     def get_center_price(self):
         return self.center_price
@@ -209,6 +214,15 @@ class Generator:
             time = self.db_start_time + offset
 
         board = PriceBoard()
+
+        time_len = BOARD_TIME_WIDTH
+
+        # fill data
+        while time_len:
+            Generator.load_from_db(self.db, board, time)
+            board.next_tick()
+            time_len -= 1
+
         retry = 10
 
         while True:
@@ -221,6 +235,7 @@ class Generator:
                 board.next_tick()
             else:
                 retry -= 1
+                board.next_tick(True)
                 if not retry:
                     break
 
@@ -300,4 +315,3 @@ class Generator:
             return False
 
         return True
-

@@ -41,6 +41,14 @@ class MyTestCase(unittest.TestCase):
     def test_generate_sparse_board(self):
         board = SparseBoard()
 
+    def test_clip_sparse_board(self):
+        board = SparseBoard()
+
+        b = board.get_board()
+
+        print(type(b))
+        print(b.shape)
+
     def test_generate_sparse_board_addline(self):
         board = SparseBoard()
 
