@@ -1,17 +1,17 @@
 import os
 
 import numpy as np
+from scipy.sparse import csr_matrix
+from scipy.sparse import lil_matrix
 import tensorflow as tf
 from matplotlib import pylab as plt
 
 import log.logdb as logdb
 from log.constant import *
-from log.timeutil import *
-from log.price import PriceBoard
 from random import random
-from scipy.sparse import csr_matrix
 
-MAX_PRICE = 200000
+
+MAX_PRICE = 100000
 
 
 class SparseBoard:
@@ -20,32 +20,36 @@ class SparseBoard:
         self.center_price = 0
         self.board_width = board_width
 
-        self.board = csr_matrix((time_width, max_price), dtype=float)
+        self.board = None
+
+        self.board = lil_matrix((board_width, max_price * 2), dtype=float)
 
     def get_board(self):
-        pos = int((self.center_price * 2) - self.board_width)
+        pos = int((self.center_price * 2) - self.board_width / 2)
         return self.board[:, pos: pos + self.board_width]
 
     def roll(self):
         self.board = self._roll(self.board)
 
     def _roll(self, board):
-        board = np.roll(board, axis=0, shift=1)
-        board[0, :] = 0
-        return board
+        # todo: set axis , not imlemented
+#        board = np.roll(board, axis=(0,), shift=1)
 
-    def add_order_vol(self, price, volume):
-        self._add_order_vol(self.board, price, volume)
+        #board[0, :] = 0
+        return board
 
     def _pos(self, price):
         return int(price * 2)
+
+    def add_order_vol(self, price, volume):
+        self._add_order_vol(self.board, price, volume)
 
     def _add_order_vol(self, board, price, volume):
         p = self._pos(price)
         board[0, p] += volume
 
-    def add_order_line(self, board, price, line, asc=True):
-        self.add_order_line(self.board, price, line, asc)
+    def add_order_line(self, price, line, asc=True):
+        self._add_order_line(self.board, price, line, asc)
 
     def _add_order_line(self, board, price, line, asc=True):
         p = self._pos(price)
@@ -74,10 +78,10 @@ class PriceBoard:
         self.current_time = 0
         self.center_price = 0
 
-        self.sell_trade = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
-        self.buy_trade = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
-        self.sell_order = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
-        self.buy_order = np.zeros((BOARD_TIME_WIDTH, BOARD_WIDTH))
+        self.sell_trade = SparseBoard()
+        self.buy_trade = SparseBoard()
+        self.sell_order = SparseBoard()
+        self.buy_order = SparseBoard()
 
         self.buy_book_price = 0
         self.buy_book_vol = 0
@@ -108,23 +112,27 @@ class PriceBoard:
         self.ba_sell_now = 0
         self.ba_buy_now =0
 
+    def next_tick(self):
+        self.buy_trade.roll()
+        self.sell_trade.roll()
+        self.buy_order.roll()
+        self.sell_order.roll()
+
     def get_board(self):
-        board = np.stack([self.buy_order, self.sell_order, self.buy_trade, self.sell_trade])
+        order_mean, order_stddev = self.calc_static(self.sell_order + self.buy_order)
+        trade_mean, trade_stddev = self.calc_static(self.sell_trade + self.buy_trade)
+
+        buy_order = self.normalize_array(self.buy_order.get_board(), order_mean + order_stddev)
+        sell_order = self.normalize_array(self.sell_order.get_board(), order_mean + order_stddev)
+
+        buy_trade = self.normalize_array(self.buy_trade.get_board(), trade_mean + trade_stddev)
+        sell_trade = self.normalize_array(self.sell_trade.get_board(), trade_mean + trade_stddev)
+
+        board = np.stack([buy_order, sell_order, buy_trade, sell_trade])
+
         return board
 
-#    def add_sell_order(self, price, size):
-#        if price in self.my_sell_order:
-#            self.my_sell_order[price] += size
-#        else:
-#            self.my_sell_order[price] = size
-
-#    def add_buy_order(self, price, size):
-#        if price in self.buy_order:
-#            self.my_buy_order[price] += size
-#        else:
-#            self.my_buy_order[price] = size
-
-    def set_origin_time(self,time):
+    def set_origin_time(self, time):
         self.current_time = time
 
     def set_board_prices(self, sell_min, sell_vol, buy_max, buy_vol):
@@ -142,150 +150,24 @@ class PriceBoard:
     def get_center_price(self):
         return self.center_price
 
-    BOARD_CENTER = BOARD_WIDTH / 2
+    BOARD_CENTER = int(BOARD_WIDTH / 2)
 
-    def get_position(self, time, price):
-        p = int((price - self.center_price) / PRICE_UNIT + PriceBoardDB.BOARD_CENTER)
+    def set_sell_order_book(self, price, line):
+        self.sell_order.add_order_line(price, line)
 
-        if p < 0 or BOARD_WIDTH <= p:
-            return None
+    def set_buy_order_book(self, price, line):
+        self.buy_order.add_order_line(price, line, False)
 
-        t = int(self.current_time - time + 1) # first line for my order
+    def add_buy_trade(self, price, volume):
+        self.buy_trade.add_order_vol(price, volume)
 
-        return t, p
-
-    def set_sell_order_book(self, time, price, line):
-        width = 0
-
-        for vol in line:
-            pos = self.get_position(time, price)
-            if not pos:
-                break
-
-            t, p = pos
-            self.sell_order[t, p] = vol
-            price += PRICE_UNIT
-            width += 1
-
-            if BOARD_WIDTH < width:
-                break
-
-    def set_buy_order_book(self, time, price, line):
-        width = 0
-
-        for vol in line:
-            pos = self.get_position(time, price)
-
-            if not pos:
-                break
-
-            t, p = pos
-            self.buy_order[t, p] = vol
-
-            price -= PRICE_UNIT
-            width += 1
-            if BOARD_WIDTH < width:
-                break
-
-    def add_buy_trade(self, time, price, volume, window=1):
-        if time == self.current_time:
-            if self.buy_trade_price == 0:
-                self.buy_trade_price = price
-
-            if self.buy_trade_price == price:
-                self.buy_trade_volume += volume
-
-        pos = self.get_position(time, price)
-        if pos:
-            t, p = pos
-            self.buy_trade[t][p] = self.buy_trade[t][p] + volume / window
-
-    def add_sell_trade(self, time, price, volume, window=1):
-        if time == self.current_time:
-            if self.sell_trade_price == 0:
-                self.sell_trade_price = price
-
-            if self.sell_trade_price == price:
-                self.sell_trade_volume += volume
-
-        pos = self.get_position(time, price)
-        if pos:
-            t, p = pos
-            self.sell_trade[t][p] = self.sell_trade[t][p] + volume / window
+    def add_sell_trade(self, price, volume):
+        self.sell_trade.add_order_vol(price, volume)
 
     def set_funding(self, ttl, funding):
         print("fundig->", ttl, funding)
         self.funding = funding
         self.funding_ttl = ttl
-
-    def save(self, filename):
-        #todo: not implemented
-        print("---dummy---")
-        np.save(filename + "sell_order", self.sell_order)
-        np.save(filename + "buy_order", self.buy_order)
-        np.save(filename + "buy_trade", self.buy_trade)
-        np.save(filename + "sell_trade", self.sell_trade)
-
-        np.savez_compressed(filename + "sell_order", self.sell_order)
-        np.savez_compressed(filename + "buy_order", self.buy_order)
-        np.savez_compressed(filename + "buy_trade", self.buy_trade)
-        np.savez_compressed(filename + "sell_trade", self.sell_trade)
-
-        #np.savez_compressed(filename, self.data)
-
-    def feature_int64(self, a):
-        return tf.train.Feature(int64_list=tf.train.Int64List(value=[a]))
-
-    def feature_float(self, a):
-        return tf.train.Feature(float_list=tf.train.FloatList(value=[a]))
-
-    def feature_bytes(self, a):
-        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[a]))
-
-    @staticmethod
-    def get_tf_writer(output_file='/tmp/data.tfrecords'):
-        writer = tf.io.TFRecordWriter(str(output_file), options=tf.io.TFRecordOptions(tf.io.TFRecordCompressionType.GZIP))
-
-        return writer
-
-    def save_tf_record(self, output_file='/tmp/data.tfrecords'):
-        writer = PriceBoard.get_tf_writer(output_file)
-        self.save_tf_to_writer(writer)
-        writer.close()
-
-    def save_tf_to_writer(self, writer):
-        record = self._tf_example_record()
-
-        writer.write(record.SerializeToString())
-
-    def _tf_example_record(self):
-        board = np.stack([self.buy_order, self.sell_order, self.buy_trade, self.sell_trade])
-
-        record = tf.train.Example(features=tf.train.Features(feature={
-            'board': self.feature_bytes(board.tobytes()),
-            'sell_book_price': self.feature_float(self.sell_book_price),
-            'sell_book_vol': self.feature_float(self.sell_book_vol),
-            'buy_book_price': self.feature_float(self.buy_book_price),
-            'buy_book_vol': self.feature_float(self.buy_book_vol),
-            'center_price': self.feature_float(self.center_price),
-            'sell_trade_price': self.feature_float(self.sell_trade_price),
-            'sell_trade_vol': self.feature_float(self.sell_trade_volume),
-            'buy_trade_price': self.feature_float(self.buy_trade_price),
-            'buy_trade_vol': self.feature_float(self.buy_trade_volume),
-            'market_buy_price': self.feature_float(self.market_buy_price),
-            'market_sell_price': self.feature_float(self.market_sell_price),
-            'fix_buy_price': self.feature_float(self.fix_buy_price),
-            'fix_sell_price': self.feature_float(self.fix_sell_price),
-            'ba': self.feature_int64(self.best_action),
-            'ba_nop': self.feature_int64(self.ba_nop),
-            'ba_sell': self.feature_int64(self.ba_sell),
-            'ba_buy': self.feature_int64(self.ba_buy),
-            'ba_sell_now': self.feature_int64(self.ba_sell_now),
-            'ba_buy_now': self.feature_int64(self.ba_buy_now),
-            'time': self.feature_int64(self.current_time)
-            }))
-
-        return record
 
     def calc_static(self, a):
         """
@@ -301,21 +183,14 @@ class PriceBoard:
 
         return non_zero_sum/item_no, variant ** (0.5)
 
-    def normalize(self):
-        order_mean, order_stddev = self.calc_static(self.sell_order + self.buy_order)
-        trade_mean, trade_stddev = self.calc_static(self.sell_trade + self.buy_trade)
-
-        self.buy_order = self.normalize_array(self.buy_order, order_mean + order_stddev)
-        self.sell_order = self.normalize_array(self.sell_order, order_mean + order_stddev)
-
-        self.buy_trade = self.normalize_array(self.buy_trade, trade_mean + trade_stddev)
-        self.sell_trade = self.normalize_array(self.sell_trade, trade_mean + trade_stddev)
-
     def normalize_array(self, array, max_value):
         float_array = array * (256 / max_value)
         uint8_array = np.ceil(np.clip(float_array, 0, 255)).astype('uint8')
 
         return uint8_array
+
+
+EPISODE_LEN = 60 * 60
 
 
 class Generator:
@@ -329,15 +204,26 @@ class Generator:
             self.open_db(db_name)
 
         if time is None:
-            offset = int((self.db_end_time - self.db_start_time) * random())
+            offset = int((self.db_end_time - self.db_start_time - EPISODE_LEN) * random()) + EPISODE_LEN
+            print('offset->', offset)
             time = self.db_start_time + offset
 
+        board = PriceBoard()
+        retry = 10
+
         while True:
-            board = Generator._load_from_db(self.db, time)
-            time += 1
-            if not board:
-                break
-            yield board
+            time -= 1
+            print('currenttime->', time)
+            result = Generator.load_from_db(self.db, board, time)
+
+            if result:
+                yield board
+                board.next_tick()
+            else:
+                retry -= 1
+                if not retry:
+                    break
+
         yield None
 
     def open_db(self, db_name):
@@ -350,7 +236,6 @@ class Generator:
     def close_db(self):
         if self.db:
             self.db.close()
-
 
     @staticmethod
     def start_time(db=None):
@@ -365,48 +250,25 @@ class Generator:
         return start_time, end_time
 
     @staticmethod
-    def _load_from_db(dbobj, time, time_width=TIME_WIDTH):
-        db = dbobj
-        board = PriceBoard()
+    def load_from_db(db, board, time):
         board.set_origin_time(time)
 
-        retry = 1
-        center_price = None
-        sell_min = None
-        sell_volume = None
-        buy_max = None
-        buy_volume = None
+        result = db.select_book_price(time)
+        if result:
+            sell_min, sell_volume, buy_max, buy_volume = result
+        else:
+            print('---DBEND---(center_book price)')
+            return None
 
-        while retry:
-            result = db.select_book_price(time)
-            if result:
-                sell_min, sell_volume, buy_max, buy_volume = result
-            else:
-                return None
-
-            center_price = db.calc_center_price(buy_max, sell_min)
-            if center_price:
-                break
-            time = time + 1
-            retry = retry - 1
-
+        center_price = db.calc_center_price(buy_max, sell_min)
         if not center_price:
-            print('---DBEND---')
+            print('---DBEND---(center_price)')
             return None
 
         board.set_center_price(center_price)
         board.set_board_prices(sell_min, sell_volume, buy_max, buy_volume)
 
-        error_count = 0
-        query_time = time
-
-        for offset in range(0, time_width):
-            if not Generator.load_from_db_time(db, board, time, offset, query_time):
-                error_count = error_count + 1
-            query_time = query_time - 1
-
-        board.normalize()
-
+        '''
         #load funding
         funding = db.select_funding(time)
 
@@ -414,44 +276,28 @@ class Generator:
             t, p = funding
             board.funding_ttl = 0
             board.funding = 0
-
-        if 10 < error_count:
+        else:
+            print('---DBEND---(funding)')
             return None
-
-        return board
-
-    @staticmethod
-    def load_from_db_time(db, board, time_origin, offset, query_time, time_window=1):
+        '''
 
         # load sell order
-        for price, volume in db.select_sell_trade(query_time, time_window):
-            board.add_sell_trade(time_origin - offset, price, volume / time_window)
+        for price, volume in db.select_sell_trade(time):
+            board.add_sell_trade(price, volume)
 
         # load buy order
-        for price, volume in db.select_buy_trade(query_time, time_window):
-            board.add_buy_trade(time_origin - offset, price, volume / time_window)
+        for price, volume in db.select_buy_trade(time):
+            board.add_buy_trade(price, volume)
 
-        # load order book
-        order_book = None
-
-        max_retry = 10
-        if time_window < max_retry:
-            max_retry = time_window + 50
-
-        retry = 0
-        while not order_book and retry < max_retry:
-            order_book = db.select_order_book(query_time - retry)
-            retry = retry + 1
+        order_book = db.select_order_book(time)
 
         if order_book:
             t, sell_min, sell_book, buy_max, buy_book = order_book
-            board.set_sell_order_book(time_origin - offset, sell_min, sell_book)
-            if(len(sell_book) < 10):
-                print("shot->", time_origin - offset, sell_book)
-
-            board.set_buy_order_book(time_origin - offset, buy_max, buy_book)
-
-            return True
+            board.set_sell_order_book(sell_min, sell_book)
+            board.set_buy_order_book(buy_max, buy_book)
         else:
-            print("NO ORDERBOOK FOUND->", query_time)
+            print("NO ORDERBOOK FOUND->", time)
             return False
+
+        return True
+

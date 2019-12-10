@@ -7,15 +7,16 @@ class MyTestCase(unittest.TestCase):
 
 
     def test_create_generator(self):
-        gen1 = Generator.create(db_name='/bitlog/bitlog.db')
-        gen2 = Generator.create(db_name='/bitlog/bitlog.db')
+        g = Generator()
+        gen1 = g.create(db_name='/bitlog/bitlog.db')
+        gen2 = g.create(db_name='/bitlog/bitlog.db')
 
-        for i in range(10):
+        for i in range(100):
             board = next(gen1)
-            print(board.current_time, board.center_price)
+            print('a', board.current_time, board.center_price)
 
             board = next(gen2)
-            print(board.current_time, board.center_price)
+            print('B', board.current_time, board.center_price)
 
 
 if __name__ == '__main__':

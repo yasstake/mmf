@@ -3,6 +3,7 @@ import numpy as np
 from collections import deque
 from scipy.sparse import *
 from scipy import *
+from scipy.ndimage.interpolation import shift
 from log.dbgen import SparseBoard
 
 class MyTestCase(unittest.TestCase):
@@ -11,15 +12,31 @@ class MyTestCase(unittest.TestCase):
 
 
     def test_create_sparse_matrix(self):
-        mat = csr_matrix((100, 200000), dtype=float)
+        mat = lil_matrix((10, 200000), dtype=float)
 
-        mat2 = csr_matrix((100, 200000), dtype=float)
+        mat[1, 10000] = 1
+        mat[1, 10003] = 3
+        print(mat.data)
+        print(mat.rows)
 
-        np.roll(mat, shift=1)
+        print(mat)
 
-        print(mat[1, 1])
-        print(mat.shape)
-        print(mat[90:95, 19999:].shape)
+        # shift array
+        print(mat.data[:1])
+        mat.data[-1] = list()
+        mat.data = np.append(mat.data[-1:], mat.data[0:-1])
+
+        mat.rows[-1] = list()
+        mat.rows = np.append(mat.rows[-1:], mat.rows[0:-1])
+
+        print(mat.data)
+        print(mat.rows)
+
+        print(mat)
+
+        print('----')
+
+
 
     def test_generate_sparse_board(self):
         board = SparseBoard()
