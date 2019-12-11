@@ -185,7 +185,7 @@ class TradeEnv(gym.Env):
 
         if price:
             self.sell_order_price = price
-            print('ACTION:sell', self.sell_order_price)
+            print('ACTION:sell', self.sell_order_price, '(', self.board.current_time, ')')
             return self.board.fix_sell_price_time - self.board.current_time + 30
 
         print('ACTION:sell skip 300 sec')
@@ -199,7 +199,7 @@ class TradeEnv(gym.Env):
 
         if price:
             self.buy_order_price = price
-            print('ACTION:buy', self.buy_order_price)
+            print('ACTION:buy', self.buy_order_price, '(', self.board.current_time, ')')
             return self.board.fix_buy_price_time - self.board.current_time + 30
 
         print('ACTION:buy skip 300 sec')
@@ -213,8 +213,8 @@ class TradeEnv(gym.Env):
 
         if price:
             self.sell_order_price = price
-            print('ACTION:sell now', self.sell_order_price)
-            return 30
+            print('ACTION:sell now', self.sell_order_price, '(', self.board.current_time, ')')
+            return 60
         return 60
 
     def action_buy_now(self):
@@ -225,8 +225,8 @@ class TradeEnv(gym.Env):
 
         if price:
             self.buy_order_price = price
-            print('ACTION:buy now', self.buy_order_price)
-            return 30
+            print('ACTION:buy now', self.buy_order_price, '(', self.board.current_time, ')')
+            return 60
         return 60
 
     def evaluate(self):

@@ -63,10 +63,15 @@ class SparseBoard:
         if not asc:
             step = -1
 
+
+        l = 32
         for vol in line:
             board[0, p] = vol
             p += step
 
+            l -= 1
+            if not l:
+                break
 
 class PriceBoard:
     """
