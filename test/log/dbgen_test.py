@@ -11,12 +11,9 @@ class MyTestCase(unittest.TestCase):
         gen1 = g.create(db_name='/bitlog/bitlog.db')
         gen2 = g.create(db_name='/bitlog/bitlog.db')
 
-        for i in range(100):
+        for i in range(1000):
             board = next(gen1)
             print('a', board.current_time, board.center_price)
-
-            board = next(gen2)
-            print('B', board.current_time, board.center_price)
 
 
 if __name__ == '__main__':

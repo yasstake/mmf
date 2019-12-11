@@ -5,6 +5,13 @@ from log.logdb import LogDb
 from log.timeutil import time_sec
 
 
+def logdir2db(path, db_file):
+    db_loader = DbLoader()
+    db_loader.open_db(db_file=db_file)
+    db_loader.load_dir(path)
+    db_loader.close_db()
+
+
 def log2db(year, month, day):
     db_file = '/tmp/{:04d}-{:02d}-{:02d}.db'.format(year, month, day)
 

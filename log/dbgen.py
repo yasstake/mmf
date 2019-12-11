@@ -24,16 +24,10 @@ class SparseBoard:
 
         self.board = lil_matrix((time_width, max_price * 2), dtype=float)
 
-        print('board shape', self.board.shape)
-
     def get_board(self):
         offset = int(BOARD_WIDTH / 2)
         pos = self._pos(self.center_price) - offset
-        print("pos, offset->", pos, offset)
-
-        #return self.board[:, pos: pos + BOARD_WIDTH].todense()
         extract = self.board[:, pos: pos + BOARD_WIDTH]
-        print('extract shape->', extract.shape)
 
         return extract.toarray().reshape(TIME_WIDTH, BOARD_WIDTH)
 
@@ -64,9 +58,9 @@ class SparseBoard:
     def _add_order_line(self, board, price, line, asc=True):
         p = self._pos(price)
 
-        if asc:
-            step = 1
-        else:
+        step = 1
+
+        if not asc:
             step = -1
 
         for vol in line:
@@ -213,7 +207,6 @@ class Generator:
 
         if time is None:
             offset = int((self.db_end_time - self.db_start_time - EPISODE_LEN) * random()) + EPISODE_LEN
-            print('offset->', offset)
             time = self.db_start_time + offset
 
         board = PriceBoard()
@@ -238,7 +231,6 @@ class Generator:
                 board.next_tick()
             else:
                 retry -= 1
-                board.next_tick(True)
                 if not retry:
                     break
 

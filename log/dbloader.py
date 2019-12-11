@@ -32,7 +32,6 @@ class DbLoader:
         for line in lines:
             self.log_loader.load_line(line)
 
-
     def load_file(self, log_file):
         print('Processs ' + log_file, end='')
         try:
