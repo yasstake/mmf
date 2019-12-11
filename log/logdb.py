@@ -254,6 +254,18 @@ class LogDb:
         self.cursor.execute(sql, (time,))
         return self.cursor.fetchone()
 
+    def select_expected_price_with_time(self, time):
+        '''
+        select one record from order price info with time
+        :param time:
+        :return:
+        '''
+        sql = """select market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time, fix_order_buy, fix_order_buy_time from order_book where time = ?"""
+
+        self.cursor.execute(sql, (time,))
+        return self.cursor.fetchone()
+
+
     def select_best_action(self, time):
         sql = """select ba from order_book where time = ?"""
 
@@ -470,7 +482,6 @@ class LogDb:
 
         return market_order_sell, market_order_buy, fix_order_sell, fix_order_buy
 
-
     def select_best_order_prices(self, time, width):
         select_sql = """select max(market_order_sell) from order_book where ? <= time and time <= ?"""
         self.cursor.execute(select_sql, (time, time + width))
@@ -501,7 +512,6 @@ class LogDb:
         fix_order_buy = rec[0]
 
         return market_order_sell, market_order_buy, fix_order_sell, fix_order_buy
-
 
     def update_all_best_action(self, force=False):
         if force:

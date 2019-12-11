@@ -81,46 +81,42 @@ class TradeEnv(gym.Env):
         if not self.board:
             return None, 0, True, {}
 
-        result = False
+        exec_time = False
         reward = 0
         text = {}
 
         if self.check_draw_down():
             # force to sell or buy now!!
-            result = True
+            exec_time = 60
         elif action == ACTION.NOP:
-            result = self.action_nop()
+            exec_time = self.action_nop()
             reward = TIME_STEP_REWARD
         elif action == ACTION.BUY:
-            result = self.action_buy()
-            if not result:
+            exec_time = self.action_buy()
+            if not exec_time:
                 reward = TIME_STEP_REWARD
         elif action == ACTION.BUY_NOW:
-            result = self.action_buy_now()
-            if not result:
+            exec_time = self.action_buy_now()
+            if not exec_time:
                 reward = TIME_STEP_REWARD
         elif action == ACTION.SELL:
-            result = self.action_sell()
-            if not result:
+            exec_time = self.action_sell()
+            if not exec_time:
                 reward = TIME_STEP_REWARD
         elif action == ACTION.SELL_NOW:
-            result = self.action_sell_now()
-            if not result:
+            exec_time = self.action_sell_now()
+            if not exec_time:
                 reward = TIME_STEP_REWARD
         else:
             print('Unknown action no->', action)
 
-        if result:
-            self.evaluate()
-            self.action = action
-            if self.episode_done:
-                reward = self.margin
-        else:
-            print("NOP", action)
-            self.action = ACTION.NOP
-            self.episode_done = True
+        self.evaluate()
+        self.action = action
+        if self.episode_done:
+            reward = self.margin
 
         observation = self._observe()
+        self.skip_sec(exec_time - 1)
 
         return observation, reward, self.episode_done, text
 
@@ -129,13 +125,18 @@ class TradeEnv(gym.Env):
 
     def _observe(self):
         if self.board:
-            return np.stack([self.board.buy_order.get_board(), self.board.sell_order.get_board(),
-                             self.board.buy_trade.get_board(), self.board.sell_trade.get_board(),
-                             self.sell_order, self.buy_order])
+            '''
+            #    return np.stack([self.board.buy_order.get_board(), self.board.sell_order.get_board(),
+            #                    self.board.buy_trade.get_board(), self.board.sell_trade.get_board(),
+            #                   self.sell_order, self.buy_order])
+            '''
+            a, b, c, d = self.board.get_std_boards()
+            return np.stack([a, b, c, d, self.sell_order, self.buy_order])
+
         else:
             print("ERROR in _observe")
             # todo: fix size
-            return np.zeros((6, BOARD_TIME_WIDTH, BOARD_WIDTH))
+            return np.zeros((6, TIME_WIDTH, BOARD_WIDTH))
 
     def new_episode(self):
         '''
@@ -158,10 +159,11 @@ class TradeEnv(gym.Env):
         return self.board
 
     def skip_sec(self, sec):
+        board = None
         for _ in range(sec):
             board = self.new_sec()
             if not board:
-                return None
+                break
         return board
 
     def check_draw_down(self):
@@ -176,102 +178,59 @@ class TradeEnv(gym.Env):
         return False
 
     def action_nop(self):
-        return True
+        return 1
 
     def action_sell(self):
         if self.sell_order_price:  # sell order exist(cannot sell twice at one time)
-            return False
+            return 1
 
-        order_price = self.board.sell_book_price
-        volume = order_price * ONE_ORDER_SIZE
-        volume += self.board.sell_book_vol
+        price = self.board.fix_sell_price
 
-        time_count = TRAN_TIMEOUT
+        if price:
+            self.sell_order_price = price
+            print('ACTION:sell', self.sell_order_price)
+            return self.board.fix_sell_price_time - self.board.current_time + 30
 
-        while self.new_sec() and time_count:
-            if order_price <= self.board.buy_trade_price:
-                volume -= self.board.buy_trade_volume
-
-            '''
-            # fail to sell(order book is moving to another side)
-            if self.board.sell_book_price < order_price:
-                self.skip_sec(60)
-                return False
-            '''
-            if volume <= 0:
-                self.sell_order_price = order_price * MAKER_SELL
-                break
-
-            time_count -= 1
-
-        if time_count <= 0 or self.board is None:
-            return False
-
-        print('ACTION:sell', self.sell_order_price)
-        return True
+        print('ACTION:sell skip 300 sec')
+        return 300
 
     def action_buy(self):
         if self.buy_order_price: # buy order exist(cannot sell twice at one time)
-            return False
+            return 1
 
-        order_price = self.board.buy_book_price
-        volume = order_price * ONE_ORDER_SIZE
-        volume += self.board.buy_book_vol
+        price = self.board.fix_buy_price
 
-        time_count = TRAN_TIMEOUT
+        if price:
+            self.buy_order_price = price
+            print('ACTION:buy', self.buy_order_price)
+            return self.board.fix_buy_price_time - self.board.current_time + 30
 
-        while self.new_sec() and time_count:
-            if self.board.sell_trade_price <= order_price:
-                volume -= self.board.sell_trade_volume
-
-            '''
-            # fail to buy, board is moving to another side
-            if order_price < self.board.buy_book_price:
-                self.skip_sec(60)
-                return False
-            '''
-            if volume <= 0:
-                self.buy_order_price = order_price * MAKER_BUY
-                break
-
-            time_count -= 1
-
-        if time_count <= 0 or self.board is None:
-            return False
-
-        print('ACTION:buy', self.buy_order_price)
-
-        return True
+        print('ACTION:buy skip 300 sec')
+        return 300
 
     def action_sell_now(self):
         if self.sell_order_price: # sell order exist(cannot sell twice at one time)
-            return False
+            return 1
 
-        volume = self.board.buy_book_price * ONE_ORDER_SIZE
+        price = self.board.sell_book_price
 
-        if volume < self.board.buy_book_vol:
-            self.sell_order_price = volume * TAKER_SELL
-        else:
-            self.sell_order_price = (volume - PRICE_UNIT) * TAKER_SELL
-
-        print('ACTION:sell now', self.sell_order_price)
-
-        return True
+        if price:
+            self.sell_order_price = price
+            print('ACTION:sell now', self.sell_order_price)
+            return 30
+        return 60
 
     def action_buy_now(self):
         if self.buy_order_price: # buy order exist(cannot sell twice at one time)
-            return False
+            return 1
 
-        volume = self.board.sell_book_price * ONE_ORDER_SIZE
+        price = self.board.buy_book_price
 
-        if volume < self.board.sell_book_vol:
-            self.buy_order_price = volume * TAKER_BUY
-        else:
-            self.buy_order_price = (volume + PRICE_UNIT) * TAKER_BUY
-
-        print('ACTION:buy now', self.buy_order_price)
-
-        return True
+        if price:
+            self.buy_order_price = price
+            print('ACTION:buy now', self.buy_order_price)
+            return 30
+        return 60
 
     def evaluate(self):
         if self.buy_order_price and self.sell_order_price:

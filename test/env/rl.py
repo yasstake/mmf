@@ -51,6 +51,31 @@ class MyTestCase(unittest.TestCase):
         env.step(ACTION.SELL)
         env.step(ACTION.BUY)
 
+    def test_action_sell(self):
+        env = TradeEnv()
+
+        env.step(ACTION.SELL)
+
+        print('1')
+
+        env.step(ACTION.BUY)
+
+        print('2')
+        env.step(ACTION.SELL)
+
+        print('3')
+        env.step(ACTION.BUY)
+        env.step(ACTION.SELL)
+        env.step(ACTION.SELL)
+        env.step(ACTION.SELL)
+        env.step(ACTION.SELL)
+        env.step(ACTION.SELL)
+        env.step(ACTION.SELL)
+        env.step(ACTION.SELL)
+        env.step(ACTION.SELL)
+        env.step(ACTION.SELL)
+
+
     def test_buy(self):
         env = TradeEnv()
         env.action_buy()

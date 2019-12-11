@@ -100,11 +100,13 @@ class PriceBoard:
         self.my_sell_order = {}
         self.my_buy_order = {}
 
-        self.market_sell_price = 0
-        self.market_buy_price = 0
-
-        self.fix_sell_price = 0
-        self.fix_buy_price = 0
+        # sell simulation result
+        self.market_sell_price = None
+        self.market_buy_price = None
+        self.fix_sell_price = None
+        self.fix_sell_price_time = None
+        self.fix_buy_price = None
+        self.fix_buy_price_time = None
 
         self.funding_ttl = 0
         self.funding = 0
@@ -115,19 +117,24 @@ class PriceBoard:
         self.buy_order.roll(copy_last_data)
         self.sell_order.roll(copy_last_data)
 
-    def get_board(self):
-        order_mean, order_stddev = self.calc_static(self.sell_order + self.buy_order)
-        trade_mean, trade_stddev = self.calc_static(self.sell_trade + self.buy_trade)
+    def get_std_boards(self):
+        sell_order = self.sell_order.get_board()
+        buy_order = self.buy_order.get_board()
+        buy_trade = self.buy_trade.get_board()
+        sell_trade = self.sell_trade.get_board()
 
-        buy_order = self.normalize_array(self.buy_order.get_board(), order_mean + order_stddev)
-        sell_order = self.normalize_array(self.sell_order.get_board(), order_mean + order_stddev)
+        order_mean, order_stddev = self.calc_static(sell_order + buy_order)
+        trade_mean, trade_stddev = self.calc_static(sell_trade + buy_trade)
 
-        buy_trade = self.normalize_array(self.buy_trade.get_board(), trade_mean + trade_stddev)
-        sell_trade = self.normalize_array(self.sell_trade.get_board(), trade_mean + trade_stddev)
+        buy_order = self.normalize_array(buy_order, order_mean + order_stddev)
+        sell_order = self.normalize_array(sell_order, order_mean + order_stddev)
 
-        board = np.stack([buy_order, sell_order, buy_trade, sell_trade])
+        buy_trade = self.normalize_array(buy_trade, trade_mean + trade_stddev)
+        sell_trade = self.normalize_array(sell_trade, trade_mean + trade_stddev)
 
-        return board
+        boards = buy_order, sell_order, buy_trade, sell_trade
+
+        return boards
 
     def set_origin_time(self, time):
         self.current_time = time
@@ -200,6 +207,7 @@ class Generator:
         self.db = None
         self.db_start_time = None
         self.db_end_time = None
+        self.time = None
 
     def create(self, time=None, db_name = "/tmp/bitlog.db"):
         if not self.db:
@@ -209,31 +217,33 @@ class Generator:
             offset = int((self.db_end_time - self.db_start_time - EPISODE_LEN) * random()) + EPISODE_LEN
             time = self.db_start_time + offset
 
+        self.time = time
+
         board = PriceBoard()
 
         time_len = BOARD_TIME_WIDTH
 
         # fill data
         while time_len:
-            Generator.load_from_db(self.db, board, time)
+            Generator.load_from_db(self.db, board, self.time)
+            self.time += 1
             board.next_tick()
             time_len -= 1
-
         retry = 10
 
         while True:
-            time -= 1
-            print('currenttime->', time)
-            result = Generator.load_from_db(self.db, board, time)
-
+            result = Generator.load_from_db(self.db, board, self.time)
+            self.time += 1
             if result:
                 yield board
                 board.next_tick()
+                retry = 10
             else:
                 retry -= 1
                 if not retry:
                     break
 
+        print('[DBEND]')
         yield None
 
     def open_db(self, db_name):
@@ -278,8 +288,8 @@ class Generator:
         board.set_center_price(center_price)
         board.set_board_prices(sell_min, sell_volume, buy_max, buy_volume)
 
-        '''
         #load funding
+        '''
         funding = db.select_funding(time)
 
         if funding:
@@ -290,6 +300,18 @@ class Generator:
             print('---DBEND---(funding)')
             return None
         '''
+
+        # load fix order prices
+        result = db.select_expected_price_with_time(time)
+        if result:
+            market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time, fix_order_buy, fix_order_buy_time = result
+
+            board.market_sell_price = market_order_sell
+            board.market_buy_price = market_order_buy
+            board.fix_sell_price = fix_order_sell
+            board.fix_sell_price_time = fix_order_sell_time
+            board.fix_buy_price = fix_order_buy
+            board.fix_buy_price_time = fix_order_buy_time
 
         # load sell order
         for price, volume in db.select_sell_trade(time):
