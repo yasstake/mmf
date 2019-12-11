@@ -26,7 +26,7 @@ class SparseBoard:
 
     def get_board(self):
         offset = int(BOARD_WIDTH / 2)
-        pos = self._pos(self.center_price) - offset
+        pos = self.price_pos(self.center_price) - offset
         extract = self.board[:, pos: pos + BOARD_WIDTH]
 
         return extract.toarray().reshape(TIME_WIDTH, BOARD_WIDTH)
@@ -42,21 +42,21 @@ class SparseBoard:
         self.board.data = np.append(self.board.data[-1:], self.board.data[0:-1])
         self.board.rows = np.append(self.board.rows[-1:], self.board.rows[0:-1])
 
-    def _pos(self, price):
+    def price_pos(self, price):
         return int(price * 2)
 
     def add_order_vol(self, price, volume):
         self._add_order_vol(self.board, price, volume)
 
     def _add_order_vol(self, board, price, volume):
-        p = self._pos(price)
+        p = self.price_pos(price)
         board[0, p] += volume
 
     def add_order_line(self, price, line, asc=True):
         self._add_order_line(self.board, price, line, asc)
 
     def _add_order_line(self, board, price, line, asc=True):
-        p = self._pos(price)
+        p = self.price_pos(price)
 
         step = 1
 
@@ -165,6 +165,16 @@ class PriceBoard:
         return self.center_price
 
     BOARD_CENTER = int(BOARD_WIDTH / 2)
+
+    def price_offset(self, price):
+        pos = self.buy_order.price_pos(price) - self.center_price - PriceBoard.BOARD_CENTER
+
+        if pos < 0:
+            pos = 0
+        elif BOARD_WIDTH < pos:
+            pos = BOARD_WIDTH
+
+        return int(pos)
 
     def set_sell_order_book(self, price, line):
         self.sell_order.add_order_line(price, line)

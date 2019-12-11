@@ -2,6 +2,11 @@ import unittest
 from env.rl import TradeEnv
 from log.constant import ACTION
 
+import numpy as np
+
+from env.rl import X
+from env.rl import O
+
 class MyTestCase(unittest.TestCase):
     def test_create(self):
         env = TradeEnv()
@@ -92,7 +97,15 @@ class MyTestCase(unittest.TestCase):
         env = TradeEnv()
         env.action_sell_now()
 
+    def test_ones(self):
+        print(X)
+        print(O)
 
+#        A = np.zeros((TIME_WIDTH, BOARD_WIDTH))
+        A_1 = np.stack([X, O, O, O, O, O, O])
+
+
+        print(A_1)
 
 if __name__ == '__main__':
     unittest.main()

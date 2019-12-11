@@ -9,6 +9,10 @@ ONE_ORDER_SIZE = 1.0
 MAX_DRAW_DOWN = 10
 TIME_STEP_REWARD = -0.0000001
 
+O = np.zeros((TIME_WIDTH, 1))
+X = np.ones((TIME_WIDTH, 1))
+
+
 class TradeEnv(gym.Env):
     """The main OpenAI Gym class. It encapsulates an environment with
     arbitrary behind-the-scenes dynamics. An environment can be
@@ -50,8 +54,8 @@ class TradeEnv(gym.Env):
         self.sell_order_price = None
         self.buy_order_price = None
 
-        self.sell_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
-        self.buy_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
+#        self.sell_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
+#        self.buy_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
 
         # init gym environment
         self.action_space = gym.spaces.Discrete(5)   # 5 actions nop, buy, BUY, sell, SELL
@@ -127,8 +131,21 @@ class TradeEnv(gym.Env):
             #                    self.board.buy_trade.get_board(), self.board.sell_trade.get_board(),
             #                   self.sell_order, self.buy_order])
             '''
+            sell_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
+            buy_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
+
+            if self.sell_order_price:
+                offset = self.board.price_offset(self.sell_order_price)
+                offset_end = offset + 1
+                sell_order[:, offset:offset_end] = 1
+
+            if self.buy_order_price:
+                offset = self.board.price_offset(self.buy_order_price)
+                offset_end = offset + 1
+                buy_order[:, offset:offset_end] = 1
+
             a, b, c, d = self.board.get_std_boards()
-            return np.stack([a, b, c, d, self.sell_order, self.buy_order])
+            return np.stack([a, b, c, d, sell_order, buy_order])
 
         else:
             print("ERROR in _observe")
