@@ -5,11 +5,8 @@ import numpy as np
 from log.constant import *
 from log.dbgen import Generator
 
-EPISODE_FRAMES = 3600 * 2   # 2Hour
-EPISODE_FILES = int(EPISODE_FRAMES / BOARD_IN_FILE)
-
 ONE_ORDER_SIZE = 1.0
-MAX_DRAW_DOWN = 6
+MAX_DRAW_DOWN = 10
 TIME_STEP_REWARD = -0.0000001
 
 class TradeEnv(gym.Env):
