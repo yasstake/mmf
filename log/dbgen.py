@@ -13,6 +13,67 @@ from random import random
 
 MAX_PRICE = 100000
 
+class SparseLine:
+    def __init__(self, size):
+        self.size = size
+        self.start_index = 0
+        self.last_index = 0
+        self.line = None
+
+    def set_line(self, start_index,  line, asc=True):
+        self.line = line
+
+        if asc:
+            self.start_index = start_index
+            self.last_index = start_index + len(line)
+        else:
+            self.line = reversed(line)
+            self.start_index = start_index - len(line)
+            self.last_index = start_index
+
+    def get_line(self, start_clip, end_clip):
+        '''
+         self.start_index              self.last_index
+         [0]                           [len(self.line)]
+         |                             |
+        [x, x, x, x, x, x, x, x, x, x, x]
+        :param start_clip:
+        :param end_clip:
+        :return:
+        '''
+
+        clip = None
+
+        if end_clip < self.start_index:
+            clip = np.zeros(end_clip - start_clip)
+
+        elif (start_clip <= self.start_index) and (self.last_index <= end_clip):
+            zero1 = self.start_index - start_clip
+            zero2 = end_clip - self.last_index
+            clip = np.zeros(zero1) + self.line + np.zeros(zero2)
+
+        elif (start_clip <= self.start_index) and (self.start_index < end_clip):
+            zeros = self.start_index - start_clip
+            end = end_clip - self.start_index
+            clip = np.zeros(zeros) + clip[:end]
+
+        elif (self.start_index <= start_clip) and (end_clip <= self.last_index):
+            clip = np.array(clip[start_clip - self.start_index : end_clip - self.start_index])
+
+        elif (self.last_index <= start_clip) and (self.last_index < end_clip):
+            start = start_clip - self.last_index
+            zeros = end_clip - self.last_index
+            clip = clip[start:] + np.zeros(zeros)
+
+        elif self.last_index < end_clip:
+            clip = np.zeros(end_clip - start_clip)
+
+        return clip
+
+class SparseMatrix:
+    def __init__(self, size_m, size_n):
+        pass
+
 
 class SparseBoard:
     def __init__(self, time_width=TIME_WIDTH, max_price=MAX_PRICE):

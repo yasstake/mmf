@@ -31,8 +31,11 @@ env = DummyVecEnv([lambda: env])  # The algorithms require a vectorized environm
 #num_cpu = 1
 #env = SubprocVecEnv([make_env(i) for i in range(num_cpu)])
 
-model = PPO2(MlpPolicy, env, verbose=1)
-model.learn(total_timesteps=10000)
+LOGDIR='/bitlog/tfboard/'
+
+model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=LOGDIR)
+
+model.learn(total_timesteps=10000, tb_log_name='FIRST_TRY')
 
 obs = env.reset()
 for i in range(1000):

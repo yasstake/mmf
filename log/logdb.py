@@ -465,6 +465,18 @@ class LogDb:
             if result:
                 fix_order_buy, fix_order_buy_time = result
 
+            if market_order_sell:
+                market_order_sell *= TAKER_SELL
+
+            if market_order_buy:
+                market_order_buy *= TAKER_BUY
+
+            if fix_order_sell:
+                fix_order_sell *= MAKER_SELL
+
+            if fix_order_buy:
+                fix_order_buy *= MAKER_BUY
+
             print(time, 'sell->', market_order_sell, ' buy->', market_order_buy, ' sell(fix)->',
                   fix_order_sell, '(', fix_order_sell_time, ')  buy(fix)->',
                   fix_order_buy, '(', fix_order_buy_time, ')')

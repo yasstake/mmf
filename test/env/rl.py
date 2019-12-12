@@ -4,9 +4,6 @@ from log.constant import ACTION
 
 import numpy as np
 
-from env.rl import X
-from env.rl import O
-
 class MyTestCase(unittest.TestCase):
     def test_create(self):
         env = TradeEnv()

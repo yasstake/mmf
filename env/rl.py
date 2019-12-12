@@ -6,12 +6,8 @@ from log.constant import *
 from log.dbgen import Generator
 
 ONE_ORDER_SIZE = 1.0
-MAX_DRAW_DOWN = 10
+MAX_DRAW_DOWN = 20
 TIME_STEP_REWARD = -0.0000001
-
-O = np.zeros((TIME_WIDTH, 1))
-X = np.ones((TIME_WIDTH, 1))
-
 
 class TradeEnv(gym.Env):
     """The main OpenAI Gym class. It encapsulates an environment with
@@ -54,8 +50,7 @@ class TradeEnv(gym.Env):
         self.sell_order_price = None
         self.buy_order_price = None
 
-#        self.sell_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
-#        self.buy_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
+        self.episode_start_time = 0
 
         # init gym environment
         self.action_space = gym.spaces.Discrete(5)   # 5 actions nop, buy, BUY, sell, SELL
@@ -136,13 +131,11 @@ class TradeEnv(gym.Env):
 
             if self.sell_order_price:
                 offset = self.board.price_offset(self.sell_order_price)
-                offset_end = offset + 1
-                sell_order[:, offset:offset_end] = 1
+                sell_order[:, offset:offset+1] = 255
 
             if self.buy_order_price:
                 offset = self.board.price_offset(self.buy_order_price)
-                offset_end = offset + 1
-                buy_order[:, offset:offset_end] = 1
+                buy_order[:, offset:offset+1] = 255
 
             a, b, c, d = self.board.get_std_boards()
             return np.stack([a, b, c, d, sell_order, buy_order])
@@ -164,6 +157,8 @@ class TradeEnv(gym.Env):
         self.board_generator = self.generator.create(db_name=self.db_path)
         self.episode_done = False
         self.new_sec()
+        if self.board:
+            self.episode_start_time = self.board.current_time
 
     def new_sec(self):
         self.board = next(self.board_generator, None)
@@ -226,7 +221,7 @@ class TradeEnv(gym.Env):
         if self.sell_order_price: # sell order exist(cannot sell twice at one time)
             return 1
 
-        price = self.board.sell_book_price
+        price = self.board.market_sell_price
 
         if price:
             self.sell_order_price = price
@@ -238,7 +233,7 @@ class TradeEnv(gym.Env):
         if self.buy_order_price: # buy order exist(cannot sell twice at one time)
             return 1
 
-        price = self.board.buy_book_price
+        price = self.board.market_buy_price
 
         if price:
             self.buy_order_price = price
@@ -250,7 +245,7 @@ class TradeEnv(gym.Env):
         if self.buy_order_price and self.sell_order_price:
             self.margin = self.sell_order_price - self.buy_order_price
             self.episode_done = True
-            print('epsode done->', self.board.current_time, 'margin->', self.margin)
+            print('epsode done->', self.board.current_time, 'margin->', self.margin, self.board.current_time - self.episode_start_time)
 
         elif self.buy_order_price:
             self.margin = self.board.sell_book_price - self.buy_order_price
@@ -258,4 +253,5 @@ class TradeEnv(gym.Env):
             self.margin = self.sell_order_price - self.board.buy_book_price
         else:
             self.margin = 0
+
 
