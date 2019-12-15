@@ -167,14 +167,16 @@ class PriceBoard:
     Layer 3   Sell Trade & funding plus (other side)
 
     """
-    def __init__(self):
+    def __init__(self, time_width=TIME_WIDTH):
+        self.time_width = time_width
+
         self.current_time = 0
         self.center_price = 0
 
-        self.sell_trade = SparseMatrix()
-        self.buy_trade = SparseMatrix()
-        self.sell_order = SparseMatrix()
-        self.buy_order = SparseMatrix()
+        self.sell_trade = SparseMatrix(time_width)
+        self.buy_trade = SparseMatrix(time_width)
+        self.sell_order = SparseMatrix(time_width)
+        self.buy_order = SparseMatrix(time_width)
 
         self.buy_book_price = 0
         self.buy_book_vol = 0
@@ -207,10 +209,10 @@ class PriceBoard:
         self.sell_order.roll(copy_last_data)
 
     def get_std_boards(self):
-        sell_order = self.sell_order.get_board()
-        buy_order = self.buy_order.get_board()
-        buy_trade = self.buy_trade.get_board()
-        sell_trade = self.sell_trade.get_board()
+        sell_order = self.sell_order.get_board(self.time_width)
+        buy_order = self.buy_order.get_board(self.time_width)
+        buy_trade = self.buy_trade.get_board(self.time_width)
+        sell_trade = self.sell_trade.get_board(self.time_width)
 
         order_mean, order_stddev = self.calc_static(sell_order + buy_order)
         trade_mean, trade_stddev = self.calc_static(sell_trade + buy_trade)

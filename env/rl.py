@@ -9,7 +9,7 @@ from log.dbgen import Generator
 
 ONE_ORDER_SIZE = 1.0
 MAX_DRAW_DOWN = 20
-TIME_STEP_REWARD = -0.0000001
+TIME_STEP_REWARD = -0.0001
 
 
 class TradeEnv(gym.Env):
