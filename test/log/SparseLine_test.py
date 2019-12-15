@@ -2,6 +2,7 @@ import unittest
 from unittest import TestCase
 from log.dbgen import SparseLine
 
+
 class TestSparseLine(TestCase):
     def test_set_line(self):
         line = SparseLine()
@@ -15,7 +16,6 @@ class TestSparseLine(TestCase):
         self.assertEqual(line.get_line(100, 102)[1], 0)
         self.assertEqual(line.get_line(101, 103)[1], 1)
         self.assertEqual(line.get_line(102, 104)[1], 0)
-
 
     def test_set_line_r(self):
         line = SparseLine()

@@ -43,18 +43,8 @@ class SparseLine:
 
         clip = None
 
-        # SC <  (EC < si) < li
-        if end_clip <= self.start_index:
-            clip = np.zeros(end_clip - start_clip)
-
-        # (SC <  [si) < EC] <  li
-        elif (start_clip <= self.start_index) and (self.start_index <= end_clip):
-            zeros = self.start_index - start_clip
-            end = end_clip - self.start_index
-            clip = np.append(np.zeros(zeros), self.line[:end])
-
         # (SC <  si) < [li < EC]
-        elif (start_clip <= self.start_index) and (self.last_index <= end_clip):
+        if (start_clip <= self.start_index) and (self.last_index <= end_clip):
             zero1 = self.start_index - start_clip
             zero2 = end_clip - self.last_index
             clip = np.append(np.zeros(zero1), self.line)
@@ -64,20 +54,27 @@ class SparseLine:
         elif (self.start_index <= start_clip) and (end_clip <= self.last_index):
             clip = np.array(self.line[start_clip - self.start_index : end_clip - self.start_index])
 
+        # (SC <  [si) < EC] <  li
+        elif (start_clip <= self.start_index) and (self.start_index <= end_clip):
+            zeros = self.start_index - start_clip
+            end = end_clip - self.start_index
+            clip = np.append(np.zeros(zeros), self.line[:end])
+
         # si < (SC < [li) < EC]
         elif (start_clip < self.last_index) and (self.last_index <= end_clip):
             start = start_clip - self.start_index
             zeros = end_clip - self.last_index
             clip = np.append(self.line[start:], np.zeros(zeros))
 
-        # si <  (li < SC) < EC
-        elif self.last_index <= start_clip:
+        # si <  (li < SC) < EC  or
+        # SC <  (EC < si) < li
+        elif (self.last_index <= start_clip) or (end_clip <= self.start_index):
             clip = np.zeros(end_clip - start_clip)
-
         else:
             print('clip error', start_clip, end_clip, self.start_index, self.last_index)
 
         return clip
+
 
 class SparseMatrix:
     def __init__(self, time_len):
