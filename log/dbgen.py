@@ -1,15 +1,12 @@
 import os
 
 import numpy as np
-from scipy.sparse import csr_matrix
-from scipy.sparse import lil_matrix
 import tensorflow as tf
 from matplotlib import pylab as plt
 
 import log.logdb as logdb
 from log.constant import *
 from random import random
-
 
 MAX_PRICE = 100000
 
@@ -89,8 +86,10 @@ class SparseLine:
             self.start_index = index
             return True
         elif self.last_index <= index:
+            size = index + 1 - self.last_index
             self.last_index = index + 1
-            self.line = np.append(self.line, np.zeros(self.last_index - index))
+
+            self.line = np.append(self.line, np.zeros(size))
             return True
 
         print('error extend index', index)
@@ -99,7 +98,12 @@ class SparseLine:
     def add_value(self, index, value):
         self.check_and_extend_array(index)
 
-        self.line[index - self.start_index] += value
+        pos = index - self.start_index
+
+        if len(self.line) < pos:
+            print('error in pos', index, value, len(self.line), self.start_index, self.last_index)
+
+        self.line[pos] += value
 
     def get_value(self, index):
         return self.line[index - self.start_index]
@@ -115,28 +119,36 @@ class SparseMatrix:
             self.array.append(SparseLine())
 
     def roll(self, copy_last_line=False):
-        sparse_line = SparseLine()
         if copy_last_line:
-            sparse_line = self.array[0]
+            sparse_line = self.array[-1]  # shift recycle
+        else:
+            sparse_line = SparseLine()  # new
 
         self.array = self.array[1:]
         self.array.append(sparse_line)
 
     def set_line(self, start_price, line, asc=True):
-        self.array[-1].set_line(start_price, line, asc)
+        pos = self.price_pos(start_price)
+        self.array[-1].set_line(pos, line, asc)
 
-    def get(self, start_price, end_price):
+    def get(self, start_index, end_index):
         price_array = []
 
         for i in range(self.time_len):
-            price_array.append(self.array[i].get_line(start_price, end_price))
+            price_array.append(self.array[i].get_line(start_index, end_index))
 
         return np.array(price_array)
 
-    def get_board(self):
-        offset = int(BOARD_WIDTH / 2)
-        pos = self.price_pos(self.center_price) - offset
-        return self.get(pos, pos + BOARD_WIDTH)
+    def get_board(self, start=None, board_width=BOARD_WIDTH):
+        offset = int(board_width / 2)
+
+        if not start:
+            start = self.price_pos(self.center_price) - offset
+
+        end = start + board_width
+        print(start, end)
+
+        return self.get(start, end)
 
     def add_value(self, price, value):
         pos = self.price_pos(price)
@@ -278,7 +290,7 @@ class PriceBoard:
 
         variant = non_zero_sq_sum / item_no - (non_zero_sum / item_no) ** 2
 
-        return non_zero_sum/item_no, variant ** (0.5)
+        return non_zero_sum/item_no, variant ** 0.5
 
     def normalize_array(self, array, max_value):
         float_array = array * (256 / max_value)

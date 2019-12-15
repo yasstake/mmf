@@ -1,6 +1,7 @@
 import unittest
 from unittest import TestCase
 from log.dbgen import SparseLine
+from log.dbgen import SparseMatrix
 
 
 class TestSparseLine(TestCase):
@@ -214,9 +215,59 @@ class TestSparseLine(TestCase):
 
         self.assertEqual(len(r), 3)
 
+
+    def test_add_and_get_line2(self):
+        line = SparseLine()
+
+        line.add_value(100, 100)
+        line.add_value(100, 100)
+        line.add_value(110, 100)
+        print(line.get_line(99, 111))
+
+        r = line.get_line(99, 111)
+        self.assertEqual(r[0], 0)  # 99
+        self.assertEqual(r[1], 200)  # 100
+        self.assertEqual(r[2], 100)  # 101
+
+        self.assertEqual(len(r), 3)
+
+
+
+
+
     def test_get_line_only(self):
         line = SparseLine()
         print(line.get_line(99, 102))
+
+
+    def test_sparse_matrix(self):
+        mat = SparseMatrix(5)
+
+        mat.center_price = 100
+        mat.set_line(100, [1, 2, 3])
+        print(mat.get(200, 203))
+        print(mat.get_board(200, 3))
+
+    def test_sparse_matrix_roll(self):
+        mat = SparseMatrix(5)
+
+        mat.center_price = 100
+        mat.set_line(100, [1, 2, 3])
+        print(mat.get(200, 203))
+
+        mat.roll()
+        print(mat.get_board(200, 3))
+
+    def test_sparse_matrix_roll_2(self):
+        mat = SparseMatrix(5)
+
+        mat.center_price = 100
+        mat.set_line(100, [1, 2, 3])
+        print(mat.get(200, 203))
+
+        mat.roll(True)
+        print(mat.get_board(200, 3))
+
 
 
 
