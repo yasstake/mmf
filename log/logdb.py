@@ -135,12 +135,12 @@ class LogDb:
         sql = 'INSERT or REPLACE into funding (time, funding) values(?, ?)'
         self.cursor.execute(sql, [time, funding])
 
-    def calc_center_price(self, min, max):
-        diff = max - min
+    def calc_center_price(self, min_price, max_price):
+        diff = max_price - min_price
         if diff == PRICE_UNIT:
-            return max
+            return max_price
         else:
-            return min + (int((diff + PRICE_UNIT)))/2
+            return min_price + (int((diff + PRICE_UNIT))) / 2
 
     def select_book_price(self, time):
         """

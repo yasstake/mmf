@@ -146,7 +146,6 @@ class SparseMatrix:
             start = self.price_pos(self.center_price) - offset
 
         end = start + board_width
-        print(start, end)
 
         return self.get(start, end)
 
@@ -377,12 +376,12 @@ class Generator:
         if result:
             sell_min, sell_volume, buy_max, buy_volume = result
         else:
-            print('---DBEND---(center_book price)')
+            print('[' + str(time) + ' skip]', end='')
             return None
 
         center_price = db.calc_center_price(buy_max, sell_min)
         if not center_price:
-            print('---DBEND---(center_price)')
+            print('[' + str(time) + ']' + 'missing info(center_price)', end='')
             return None
 
         board.set_center_price(center_price)

@@ -48,6 +48,8 @@ class TradeEnv(gym.Env):
         self.board = None
         self.margin = 0
 
+        self.episode_text = ''
+
         self.action = ACTION.NOP
 
         self.sell_order_price = None
@@ -145,7 +147,6 @@ class TradeEnv(gym.Env):
 
         else:
             print("ERROR in _observe")
-            # todo: fix size
             return np.zeros((6, TIME_WIDTH, BOARD_WIDTH))
 
     def new_episode(self):
@@ -156,6 +157,8 @@ class TradeEnv(gym.Env):
         self.sell_order_price = None
         self.buy_order_price = None
         self.margin = 0
+
+        self.episode_text = ''
 
         self.board_generator = self.generator.create(db_name=self.db_path)
         self.episode_done = False
@@ -200,6 +203,7 @@ class TradeEnv(gym.Env):
 
         if price:
             self.sell_order_price = price
+            self.episode_text += 'sell {}　[{}]  '.format(self.sell_order_price, self.board.current_time)
             print('ACTION:sell', self.sell_order_price, '(', self.board.current_time, ')')
             return self.board.fix_sell_price_time - self.board.current_time + 30
 
@@ -214,6 +218,7 @@ class TradeEnv(gym.Env):
 
         if price:
             self.buy_order_price = price
+            self.episode_text += 'buy {}　[{}]  '.format(self.buy_order_price, self.board.current_time)
             print('ACTION:buy', self.buy_order_price, '(', self.board.current_time, ')')
             return self.board.fix_buy_price_time - self.board.current_time + 30
 
@@ -228,6 +233,7 @@ class TradeEnv(gym.Env):
 
         if price:
             self.sell_order_price = price
+            self.episode_text += 'SELL {}　[{}]  '.format(self.sell_order_price, self.board.current_time)
             print('ACTION:sell now', self.sell_order_price, '(', self.board.current_time, ')')
             return 60
         return 60
@@ -240,6 +246,7 @@ class TradeEnv(gym.Env):
 
         if price:
             self.buy_order_price = price
+            self.episode_text += 'BUY {}　[{}]  '.format(self.buy_order_price, self.board.current_time)
             print('ACTION:buy now', self.buy_order_price, '(', self.board.current_time, ')')
             return 60
         return 60
@@ -248,7 +255,8 @@ class TradeEnv(gym.Env):
         if self.buy_order_price and self.sell_order_price:
             self.margin = self.sell_order_price - self.buy_order_price
             self.episode_done = True
-            print('epsode done->', self.board.current_time, 'margin->', self.margin, self.board.current_time - self.episode_start_time)
+            print('epsode done->', self.board.current_time, 'margin->', self.margin,
+                  self.board.current_time - self.episode_start_time, self.episode_text)
 
         elif self.buy_order_price:
             self.margin = self.board.sell_book_price - self.buy_order_price
