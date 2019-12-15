@@ -18,16 +18,16 @@ class SparseLine:
     def __init__(self):
         self.start_index = 0
         self.last_index = 0
-        self.line = []
+        self.line = np.zeros(0)
 
     def set_line(self, start_index,  line, asc=True):
-        self.line = line
 
         if asc:
+            self.line = np.array(line)
             self.start_index = start_index
             self.last_index = start_index + len(line)
         else:
-            self.line.reverse()
+            self.line = np.array(line[::-1])
             self.start_index = start_index - len(line) + 1
             self.last_index = start_index + 1
 
@@ -76,19 +76,54 @@ class SparseLine:
 
         return clip
 
+    def check_and_extend_array(self, index):
+        if (self.start_index <= index) and (index < self.last_index):
+            return True
+        if self.start_index == 0 and self.last_index == 0:
+            self.start_index = index
+            self.last_index = index + 1
+            self.line = np.zeros(1)
+            return True
+        elif index < self.start_index:
+            self.line = np.insert(self.line, 0, np.zeros(self.start_index - index))
+            self.start_index = index
+            return True
+        elif self.last_index <= index:
+            self.last_index = index + 1
+            self.line = np.append(self.line, np.zeros(self.last_index - index))
+            return True
+
+        print('error')
+        return False
+
+    def add_value(self, index, value):
+        self.check_and_extend_array(index)
+
+        self.line[index - self.start_index] += value
+
+    def get_value(self, index):
+        return self.line[index - self.start_index]
+
 
 class SparseMatrix:
-    def __init__(self, time_len):
-        self.time_len = time_len
+    def __init__(self, time_width=TIME_WIDTH):
+        self.time_len = time_width
+        self.center_price = 0
+
         self.array = []
         for i in range(self.time_len):
             self.array.append(SparseLine())
 
-    def new_line(self, start_price, line, asc=True):
+    def roll(self, copy_last_line=False):
         sparse_line = SparseLine()
-        sparse_line.set_line(start_price, line, asc)
+        if copy_last_line:
+            sparse_line = self.array[0]
+
         self.array = self.array[1:]
         self.array.append(sparse_line)
+
+    def set_line(self, start_price, line, asc=True):
+        self.array[-1].set_line(start_price, line, asc)
 
     def get(self, start_price, end_price):
         price_array = []
@@ -98,7 +133,20 @@ class SparseMatrix:
 
         return np.array(price_array)
 
+    def get_board(self):
+        offset = int(BOARD_WIDTH / 2)
+        pos = self.price_pos(self.center_price) - offset
+        return self.get(pos, pos + BOARD_WIDTH)
 
+    def add_value(self, price, value):
+        pos = self.price_pos(price)
+        self.array[-1].add_value(pos, value)
+
+    def price_pos(self, price):
+        return int(price * 2)
+
+
+'''
 class SparseBoard:
     def __init__(self, time_width=TIME_WIDTH, max_price=MAX_PRICE):
         self.current_time = 0
@@ -118,14 +166,14 @@ class SparseBoard:
 
     def roll(self, copy_last_data=False):
         if copy_last_data:
-            self.board.data[-1] = self.board.data[0]
-            self.board.rows[-1] = self.board.data[0]
+            board_data = self.board.data[-1]
+            board_rows = self.board.data[-1]
         else:
-            self.board.data[-1] = list()
-            self.board.rows[-1] = list()
+            board_data = list()
+            board_rows = list()
 
-        self.board.data = np.append(self.board.data[-1:], self.board.data[0:-1])
-        self.board.rows = np.append(self.board.rows[-1:], self.board.rows[0:-1])
+        self.board.data = np.append(board_data, self.board.data[:-1])
+        self.board.rows = np.append(board_rows, self.board.rows[:-1])
 
     def price_pos(self, price):
         return int(price * 2)
@@ -135,27 +183,9 @@ class SparseBoard:
 
     def _add_order_vol(self, board, price, volume):
         p = self.price_pos(price)
-        board[0, p] += volume
+        board[-1, p] += volume
+'''
 
-    def add_order_line(self, price, line, asc=True):
-        self._add_order_line(self.board, price, line, asc)
-
-    def _add_order_line(self, board, price, line, asc=True):
-        p = self.price_pos(price)
-
-        step = 1
-
-        if not asc:
-            step = -1
-
-        l = 32
-        for vol in line:
-            board[0, p] = vol
-            p += step
-
-            l -= 1
-            if not l:
-                break
 
 class PriceBoard:
     """
@@ -171,10 +201,10 @@ class PriceBoard:
         self.current_time = 0
         self.center_price = 0
 
-        self.sell_trade = SparseBoard()
-        self.buy_trade = SparseBoard()
-        self.sell_order = SparseBoard()
-        self.buy_order = SparseBoard()
+        self.sell_trade = SparseMatrix()
+        self.buy_trade = SparseMatrix()
+        self.sell_order = SparseMatrix()
+        self.buy_order = SparseMatrix()
 
         self.buy_book_price = 0
         self.buy_book_vol = 0
@@ -261,16 +291,16 @@ class PriceBoard:
         return int(pos)
 
     def set_sell_order_book(self, price, line):
-        self.sell_order.add_order_line(price, line)
+        self.sell_order.set_line(price, line)
 
     def set_buy_order_book(self, price, line):
-        self.buy_order.add_order_line(price, line, False)
+        self.buy_order.set_line(price, line, False)
 
     def add_buy_trade(self, price, volume):
-        self.buy_trade.add_order_vol(price, volume)
+        self.buy_trade.add_value(price, volume)
 
     def add_sell_trade(self, price, volume):
-        self.sell_trade.add_order_vol(price, volume)
+        self.sell_trade.add_value(price, volume)
 
     def set_funding(self, ttl, funding):
         print("fundig->", ttl, funding)

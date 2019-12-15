@@ -2,12 +2,15 @@ from random import random
 from glob import glob
 import gym
 import numpy as np
-from log.constant import *
+from log.constant import ACTION
+from log.constant import TIME_WIDTH
+from log.constant import BOARD_WIDTH
 from log.dbgen import Generator
 
 ONE_ORDER_SIZE = 1.0
 MAX_DRAW_DOWN = 20
 TIME_STEP_REWARD = -0.0000001
+
 
 class TradeEnv(gym.Env):
     """The main OpenAI Gym class. It encapsulates an environment with

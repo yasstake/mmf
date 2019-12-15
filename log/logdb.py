@@ -544,7 +544,7 @@ class LogDb:
 
             market_order_sell, market_order_buy, fix_order_sell, fix_order_buy = rec
 
-            rec = self.select_best_order_prices(time + 10, FORCAST_TIME)
+            rec = self.select_best_order_prices(time + 10, FORECAST_TIME)
             if rec is None:
                 continue
 

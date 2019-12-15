@@ -143,8 +143,8 @@ class TestSparseLine(TestCase):
         r = line.get_line(108, 110)
         print(r)
 
-
     def test_get_line8r(self):
+
         line = SparseLine()
         line.set_line(104, [1, 2, 3, 4, 5], False)
 
@@ -182,7 +182,43 @@ class TestSparseLine(TestCase):
         print(r)
 
         r = line.get_line(108, 110)
+
         print(r)
+
+    def test_add_value(self):
+        line = SparseLine()
+        line.add_value(1, 100)
+        line.add_value(1, 100)
+        line.add_value(1, 100)
+        print(line.get_value(1))
+        self.assertEqual(line.get_value(1), 300)
+
+        line.add_value(2, 100)
+        self.assertEqual(line.get_value(1), 300)
+        print(line.get_value(1))
+        self.assertEqual(line.get_value(2), 100)
+        print(line.get_value(2))
+
+    def test_add_and_get_line(self):
+        line = SparseLine()
+
+        line.add_value(100, 100)
+        line.add_value(100, 100)
+        line.add_value(101, 100)
+        print(line.get_line(99, 102))
+
+        r = line.get_line(99, 102)
+        self.assertEqual(r[0], 0)  # 99
+        self.assertEqual(r[1], 200)  # 100
+        self.assertEqual(r[2], 100)  # 101
+
+        self.assertEqual(len(r), 3)
+
+    def test_get_line_only(self):
+        line = SparseLine()
+        print(line.get_line(99, 102))
+
+
 
 
 if __name__ == '__main__':
