@@ -93,7 +93,7 @@ class SparseLine:
             self.line = np.append(self.line, np.zeros(self.last_index - index))
             return True
 
-        print('error')
+        print('error extend index', index)
         return False
 
     def add_value(self, index, value):
