@@ -25,22 +25,25 @@ def make_env(rank, seed=0):
     return _init
 
 
-env = TradeEnv()
-env = DummyVecEnv([lambda: env])  # The algorithms require a vectorized environment to run
+#env = TradeEnv()
+#env = DummyVecEnv([lambda: env])  # The algorithms require a vectorized environment to run
 
 
-#num_cpu = 1
-#env = SubprocVecEnv([make_env(i) for i in range(num_cpu)])
 
-LOGDIR='/bitlog/tfboard/'
+if __name__ == '__main__':
+#    freeze_support()
+    num_cpu = 4
+    env = SubprocVecEnv([make_env(i) for i in range(num_cpu)])
 
-#model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=LOGDIR)
-model = A2C(MlpPolicy, env, verbose=1, tensorboard_log=LOGDIR)
+    LOGDIR='/bitlog/tfboard/'
 
-model.learn(total_timesteps=10000, tb_log_name='A2C')
+    model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=LOGDIR)
+    #model = A2C(MlpPolicy, env, verbose=1, tensorboard_log=LOGDIR)
 
-obs = env.reset()
-for i in range(1000):
-    action, _states = model.predict(obs)
-    obs, rewards, done, info = env.step(action)
-    env.render()
+    model.learn(total_timesteps=1000000, tb_log_name='RPO2')
+    
+    obs = env.reset()
+    for i in range(1000):
+        action, _states = model.predict(obs)
+        obs, rewards, done, info = env.step(action)
+        env.render()
