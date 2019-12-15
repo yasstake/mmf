@@ -255,8 +255,9 @@ class TradeEnv(gym.Env):
         if self.buy_order_price and self.sell_order_price:
             self.margin = self.sell_order_price - self.buy_order_price
             self.episode_done = True
-            print('epsode done->', self.board.current_time, 'margin->', self.margin,
-                  self.board.current_time - self.episode_start_time, self.episode_text)
+
+            self.episode_text += ' [{}]{}'.format(self.board.current_time - self.episode_start_time, self.margin)
+            print('epsode done->', self.board.current_time, self.episode_text)
 
         elif self.buy_order_price:
             self.margin = self.board.sell_book_price - self.buy_order_price
