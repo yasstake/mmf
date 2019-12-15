@@ -13,6 +13,7 @@ from random import random
 
 MAX_PRICE = 100000
 
+
 class SparseLine:
     def __init__(self):
         self.start_index = 0
@@ -79,20 +80,23 @@ class SparseLine:
 class SparseMatrix:
     def __init__(self, time_len):
         self.time_len = time_len
-        self.array  = []
+        self.array = []
         for i in range(self.time_len):
-            self.array[i] = SparseLine()
+            self.array.append(SparseLine())
 
-    def new_line(self, line):
-        self.array = line + self.array[1:]
+    def new_line(self, start_price, line, asc=True):
+        sparse_line = SparseLine()
+        sparse_line.set_line(start_price, line, asc)
+        self.array = self.array[1:]
+        self.array.append(sparse_line)
 
     def get(self, start_price, end_price):
         price_array = []
-        while i in range(self.time_len):
-            price_array.apend(self.array[i].get_line(start_price, end_price))
+
+        for i in range(self.time_len):
+            price_array.append(self.array[i].get_line(start_price, end_price))
 
         return np.array(price_array)
-
 
 
 class SparseBoard:
