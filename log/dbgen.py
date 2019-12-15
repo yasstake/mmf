@@ -146,47 +146,6 @@ class SparseMatrix:
         return int(price * 2)
 
 
-'''
-class SparseBoard:
-    def __init__(self, time_width=TIME_WIDTH, max_price=MAX_PRICE):
-        self.current_time = 0
-        self.center_price = 0
-        self.time_width = time_width
-
-        self.board = None
-
-        self.board = lil_matrix((time_width, max_price * 2), dtype=float)
-
-    def get_board(self):
-        offset = int(BOARD_WIDTH / 2)
-        pos = self.price_pos(self.center_price) - offset
-        extract = self.board[:, pos: pos + BOARD_WIDTH]
-
-        return extract.toarray().reshape(TIME_WIDTH, BOARD_WIDTH)
-
-    def roll(self, copy_last_data=False):
-        if copy_last_data:
-            board_data = self.board.data[-1]
-            board_rows = self.board.data[-1]
-        else:
-            board_data = list()
-            board_rows = list()
-
-        self.board.data = np.append(board_data, self.board.data[:-1])
-        self.board.rows = np.append(board_rows, self.board.rows[:-1])
-
-    def price_pos(self, price):
-        return int(price * 2)
-
-    def add_order_vol(self, price, volume):
-        self._add_order_vol(self.board, price, volume)
-
-    def _add_order_vol(self, board, price, volume):
-        p = self.price_pos(price)
-        board[-1, p] += volume
-'''
-
-
 class PriceBoard:
     """
     represent order book board and its history
