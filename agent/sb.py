@@ -4,6 +4,7 @@ from stable_baselines.common.policies import MlpPolicy
 from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines.common.vec_env import SubprocVecEnv
 from stable_baselines import PPO2
+from stable_baselines import A2C
 
 from env.rl import TradeEnv
 
@@ -33,13 +34,13 @@ env = DummyVecEnv([lambda: env])  # The algorithms require a vectorized environm
 
 LOGDIR='/bitlog/tfboard/'
 
-model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=LOGDIR)
+#model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log=LOGDIR)
+model = A2C(MlpPolicy, env, verbose=1, tensorboard_log=LOGDIR)
 
-model.learn(total_timesteps=10000, tb_log_name='FIRST_TRY')
+model.learn(total_timesteps=10000, tb_log_name='A2C')
 
 obs = env.reset()
 for i in range(1000):
     action, _states = model.predict(obs)
     obs, rewards, done, info = env.step(action)
     env.render()
-

@@ -14,11 +14,10 @@ from random import random
 MAX_PRICE = 100000
 
 class SparseLine:
-    def __init__(self, size):
-        self.size = size
+    def __init__(self):
         self.start_index = 0
         self.last_index = 0
-        self.line = None
+        self.line = []
 
     def set_line(self, start_index,  line, asc=True):
         self.line = line
@@ -27,9 +26,9 @@ class SparseLine:
             self.start_index = start_index
             self.last_index = start_index + len(line)
         else:
-            self.line = reversed(line)
-            self.start_index = start_index - len(line)
-            self.last_index = start_index
+            self.line.reverse()
+            self.start_index = start_index - len(line) + 1
+            self.last_index = start_index + 1
 
     def get_line(self, start_clip, end_clip):
         '''
@@ -44,35 +43,59 @@ class SparseLine:
 
         clip = None
 
-        if end_clip < self.start_index:
+        # SC <  (EC < si) < li
+        if end_clip <= self.start_index:
             clip = np.zeros(end_clip - start_clip)
 
+        # (SC <  [si) < EC] <  li
+        elif (start_clip <= self.start_index) and (self.start_index <= end_clip):
+            zeros = self.start_index - start_clip
+            end = end_clip - self.start_index
+            clip = np.append(np.zeros(zeros), self.line[:end])
+
+        # (SC <  si) < [li < EC]
         elif (start_clip <= self.start_index) and (self.last_index <= end_clip):
             zero1 = self.start_index - start_clip
             zero2 = end_clip - self.last_index
-            clip = np.zeros(zero1) + self.line + np.zeros(zero2)
+            clip = np.append(np.zeros(zero1), self.line)
+            clip = np.append(clip, np.zeros(zero2))
 
-        elif (start_clip <= self.start_index) and (self.start_index < end_clip):
-            zeros = self.start_index - start_clip
-            end = end_clip - self.start_index
-            clip = np.zeros(zeros) + clip[:end]
-
+        # (si < SC) < (EC  <  li)
         elif (self.start_index <= start_clip) and (end_clip <= self.last_index):
-            clip = np.array(clip[start_clip - self.start_index : end_clip - self.start_index])
+            clip = np.array(self.line[start_clip - self.start_index : end_clip - self.start_index])
 
-        elif (self.last_index <= start_clip) and (self.last_index < end_clip):
-            start = start_clip - self.last_index
+        # si < (SC < [li) < EC]
+        elif (start_clip < self.last_index) and (self.last_index <= end_clip):
+            start = start_clip - self.start_index
             zeros = end_clip - self.last_index
-            clip = clip[start:] + np.zeros(zeros)
+            clip = np.append(self.line[start:], np.zeros(zeros))
 
-        elif self.last_index < end_clip:
+        # si <  (li < SC) < EC
+        elif self.last_index <= start_clip:
             clip = np.zeros(end_clip - start_clip)
+
+        else:
+            print('clip error', start_clip, end_clip, self.start_index, self.last_index)
 
         return clip
 
 class SparseMatrix:
-    def __init__(self, size_m, size_n):
-        pass
+    def __init__(self, time_len):
+        self.time_len = time_len
+        self.array  = []
+        for i in range(self.time_len):
+            self.array[i] = SparseLine()
+
+    def new_line(self, line):
+        self.array = line + self.array[1:]
+
+    def get(self, start_price, end_price):
+        price_array = []
+        while i in range(self.time_len):
+            price_array.apend(self.array[i].get_line(start_price, end_price))
+
+        return np.array(price_array)
+
 
 
 class SparseBoard:
@@ -123,7 +146,6 @@ class SparseBoard:
 
         if not asc:
             step = -1
-
 
         l = 32
         for vol in line:
