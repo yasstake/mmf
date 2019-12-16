@@ -59,13 +59,15 @@ class TradeEnv(gym.Env):
 
         # init gym environment
         self.action_space = gym.spaces.Discrete(5)   # 5 actions nop, buy, BUY, sell, SELL
+
         self.observation_space = gym.spaces.Box(
             low=0,
             high=255,
-            shape=(6, TIME_WIDTH, BOARD_WIDTH),
+            shape=(TIME_WIDTH, BOARD_WIDTH, 6),
             dtype=np.uint8
         )
         # self.reward_range = [-255., 255.]
+
 
         self.reset()
 
@@ -125,29 +127,28 @@ class TradeEnv(gym.Env):
         pass
 
     def _observe(self):
+
         if self.board:
-            '''
-            #    return np.stack([self.board.buy_order.get_board(), self.board.sell_order.get_board(),
-            #                    self.board.buy_trade.get_board(), self.board.sell_trade.get_board(),
-            #                   self.sell_order, self.buy_order])
-            '''
             sell_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
             buy_order = np.zeros((TIME_WIDTH, BOARD_WIDTH))
 
             if self.sell_order_price:
-                offset = self.board.price_offset(self.sell_order_price)
+                offset = self.board.price_offset(self.sell_order_price) - 1
                 sell_order[:, offset:offset+1] = 255
 
             if self.buy_order_price:
-                offset = self.board.price_offset(self.buy_order_price)
+                offset = self.board.price_offset(self.buy_order_price) + 1
                 buy_order[:, offset:offset+1] = 255
 
             a, b, c, d = self.board.get_std_boards()
-            return np.stack([a, b, c, d, sell_order, buy_order])
+
+            r = np.stack([a, b, c, d, sell_order, buy_order], axis=2)
+
+            return r
 
         else:
             print("ERROR in _observe")
-            return np.zeros((6, TIME_WIDTH, BOARD_WIDTH))
+            return np.zeros((TIME_WIDTH, BOARD_WIDTH, 6))
 
     def new_episode(self):
         '''
