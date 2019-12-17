@@ -1,17 +1,17 @@
+
 import sqlite3
 import zlib
 from functools import lru_cache
-
+import numpy as np
 from log.constant import *
 from log.loader import LogLoader
 
-#DB_NAME = "file::memory:?cache=shared"
 DB_NAME = ":memory:"
 
 ORDER_TIME_WIDTH = 120
 
 class LogDb:
-    def __init__(self, db_name = None):
+    def __init__(self, db_name=None):
         self.db_name = db_name
         self.connection = None
         self.last_time = 0
@@ -105,9 +105,21 @@ class LogDb:
 
         return zlib.compress(message_string[:-1].encode())
 
+    def list_to_bin(self, message_list):
+        message_array = np.array(message_list, dtype=np.float32)
+        data = message_array.data
+        return data
+        #return zlib.compress(data)
+
     def zip_string_to_list(self, zip_string):
         message_array = zlib.decompress(zip_string).decode().split(',')
         return list(map(int, message_array))
+
+    def bin_to_list(self, zip_bin):
+        #bin_message = zlib.decompress(zip_bin)
+        bin_message = zip_bin
+
+        return np.frombuffer(bin_message, dtype=np.float32)
 
     def insert_order_book_message(self, time, message):
         sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list = LogLoader.message_to_list(message)
