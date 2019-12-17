@@ -8,8 +8,10 @@ from log.constant import BOARD_WIDTH
 from log.dbgen import Generator
 
 ONE_ORDER_SIZE = 1.0
-MAX_DRAW_DOWN = 20
+MAX_DRAW_DOWN = 50
 TIME_STEP_REWARD = -0.0001
+TIME_STEP_REWARD_WITH_ORDER = -0.001
+INVALID_ACTION_REWARD = -0.1
 
 
 class TradeEnv(gym.Env):
@@ -93,23 +95,26 @@ class TradeEnv(gym.Env):
             exec_time = 60
         elif action == ACTION.NOP:
             exec_time = self.action_nop()
-            reward = TIME_STEP_REWARD
+            if self.sell_order_price or self.buy_order_price:
+                reward = TIME_STEP_REWARD_WITH_ORDER
+            else:
+                reward = TIME_STEP_REWARD
         elif action == ACTION.BUY:
             exec_time = self.action_buy()
             if not exec_time:
-                reward = TIME_STEP_REWARD
+                reward = INVALID_ACTION_REWARD
         elif action == ACTION.BUY_NOW:
             exec_time = self.action_buy_now()
             if not exec_time:
-                reward = TIME_STEP_REWARD
+                reward = INVALID_ACTION_REWARD
         elif action == ACTION.SELL:
             exec_time = self.action_sell()
             if not exec_time:
-                reward = TIME_STEP_REWARD
+                reward = INVALID_ACTION_REWARD
         elif action == ACTION.SELL_NOW:
             exec_time = self.action_sell_now()
             if not exec_time:
-                reward = TIME_STEP_REWARD
+                reward = INVALID_ACTION_REWARD
         else:
             print('Unknown action no->', action)
 
@@ -119,7 +124,9 @@ class TradeEnv(gym.Env):
             reward = self.margin
 
         observation = self._observe()
-        self.skip_sec(exec_time - 1)
+
+        if exec_time:
+            self.skip_sec(exec_time)
 
         return observation, reward, self.episode_done, text
 
@@ -174,7 +181,7 @@ class TradeEnv(gym.Env):
 
         return self.board
 
-    def skip_sec(self, sec):
+    def skip_sec(self, sec=1):
         board = None
         for _ in range(sec):
             board = self.new_sec()
@@ -194,11 +201,11 @@ class TradeEnv(gym.Env):
         return False
 
     def action_nop(self):
-        return 1
+        return 0
 
     def action_sell(self):
         if self.sell_order_price:  # sell order exist(cannot sell twice at one time)
-            return 1
+            return 0
 
         price = self.board.fix_sell_price
 
@@ -213,7 +220,7 @@ class TradeEnv(gym.Env):
 
     def action_buy(self):
         if self.buy_order_price: # buy order exist(cannot sell twice at one time)
-            return 1
+            return 0
 
         price = self.board.fix_buy_price
 
@@ -228,7 +235,7 @@ class TradeEnv(gym.Env):
 
     def action_sell_now(self):
         if self.sell_order_price: # sell order exist(cannot sell twice at one time)
-            return 1
+            return 0
 
         price = self.board.market_sell_price
 
@@ -241,7 +248,7 @@ class TradeEnv(gym.Env):
 
     def action_buy_now(self):
         if self.buy_order_price: # buy order exist(cannot sell twice at one time)
-            return 1
+            return 0
 
         price = self.board.market_buy_price
 
