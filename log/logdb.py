@@ -123,9 +123,12 @@ class LogDb:
 
     def bin_to_list(self, zip_bin):
         bin_message = zlib.decompress(zip_bin)
-        #bin_message = zip_bin
 
-        return np.frombuffer(bin_message, dtype=np.float32)
+        list = np.frombuffer(bin_message, dtype=np.float32)
+
+        # todo debug
+        #print(list)
+        return list
 
     def insert_order_book_message(self, time, message):
         sell_min, sell_vol, sell_list, buy_max, buy_vol, buy_list = LogLoader.message_to_list(message)

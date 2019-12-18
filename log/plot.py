@@ -9,6 +9,7 @@ def show():
     gen1 = g.create(db_name='/bitlog/bitlog.db')
 
     board = next(gen1)
+    board = next(gen1)
 
     mat = board.get_std_boards()[0]
     plt.figure()

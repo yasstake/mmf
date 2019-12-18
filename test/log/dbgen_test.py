@@ -6,11 +6,11 @@ class MyTestCase(unittest.TestCase):
         g = Generator()
         gen1 = g.create(db_name='/bitlog/bitlog20191215.db')
 
-        for i in range(1000):
+        for i in range(1):
             board = next(gen1)
             print('a', board.current_time, board.center_price)
             a = board.get_std_boards()
-    #        print(board.get_std_boards())
+            print(a)
 
 
 if __name__ == '__main__':

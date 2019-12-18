@@ -139,11 +139,10 @@ class SparseMatrix:
 
         return np.array(price_array)
 
-    def get_board(self, start=None, board_width=BOARD_WIDTH):
+    def get_board(self, board_width=BOARD_WIDTH):
         offset = int(board_width / 2)
 
-        if not start:
-            start = self.price_pos(self.center_price) - offset
+        start = self.price_pos(self.center_price) - offset
 
         end = start + board_width
 
