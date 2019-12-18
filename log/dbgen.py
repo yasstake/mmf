@@ -306,19 +306,23 @@ class PriceBoard:
         board = self.get_std_boards()
 
         sub = fig.add_subplot(2, 2, 1)
-        sub.matshow(board[0], vmin=0, vmax=255)
+        b = np.flipud(board[0])
+        sub.matshow(b, vmin=0, vmax=255)
         fig.text(0.15, 0.95, 'BUY BOOK')
 
         sub = fig.add_subplot(2, 2, 2)
-        sub.matshow(board[1], vmin=0, vmax=255)
+        b = np.flipud(board[1])
+        sub.matshow(b, vmin=0, vmax=255)
         fig.text(0.35, 0.95, 'SELL BOOK')
 
         sub = fig.add_subplot(2, 2, 3)
-        sub.matshow(board[2], vmin=0, vmax=100)
+        b = np.flipud(board[2])
+        sub.matshow(b, vmin=0, vmax=100)
         fig.text(0.55, 0.95, 'BUY TRAN')
 
         sub = fig.add_subplot(2, 2, 4)
-        sub.matshow(board[3], vmin=0, vmax=100)
+        b = np.flipud(board[3])
+        sub.matshow(b, vmin=0, vmax=100)
         fig.text(0.75, 0.95, 'SELL TRAN')
 
         if frame_no is None:

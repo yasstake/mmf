@@ -2,8 +2,8 @@
 
 PRICE_UNIT = 0.5
 
-TIME_WIDTH = 60
-BOARD_WIDTH = 40
+TIME_WIDTH = 90
+BOARD_WIDTH = 60
 
 # width of order book width(both side)
 #BOOK_DEPTH = 128
