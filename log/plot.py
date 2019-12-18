@@ -1,6 +1,3 @@
-import numpy as np
-import matplotlib.pyplot as plt
-
 from log.dbgen import Generator
 
 
@@ -8,28 +5,13 @@ def show():
     g = Generator()
     gen1 = g.create(db_name='/bitlog/bitlog.db')
 
-    board = next(gen1)
-    board = next(gen1)
+    i = 0
+    for board in gen1:
+        i += 1
+        board.save_to_img('./img', i)
 
-    mat = board.get_std_boards()[0]
-    plt.figure()
-    plt.imshow(mat, interpolation='nearest', vmin=0, vmax=255, cmap='jet')
-    plt.show()
-
-    mat = board.get_std_boards()[1]
-    plt.figure()
-    plt.imshow(mat, interpolation='nearest', vmin=0, vmax=255, cmap='jet')
-    plt.show()
-
-    mat = board.get_std_boards()[2]
-    plt.figure()
-    plt.imshow(mat, interpolation='nearest', vmin=0, vmax=255, cmap='jet')
-    plt.show()
-
-    mat = board.get_std_boards()[3]
-    plt.figure()
-    plt.imshow(mat, interpolation='nearest', vmin=0, vmax=255, cmap='jet')
-    plt.show()
+        if 1000 < i:
+            break
 
 
 if __name__ == "__main__":
