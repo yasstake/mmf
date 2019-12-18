@@ -12,6 +12,8 @@ class MyTestCase(unittest.TestCase):
             a = board.get_std_boards()
             print(a)
 
+            board.save_to_img('/tmp', i)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -48,7 +48,7 @@ if __name__ == '__main__':
     print('---------------------------------------------')    
     #model = A2C(MlpPolicy, env, verbose=1, tensorboard_log=LOGDIR)
 
-    model.learn(total_timesteps=10000000, tb_log_name='RPO2LNCNN')
+    model.learn(total_timesteps=1000000, tb_log_name='RPO2LNCNN')
     
     obs = env.reset()
     for i in range(1000):

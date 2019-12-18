@@ -137,7 +137,9 @@ class SparseMatrix:
         for i in range(self.time_len):
             price_array.append(self.array[i].get_line(start_index, end_index))
 
-        return np.array(price_array)
+        price_array = np.array(price_array)
+
+        return price_array
 
     def get_board(self, board_width=BOARD_WIDTH):
         offset = int(board_width / 2)
@@ -208,10 +210,10 @@ class PriceBoard:
         self.sell_order.roll(copy_last_data)
 
     def get_std_boards(self):
-        sell_order = self.sell_order.get_board(self.time_width)
-        buy_order = self.buy_order.get_board(self.time_width)
-        buy_trade = self.buy_trade.get_board(self.time_width)
-        sell_trade = self.sell_trade.get_board(self.time_width)
+        sell_order = self.sell_order.get_board()
+        buy_order = self.buy_order.get_board()
+        buy_trade = self.buy_trade.get_board()
+        sell_trade = self.sell_trade.get_board()
 
         order_mean, order_stddev = self.calc_static(sell_order + buy_order)
         trade_mean, trade_stddev = self.calc_static(sell_trade + buy_trade)
@@ -297,6 +299,34 @@ class PriceBoard:
         uint8_array = np.ceil(np.clip(float_array, 0, 255)).astype('uint8')
 
         return uint8_array
+
+    def save_to_img(self, img_dir, frame_no=None):
+        fig = plt.figure()
+
+        board = self.get_std_boards()
+
+        sub = fig.add_subplot(2, 2, 1)
+        sub.matshow(board[0], vmin=0, vmax=255)
+        fig.text(0.15, 0.95, 'BUY BOOK')
+
+        sub = fig.add_subplot(2, 2, 2)
+        sub.matshow(board[1], vmin=0, vmax=255)
+        fig.text(0.35, 0.95, 'SELL BOOK')
+
+        sub = fig.add_subplot(2, 2, 3)
+        sub.matshow(board[2], vmin=0, vmax=100)
+        fig.text(0.55, 0.95, 'BUY TRAN')
+
+        sub = fig.add_subplot(2, 2, 4)
+        sub.matshow(board[3], vmin=0, vmax=100)
+        fig.text(0.75, 0.95, 'SELL TRAN')
+
+        if frame_no is None:
+            frame_no = '0000'
+        img_file = img_dir + '/{:06d}.png'.format(frame_no)
+
+        plt.savefig(img_file)
+        plt.close()
 
 
 EPISODE_LEN = 60 * 60

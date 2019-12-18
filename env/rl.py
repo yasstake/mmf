@@ -157,6 +157,8 @@ class TradeEnv(gym.Env):
             print("ERROR in _observe")
             return np.zeros((TIME_WIDTH, BOARD_WIDTH, 6))
 
+
+
     def new_episode(self):
         '''
         reset environment with new episode

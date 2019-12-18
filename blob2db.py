@@ -1,6 +1,7 @@
 import sys
 import os
 from log.dbloader import DbLoader
+from log.logdb import LogDb
 
 if __name__ == '__main__':
     '''
@@ -25,3 +26,10 @@ if __name__ == '__main__':
     db_loader.open_db(db_file)
     db_loader.load_from_blob_by_date(year, month, day)
     db_loader.close_db()
+
+    db = LogDb(db_file)
+    db.connect()
+    db.create_cursor()
+    db.update_all_order_prices(True)
+    db.commit()
+
