@@ -4,8 +4,7 @@ from log.dbgen import Generator
 class MyTestCase(unittest.TestCase):
     def test_create_generator(self):
         g = Generator()
-        gen1 = g.create(db_name='/bitlog/bitlog.db')
-        gen2 = g.create(db_name='/bitlog/bitlog.db')
+        gen1 = g.create(db_name='/bitlog/bitlog20191215.db')
 
         for i in range(1000):
             board = next(gen1)

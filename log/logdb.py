@@ -98,6 +98,9 @@ class LogDb:
             ''')
 
     def list_to_zip_string(self, message_list):
+        return self.list_to_bin(message_list)
+
+    def _list_to_zip_string(self, message_list):
         message_string = ''
         for m in message_list:
             message_string += str(m)
@@ -108,16 +111,19 @@ class LogDb:
     def list_to_bin(self, message_list):
         message_array = np.array(message_list, dtype=np.float32)
         data = message_array.data
-        return data
-        #return zlib.compress(data)
+        #return data
+        return zlib.compress(data)
 
     def zip_string_to_list(self, zip_string):
+        return self.bin_to_list(zip_string)
+
+    def _zip_string_to_list(self, zip_string):
         message_array = zlib.decompress(zip_string).decode().split(',')
         return list(map(int, message_array))
 
     def bin_to_list(self, zip_bin):
-        #bin_message = zlib.decompress(zip_bin)
-        bin_message = zip_bin
+        bin_message = zlib.decompress(zip_bin)
+        #bin_message = zip_bin
 
         return np.frombuffer(bin_message, dtype=np.float32)
 
