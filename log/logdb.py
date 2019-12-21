@@ -1,4 +1,3 @@
-
 import sqlite3
 import zlib
 from functools import lru_cache
@@ -9,6 +8,8 @@ from log.loader import LogLoader
 DB_NAME = ":memory:"
 
 ORDER_TIME_WIDTH = 120
+
+
 
 class LogDb:
     def __init__(self, db_name=None):
@@ -363,7 +364,7 @@ class LogDb:
     def is_suceess_fixed_order_sell(self, time, price, volume, time_width = ORDER_TIME_WIDTH):
         sell_min, sell_volume, buy_max, buy_volume = self.select_order_book_price_with_retry(time)
 
-        sql_count_sell_trade  = 'select sum(volume) from buy_trade where  ? <= time and time < ? and ? <= price'
+        sql_count_sell_trade = 'select sum(volume) from buy_trade where  ? <= time and time < ? and ? <= price'
 
         end_time = time + time_width
         self.cursor.execute(sql_count_sell_trade, (time, end_time, price))
@@ -791,3 +792,13 @@ class LogDb:
 
         return start_time, end_time
 
+    def list_price_(self):
+        sql = """select time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time,  
+                   fix_order_buy, fix_order_buy_time from order_book order by time"""
+
+        cur = self.connection.execute(sql)
+
+        for result in cur.fetchall():
+            yield result
+
+        return None

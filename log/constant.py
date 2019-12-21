@@ -5,8 +5,8 @@ PRICE_UNIT = 0.5
 TIME_WIDTH = 90
 BOARD_WIDTH = 60
 
+
 # width of order book width(both side)
-#BOOK_DEPTH = 128
 BOOK_DEPTH = int(BOARD_WIDTH * 1.5)
 
 LAYER_BUY_BOOK = 0

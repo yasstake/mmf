@@ -32,23 +32,14 @@ def make_env(rank, seed=0):
 #env = DummyVecEnv([lambda: env])  # The algorithms require a vectorized environment to run
 
 
+LOG_DIR = '/bitlog/tfboard/'
+
 if __name__ == '__main__':
     num_cpu = 8
     env = SubprocVecEnv([make_env(i) for i in range(num_cpu)])
 
-#    env = TradeEnv()
-#    env = DummyVecEnv([lambda: env])  # The algorithms require a vectorized environment to run
-
-    LOGDIR='/bitlog/tfboard/'
-
-    model = PPO2(CnnLstmPolicy, env, verbose=1, tensorboard_log=LOGDIR)
-    print('---------------------------------------------')
-    print('n_env', model.n_envs)
-    print('minibatch', model.nminibatches)
-    print('---------------------------------------------')    
-    #model = A2C(MlpPolicy, env, verbose=1, tensorboard_log=LOGDIR)
-
-    model.learn(total_timesteps=1000000, tb_log_name='RPO2LNCNN')
+    model = PPO2(CnnLstmPolicy, env, verbose=1, tensorboard_log=LOG_DIR)
+    model.learn(total_timesteps=1000000, tb_log_name='RPO2LN_CNN')
     
     obs = env.reset()
     for i in range(1000):
