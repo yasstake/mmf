@@ -62,8 +62,6 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(qvalue.q[ACTION.SELL], Q_INVALID_ACTION)
         self.assertEqual(qvalue.q[ACTION.SELL_NOW], Q_INVALID_ACTION)
 
-
-
     def test_q_sequence(self):
         q_seq = QSequence()
         q_seq.set_records(TEST_PRICE_DATA)

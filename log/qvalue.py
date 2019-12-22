@@ -8,6 +8,8 @@ Q_FAILED_ACTION = -0.0001
 Q_DISCOUNT_RATE = 0.995
 Q_FIRST_DISCOUNT_RATE = 0.7
 
+HOLD_TIME_MAX = 3600
+HOLD_TIME_MIN = 60
 
 class OrderPrices:
     def __init__(self):
@@ -88,28 +90,35 @@ class QValue:
 
 
 class QSequence:
-    def __init__(self):
-        self.buy_price = None
-        self.sell_price = None
+    def __init__(self, *, sell_price=None, buy_price=None, hold_time_max=HOLD_TIME_MAX, hold_time_min=HOLD_TIME_MIN):
         self.q_values = []
+
+        self.sell_price = sell_price
+        self.buy_price = buy_price
+
+        self.max_q = 0
+        self.hold_time_max = hold_time_max
+        self.hold_time_min = hold_time_min
 
     def set_records(self, records):
         for r in records:
             self.q_values.append(QValue(r))
 
+    def set_record(self, record):
+        q_value = QValue(record)
+        q_value.set_buy_price(self.buy_price)
+        q_value.set_sell_price(self.sell_price)
+        self.max_q = q_value.get_max_q()
+
     def update_q(self):
         next_q_value = 0
 
         for r in reversed(self.q_values):
-            r.set_buy_price(self.buy_price)
-            r.set_sell_price(self.sell_price)
-
             r.q[ACTION.NOP] = next_q_value
-            maxq = r.get_max_q()
+            max_q = r.get_max_q()
 
-            if next_q_value == maxq:
-                next_q_value = maxq * Q_DISCOUNT_RATE
+            if next_q_value == max_q:
+                next_q_value = max_q * Q_DISCOUNT_RATE
             else:
-                next_q_value = maxq * Q_FIRST_DISCOUNT_RATE
-
+                next_q_value = max_q * Q_FIRST_DISCOUNT_RATE
 
