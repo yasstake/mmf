@@ -343,7 +343,13 @@ class Generator:
         self.db_end_time = None
         self.time = None
 
-    def create(self, time=None, db_name = "/tmp/bitlog.db"):
+    def create(self, *, time=None, db_name = "/tmp/bitlog.db"):
+        '''
+        create board data generator from db.
+        :param time: target time(if not specified, random time is selected)
+        :param db_name: connected db
+        :return: board object
+        '''
         if not self.db:
             self.open_db(db_name)
 
@@ -376,7 +382,6 @@ class Generator:
                 retry -= 1
                 if not retry:
                     break
-
         print('[DBEND]')
         yield None
 
@@ -405,6 +410,13 @@ class Generator:
 
     @staticmethod
     def load_from_db(db, board, time):
+        '''
+        set values at time into board object
+        :param db: connected db
+        :param board: board to be set values
+        :param time: target time
+        :return: True on success, False on fail(example:no data)
+        '''
         board.set_origin_time(time)
 
         result = db.select_book_price(time)
@@ -412,12 +424,12 @@ class Generator:
             sell_min, sell_volume, buy_max, buy_volume = result
         else:
             print('[' + str(time) + ' skip]', end='')
-            return None
+            return False
 
         center_price = db.calc_center_price(buy_max, sell_min)
         if not center_price:
             print('[' + str(time) + ']' + 'missing info(center_price)', end='')
-            return None
+            return False
 
         board.set_center_price(center_price)
         board.set_board_prices(sell_min, sell_volume, buy_max, buy_volume)

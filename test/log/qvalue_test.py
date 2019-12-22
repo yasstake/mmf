@@ -22,7 +22,7 @@ class MyTestCase(unittest.TestCase):
     def test_set_one_rec(self):
         price = OrderPrices()
 
-        price.set_record(TEST_PRICE_DATA[1])
+        price.set_price_record(TEST_PRICE_DATA[1])
 
         print(price)
 
@@ -39,7 +39,8 @@ class MyTestCase(unittest.TestCase):
 
 
     def test_q_value_buy(self):
-        qvalue = QValue(TEST_PRICE_DATA[1])
+        qvalue = QValue()
+        qvalue.set_price_record(TEST_PRICE_DATA[1])
         buy_price = TEST_PRICE_DATA[0][1]
         qvalue.set_buy_price(buy_price)
 
@@ -47,12 +48,9 @@ class MyTestCase(unittest.TestCase):
         print(qvalue.get_max_q())
 
 
-
-
-
-
     def test_q_value_sell(self):
-        qvalue = QValue(TEST_PRICE_DATA[1])
+        qvalue = QValue()
+        qvalue.set_price_record(TEST_PRICE_DATA[1])
         sell_price = TEST_PRICE_DATA[0][2]
         qvalue.set_sell_price(sell_price)
         print(sell_price)
@@ -62,11 +60,19 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(qvalue.q[ACTION.SELL], Q_INVALID_ACTION)
         self.assertEqual(qvalue.q[ACTION.SELL_NOW], Q_INVALID_ACTION)
 
-    def test_q_sequence(self):
-        q_seq = QSequence()
+    def test_q_sequence_buy(self):
+        q_seq = QSequence(buy_price=TEST_PRICE_DATA[0][1])
         q_seq.set_records(TEST_PRICE_DATA)
+        q_seq.update_q()
 
-        q_seq.buy_price = TEST_PRICE_DATA[0][1]
+        number_of_records = len(q_seq.q_values)
+
+        for i in range(number_of_records):
+            print(q_seq.q_values[i])
+
+    def test_q_sequence_sell(self):
+        q_seq = QSequence(sell_price=TEST_PRICE_DATA[0][1])
+        q_seq.set_records(TEST_PRICE_DATA)
         q_seq.update_q()
 
         number_of_records = len(q_seq.q_values)

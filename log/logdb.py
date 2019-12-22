@@ -4,6 +4,7 @@ from functools import lru_cache
 import numpy as np
 from log.constant import *
 from log.loader import LogLoader
+from log.qvalue import QValue
 
 DB_NAME = ":memory:"
 
@@ -97,6 +98,23 @@ class LogDb:
                      funding real
                      )
             ''')
+
+        cursor.execute(
+            '''
+            create table if not exists q
+                  (
+                      time integer, 
+                      start_time integer, 
+                      start_action integer,
+                      nop_q real,
+                      buy_q real,
+                      buy_now_q real,
+                      sell_q real,
+                      sell_now_q real,
+                      primary key(time, start_time, start_action)
+                  )
+            '''
+        )
 
     def list_to_zip_string(self, message_list):
         return self.list_to_bin(message_list)
@@ -802,3 +820,46 @@ class LogDb:
             yield result
 
         return None
+
+    def select_q(self, time, start_time, start_action):
+        '''
+        select and return q values
+        :param time: time to select
+        :param start_time: original time the action was executed(if the time and the start_time is same, the action is not executed yet)
+        :param start_action: action executed at original time(NOP is for action is not executed yet)
+        :return:
+        '''
+        select_q_sql = """select time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q
+                            from q where time = ? and start_time = ? and start_action = ? order by time 
+        """
+        self.cursor.execute(select_q_sql, (time, start_time, start_action,))
+        rec = self.cursor.fetchone()
+
+        return rec
+
+
+    def insert_q(self, time, start_time, start_action, q_value: QValue):
+        sql = '''INSERT or REPLACE into q
+                      (time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q)
+                      values(?, ?, ?, ?, ?, ?, ?, ?)
+        '''
+        self.cursor.execute(sql, [time, start_time, start_action,
+                                  q_value.q[ACTION.NOP], q_value.q[ACTION.BUY], q_value.q[ACTION.BUY_NOW],
+                                  q_value.q[ACTION.BUY_NOW], q_value.q[ACTION.SELL_NOW]])
+
+    def list_q(self, start_time, start_action):
+        '''
+        :param start:
+        :param start_action:
+        :param start_time:
+        :return:
+        '''
+        select_q_sql = """select time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q
+                            from q where start_time = ? and start_action = ? order by time 
+        """
+        self.cursor.execute(select_q_sql, (start_time, start_action,))
+        rec = self.cursor.fetchall()
+        print(rec)
+
+        return rec
+

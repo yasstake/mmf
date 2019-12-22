@@ -2,7 +2,6 @@ import numpy as np
 
 from log.constant import ACTION
 
-
 Q_INVALID_ACTION = -0.1
 Q_FAILED_ACTION = -0.0001
 Q_DISCOUNT_RATE = 0.995
@@ -10,6 +9,7 @@ Q_FIRST_DISCOUNT_RATE = 0.7
 
 HOLD_TIME_MAX = 3600
 HOLD_TIME_MIN = 60
+
 
 class OrderPrices:
     def __init__(self):
@@ -21,7 +21,7 @@ class OrderPrices:
         self.fix_order_buy = None  # 5
         self.fix_order_buy_time = None  # 6
 
-    def set_record(self, record):
+    def set_price_record(self, record):
         self.time = record[0]
         self.market_order_sell = record[1]
         self.market_order_buy = record[2]
@@ -39,13 +39,13 @@ class OrderPrices:
 
 
 class QValue:
-    def __init__(self, record):
+    def __init__(self):
         self.q = np.zeros((5,))
-        self.order_prices = OrderPrices()
-        self.set_record(record)
+        self.order_prices = None
 
-    def set_record(self, record):
-        self.order_prices.set_record(record)
+    def set_price_record(self, record):
+        self.order_prices = OrderPrices()
+        self.order_prices.set_price_record(record)
 
     def set_sell_price(self, price):
         if not price:
@@ -93,6 +93,8 @@ class QSequence:
     def __init__(self, *, sell_price=None, buy_price=None, hold_time_max=HOLD_TIME_MAX, hold_time_min=HOLD_TIME_MIN):
         self.q_values = []
 
+        self.action = None
+
         self.sell_price = sell_price
         self.buy_price = buy_price
 
@@ -101,14 +103,21 @@ class QSequence:
         self.hold_time_min = hold_time_min
 
     def set_records(self, records):
-        for r in records:
-            self.q_values.append(QValue(r))
+        q_sequence = []
 
-    def set_record(self, record):
-        q_value = QValue(record)
-        q_value.set_buy_price(self.buy_price)
-        q_value.set_sell_price(self.sell_price)
-        self.max_q = q_value.get_max_q()
+        for r in records:
+            q_value = QValue()
+            q_value.set_price_record(r)
+            q_value.set_buy_price(self.buy_price)
+            q_value.set_sell_price(self.sell_price)
+
+            if self.max_q < q_value.get_max_q():
+                self.max_q = q_value.get_max_q()
+                q_sequence.append(q_value)
+                self.q_values.extend(q_sequence)
+                q_sequence = []
+            elif len(self.q_values) + len(q_sequence) < HOLD_TIME_MIN:
+                q_sequence.append(q_value)
 
     def update_q(self):
         next_q_value = 0
@@ -122,3 +131,6 @@ class QSequence:
             else:
                 next_q_value = max_q * Q_FIRST_DISCOUNT_RATE
 
+    def calc_q_sequence(self, start_time, action):
+        # TODO not implemenetd
+        pass
