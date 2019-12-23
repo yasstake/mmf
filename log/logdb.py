@@ -4,12 +4,14 @@ from functools import lru_cache
 import numpy as np
 from log.constant import *
 from log.loader import LogLoader
+from log.qvalue import HOLD_TIME_MAX
 from log.qvalue import QValue
+from log.qvalue import QSequence
+
 
 DB_NAME = ":memory:"
 
 ORDER_TIME_WIDTH = 120
-
 
 
 class LogDb:
@@ -810,16 +812,18 @@ class LogDb:
 
         return start_time, end_time
 
-    def list_price_(self):
-        sql = """select time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time,  
+    def list_price(self, *, start_time=None, end_time=None):
+        if start_time and end_time:
+            sql = """select time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time,  
+                   fix_order_buy, fix_order_buy_time from order_book where ? <= time and time <= ? order by time"""
+            cur = self.connection.execute(sql, (start_time, end_time))
+        else:
+            sql = """select time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time,  
                    fix_order_buy, fix_order_buy_time from order_book order by time"""
+            cur = self.connection.execute(sql)
 
-        cur = self.connection.execute(sql)
+        return cur.fetchall()
 
-        for result in cur.fetchall():
-            yield result
-
-        return None
 
     def select_q(self, time, start_time, start_action):
         '''
@@ -836,7 +840,6 @@ class LogDb:
         rec = self.cursor.fetchone()
 
         return rec
-
 
     def insert_q(self, time, start_time, start_action, q_value: QValue):
         sql = '''INSERT or REPLACE into q
@@ -863,3 +866,41 @@ class LogDb:
 
         return rec
 
+    def update_q(self):
+        for price in self.list_price():
+            time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time, fix_order_buy, fix_order_buy_time = price
+
+            # update
+            if market_order_sell:
+                q_sequence = self.create_q_sequence(start_time=time, action=ACTION.SELL_NOW, start_price=market_order_sell, skip_time=60)
+
+            if market_order_buy:
+                pass
+
+            if fix_order_sell:
+                pass
+
+            if fix_order_sell_time:
+                pass
+
+            if fix_order_buy:
+                pass
+
+            if fix_order_buy_time:
+                pass
+
+    def create_q_sequence(self, *, start_time, action, start_price, skip_time=0):
+        '''
+
+        :param start_time: the execution beginning time(origing time). Some ticks may skipped for transaction.
+        :param action: in action
+        :param start_price: price in action
+        :param skip_time: skip time for the transaction.
+        :return: None(written to the DB)
+        '''
+        prices = self.list_price(start_time=start_time + skip_time, end_time=start_time + HOLD_TIME_MAX)
+
+        q_sequence = QSequence()
+        q_sequence.calc_q_sequence(start_time=start_time, action=action, start_price=start_price, records=prices)
+
+        return q_sequence

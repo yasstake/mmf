@@ -535,22 +535,23 @@ class PriceBoardDB(PriceBoard):
 
         array = board.buy_order
         sub = fig.add_subplot(1, 4, 1)
+        #sub.matshow(np.rot90(array), vmin=0, vmax=255)
         sub.matshow(array, vmin=0, vmax=255)
         fig.text(0.15, 0.95, 'BUY BOOK')
 
         array = board.sell_order
         sub = fig.add_subplot(1, 4, 2)
-        sub.matshow(array, vmin=0, vmax=255)
+        sub.matshow(np.rot90(array), vmin=0, vmax=255)
         fig.text(0.35, 0.95, 'SELL BOOK')
 
         array = board.buy_trade
         sub = fig.add_subplot(1, 4, 3)
-        sub.matshow(array, vmin=0, vmax=100)
+        sub.matshow(np.rot90(array), vmin=0, vmax=100)
         fig.text(0.55, 0.95, 'BUY TRAN')
 
         array = board.sell_trade
         sub = fig.add_subplot(1, 4, 4)
-        sub.matshow(array, vmin=0, vmax=100)
+        sub.matshow(np.rot90(array), vmin=0, vmax=100)
         fig.text(0.75, 0.95, 'SELL TRAN')
 
         if frame_no is None:

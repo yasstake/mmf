@@ -8,9 +8,9 @@ def show():
     i = 0
     for board in gen1:
         i += 1
-        board.save_to_img('./img', i)
+        board.save_to_img('./', i)
 
-        if 1000 < i:
+        if 1 < i:
             break
 
 

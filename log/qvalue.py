@@ -41,45 +41,34 @@ class OrderPrices:
 class QValue:
     def __init__(self):
         self.q = np.zeros((5,))
+        self.q[:] = Q_INVALID_ACTION
+
         self.order_prices = None
+        self.sell_price = None
+        self.buy_price = None
 
     def set_price_record(self, record):
         self.order_prices = OrderPrices()
         self.order_prices.set_price_record(record)
 
-    def set_sell_price(self, price):
-        if not price:
-            return
+    def update_q(self):
+        if self.sell_price:
+            if self.order_prices.fix_order_buy:
+                self.q[ACTION.BUY] = self.sell_price - self.order_prices.fix_order_buy
+                # todo calc time reduction for q value
+            else:
+                self.q[ACTION.BUY] = Q_FAILED_ACTION
 
-        self.q[ACTION.SELL] = Q_INVALID_ACTION
-        self.q[ACTION.SELL_NOW] = Q_INVALID_ACTION
+            self.q[ACTION.BUY_NOW] = self.sell_price - self.order_prices.market_order_buy
 
-        if self.order_prices.fix_order_buy:
-            self.q[ACTION.BUY] = price - self.order_prices.fix_order_buy
-        else:
-            self.q[ACTION.BUY] = Q_FAILED_ACTION
+        if self.buy_price:
+            if self.order_prices.fix_order_sell:
+                self.q[ACTION.SELL] = self.order_prices.fix_order_sell - self.buy_price
+                # todo calc time reduction for q value
+            else:
+                self.q[ACTION.SELL] = Q_FAILED_ACTION
 
-        if self.order_prices.market_order_buy:
-            self.q[ACTION.BUY_NOW] = price - self.order_prices.market_order_buy
-        else:
-            self.q[ACTION.BUY_NOW] = Q_FAILED_ACTION
-
-    def set_buy_price(self, price):
-        if not price:
-            return
-
-        if self.order_prices.fix_order_sell:
-            self.q[ACTION.SELL] = self.order_prices.fix_order_sell - price
-        else:
-            self.q[ACTION.SELL] = Q_FAILED_ACTION
-
-        if self.order_prices.market_order_sell:
-            self.q[ACTION.SELL_NOW] = self.order_prices.market_order_sell - price
-        else:
-            self.q[ACTION.SELL_NOW] = Q_FAILED_ACTION
-
-        self.q[ACTION.BUY] = Q_INVALID_ACTION
-        self.q[ACTION.BUY_NOW] = Q_INVALID_ACTION
+            self.q[ACTION.SELL_NOW] = self.order_prices.market_order_sell - self.buy_price
 
     def get_max_q(self):
         return np.max(self.q)
@@ -102,15 +91,36 @@ class QSequence:
         self.hold_time_max = hold_time_max
         self.hold_time_min = hold_time_min
 
+        self.start_time = 0
+
+    def _set_records(self, records):
+        for r in records:
+            q_value = QValue()
+            q_value.set_price_record(r)
+
+            print('sell-by price', self.buy_price, self.sell_price, r)
+
+            q_value.buy_price = self.buy_price
+            q_value.sell_price = self.sell_price
+            q_value.update_q()
+
+            print(q_value)
+            self.q_values.append(q_value)
+
     def set_records(self, records):
         q_sequence = []
 
         for r in records:
             q_value = QValue()
             q_value.set_price_record(r)
-            q_value.set_buy_price(self.buy_price)
-            q_value.set_sell_price(self.sell_price)
 
+            print('sell-by price', self.buy_price, self.sell_price)
+
+            q_value.buy_price = self.buy_price
+            q_value.sell_price = self.sell_price
+            q_value.update_q()
+
+            # todo add max draw down
             if self.max_q < q_value.get_max_q():
                 self.max_q = q_value.get_max_q()
                 q_sequence.append(q_value)
@@ -118,6 +128,11 @@ class QSequence:
                 q_sequence = []
             elif len(self.q_values) + len(q_sequence) < HOLD_TIME_MIN:
                 q_sequence.append(q_value)
+                print('append', len(self.q_values), self.max_q, q_value.get_max_q(), q_value)
+            else:
+                self.q_values.extend(q_sequence)
+                print('last', len(self.q_values))
+                break
 
     def update_q(self):
         next_q_value = 0
@@ -131,6 +146,22 @@ class QSequence:
             else:
                 next_q_value = max_q * Q_FIRST_DISCOUNT_RATE
 
-    def calc_q_sequence(self, start_time, action):
-        # TODO not implemenetd
-        pass
+    def calc_q_sequence(self, *, start_time, action, start_price, records):
+        print('calc_q_sequence', start_time, action, start_price, len(records))
+        self.start_time = start_time
+        self.action = action
+
+        if action == ACTION.SELL or action == ACTION.SELL_NOW:
+            self.sell_price = start_price
+            self.buy_price = 0
+        elif action == ACTION.BUY or action == ACTION.BUY_NOW:
+            self.sell_price = 0
+            self.buy_price = start_price
+
+        self.set_records(records)
+        #self.update_q()
+
+    def dump_q(self):
+        for q in self.q_values:
+            print(q)
+
