@@ -8,7 +8,7 @@ Q_DISCOUNT_RATE = 0.995
 Q_FIRST_DISCOUNT_RATE = 0.7
 
 HOLD_TIME_MAX = 3600
-HOLD_TIME_MIN = 60
+HOLD_TIME_MIN = 120
 
 
 class OrderPrices:
@@ -54,8 +54,15 @@ class QValue:
     def update_q(self):
         if self.sell_price:
             if self.order_prices.fix_order_buy:
-                self.q[ACTION.BUY] = self.sell_price - self.order_prices.fix_order_buy
+                q = self.sell_price - self.order_prices.fix_order_buy
                 # todo calc time reduction for q value
+
+                execute_time = self.order_prices.fix_order_buy_time - self.order_prices.time
+
+                print('execute time', execute_time)
+
+                self.q[ACTION.BUY] = q
+
             else:
                 self.q[ACTION.BUY] = Q_FAILED_ACTION
 
@@ -63,8 +70,15 @@ class QValue:
 
         if self.buy_price:
             if self.order_prices.fix_order_sell:
-                self.q[ACTION.SELL] = self.order_prices.fix_order_sell - self.buy_price
+                q = self.order_prices.fix_order_sell - self.buy_price
                 # todo calc time reduction for q value
+
+                execute_time = self.order_prices.fix_order_sell_time - self.order_prices.time
+
+                print('execute time', execute_time)
+
+                self.q[ACTION.SELL] = q
+
             else:
                 self.q[ACTION.SELL] = Q_FAILED_ACTION
 
@@ -72,6 +86,9 @@ class QValue:
 
     def get_max_q(self):
         return np.max(self.q)
+
+    def get_draw_down(self):
+        return np.min(self.q)
 
     def __str__(self):
         return 'NOP[{}] sell[{}] buy[{}] SELL[{}] BUY[{}]'.format(
@@ -109,30 +126,29 @@ class QSequence:
 
     def set_records(self, records):
         q_sequence = []
+        seq_position = 0
 
         for r in records:
             q_value = QValue()
             q_value.set_price_record(r)
-
-            print('sell-by price', self.buy_price, self.sell_price)
 
             q_value.buy_price = self.buy_price
             q_value.sell_price = self.sell_price
             q_value.update_q()
 
             # todo add max draw down
+
             if self.max_q < q_value.get_max_q():
                 self.max_q = q_value.get_max_q()
                 q_sequence.append(q_value)
                 self.q_values.extend(q_sequence)
                 q_sequence = []
-            elif len(self.q_values) + len(q_sequence) < HOLD_TIME_MIN:
+            elif len(self.q_values) + len(q_sequence) < self.hold_time_min:
                 q_sequence.append(q_value)
-                print('append', len(self.q_values), self.max_q, q_value.get_max_q(), q_value)
-            else:
-                self.q_values.extend(q_sequence)
-                print('last', len(self.q_values))
+
+            if self.hold_time_max < seq_position:
                 break
+            seq_position += 1
 
     def update_q(self):
         next_q_value = 0
@@ -159,7 +175,7 @@ class QSequence:
             self.buy_price = start_price
 
         self.set_records(records)
-        #self.update_q()
+        self.update_q()
 
     def dump_q(self):
         for q in self.q_values:

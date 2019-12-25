@@ -867,27 +867,31 @@ class LogDb:
         return rec
 
     def update_q(self):
+        '''
+        update q values according to the list of prices
+        :return:
+        '''
         for price in self.list_price():
             time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time, fix_order_buy, fix_order_buy_time = price
 
             # update
             if market_order_sell:
-                q_sequence = self.create_q_sequence(start_time=time, action=ACTION.SELL_NOW, start_price=market_order_sell, skip_time=60)
+                q_sequence = self.create_q_sequence(start_time=time, action=ACTION.SELL_NOW,
+                                                    start_price=market_order_sell, skip_time=60)
 
             if market_order_buy:
-                pass
+                q_sequence = self.create_q_sequence(start_time=time, action=ACTION.BUY_NOW,
+                                                    start_price=market_order_buy, skip_time=60)
 
             if fix_order_sell:
-                pass
-
-            if fix_order_sell_time:
-                pass
+                q_sequence = self.create_q_sequence(start_time=time, action=ACTION.SELL,
+                                                    start_price=fix_order_sell, skip_time=60)
 
             if fix_order_buy:
-                pass
+                q_sequence = self.create_q_sequence(start_time=time, action=ACTION.BUY,
+                                                    start_price=fix_order_buy, skip_time=60)
 
-            if fix_order_buy_time:
-                pass
+        return q_sequence
 
     def create_q_sequence(self, *, start_time, action, start_price, skip_time=0):
         '''

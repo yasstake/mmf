@@ -1,6 +1,7 @@
 import unittest
 from log.constant import ACTION
 from log.logdb import LogDb
+from log.qvalue import OrderPrices
 from log.qvalue import QValue
 
 
@@ -18,19 +19,26 @@ class MyTestCase(unittest.TestCase):
         fix_order_buy = None        # 5
         fix_order_buy_time = None   # 6
 
+        org_price = OrderPrices()
+
         line_count = 0
         block_count = 0
 
         for line in db.list_price():
-            if ((line[1] != market_order_sell)
-                    or (line[2] != market_order_buy)
-                    or (line[3] != fix_order_sell)
-                    or (line[5] != fix_order_buy)):
-                print(line, ',')
+            price = OrderPrices()
+            price.set_price_record(line)
+
+            if (
+                (price.market_order_sell != org_price.market_order_sell)
+                or (price.market_order_buy != org_price.market_order_buy)
+                or (price.fix_order_sell != org_price.fix_order_sell)
+                or (price.fix_order_buy != org_price.fix_order_buy)):
+
+                print(price, ',')
                 block_count += 1
 
             line_count += 1
-            time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time, fix_order_buy, fix_order_buy_time = line
+            org_price.set_price_record(line)
 
         print('line', line_count, 'block_count', block_count)
 
@@ -143,7 +151,7 @@ class MyTestCase(unittest.TestCase):
         price = db.list_price(start_time=start, end_time=start + 150)
         print(len(price))
 
-        q_seq = db.create_q_sequence(start_time=start, action=ACTION.BUY_NOW, start_price=price[0][1])
+        q_seq = db.create_q_sequence(start_time=start, action=ACTION.BUY_NOW, start_price=7000)
         q_seq.dump_q()
 
 if __name__ == '__main__':
