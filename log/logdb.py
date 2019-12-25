@@ -867,10 +867,10 @@ class LogDb:
 
         return rec
 
-    def update_q(self):
+    def insert_updated_q(self):
         '''
         update q values according to the list of prices
-        :return:
+        :return: None
         '''
         for line in self.list_price():
             price = OrderPrices()
@@ -892,8 +892,7 @@ class LogDb:
             if price.fix_order_buy:
                 q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY,
                                                     start_price=price.fix_order_buy, skip_time=60)
-
-        return q_sequence
+        self.insert_q_sequence(q_sequence)
 
     def create_q_sequence(self, *, start_time, action, start_price, skip_time=0):
         '''
@@ -910,3 +909,9 @@ class LogDb:
         q_sequence.calc_q_sequence(start_time=start_time, action=action, start_price=start_price, records=prices)
 
         return q_sequence
+
+    def insert_q_sequence(self, q_sequence):
+        for q in q_sequence:
+            self.insert_q(q.star_ttime, q.q.order_prices.time, q.action, q.q)
+
+

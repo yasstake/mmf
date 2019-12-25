@@ -136,7 +136,7 @@ class MyTestCase(unittest.TestCase):
         db.insert_q(101, 101, ACTION.BUY, q)
         db.commit()
 
-        db.update_q()
+        db.insert_updated_q()
 
 
     def test_create_q_values(self):
