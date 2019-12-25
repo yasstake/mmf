@@ -55,14 +55,10 @@ class QValue:
         if self.sell_price:
             if self.order_prices.fix_order_buy:
                 q = self.sell_price - self.order_prices.fix_order_buy
-                # todo calc time reduction for q value
 
+                # calc time reduction for q value
                 execute_time = self.order_prices.fix_order_buy_time - self.order_prices.time
-
-                print('execute time', execute_time)
-
-                self.q[ACTION.BUY] = q
-
+                self.q[ACTION.BUY] = q * Q_FIRST_DISCOUNT_RATE * (Q_DISCOUNT_RATE ** execute_time)
             else:
                 self.q[ACTION.BUY] = Q_FAILED_ACTION
 
@@ -71,14 +67,10 @@ class QValue:
         if self.buy_price:
             if self.order_prices.fix_order_sell:
                 q = self.order_prices.fix_order_sell - self.buy_price
-                # todo calc time reduction for q value
 
+                # calc time reduction for q value
                 execute_time = self.order_prices.fix_order_sell_time - self.order_prices.time
-
-                print('execute time', execute_time)
-
-                self.q[ACTION.SELL] = q
-
+                self.q[ACTION.SELL] = q * Q_FIRST_DISCOUNT_RATE * (Q_DISCOUNT_RATE ** execute_time)
             else:
                 self.q[ACTION.SELL] = Q_FAILED_ACTION
 
@@ -136,15 +128,22 @@ class QSequence:
             q_value.sell_price = self.sell_price
             q_value.update_q()
 
+            print(q_value.order_prices.time)
+
             # todo add max draw down
 
             if self.max_q < q_value.get_max_q():
                 self.max_q = q_value.get_max_q()
                 q_sequence.append(q_value)
+                print('append1', q_value.order_prices.time)
                 self.q_values.extend(q_sequence)
                 q_sequence = []
-            elif len(self.q_values) + len(q_sequence) < self.hold_time_min:
+            elif len(self.q_values) < self.hold_time_min:
                 q_sequence.append(q_value)
+                print('append2', q_value.order_prices.time)
+            else:
+                self.q_values.extend(q_sequence)
+                break
 
             if self.hold_time_max < seq_position:
                 break

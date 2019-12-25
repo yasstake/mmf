@@ -24,6 +24,31 @@ TEST_PRICE_DATA_BUY_SELL_ONLY= [
     (10020, 90.0, 91.0, None, None, None, None)
 ]
 
+#    Time,  sell,  buy, FIX sell, fixselltime, FIX buy, fixsell time
+TEST_PRICE_DATA_BUY_SELL_ONLY_2= [
+    (10000, 99.0, 100.0, None, None, None, None),
+    (10001, 98.0, 99.0, 103, 10003, None, None),
+    (10002, 97.0, 98.0, None, None, None, None),
+    (10003, 96.0, 97.0, None, None, 90, 10007),
+    (10004, 95.0, 96.0, None, None, None, None),
+    (10005, 96.0, 97.0, None, None, None, None),
+    (10006, 97.0, 98.0, None, None, None, None),
+    (10007, 98.0, 99.0, None, None, None, None),
+    (10008, 99.0, 100.0, None, None, None, None),
+    (10009, 100.0, 101.0, None, None, None, None),
+    (10010, 101.0, 102.0, None, None, None, None),
+    (10011, 102.0, 103.0, None, None, None, None),
+    (10012, 103, 104.0, None, None, None, None),
+    (10013, 104.0, 105.0, None, None, None, None),
+    (10014, 105.0, 106.0, None, None, None, None),
+    (10015, 106.0, 107.0, None, None, None, None),
+    (10016, 107.0, 108.0, None, None, None, None),
+    (10017, 100.0, 101.0, None, None, None, None),
+    (10018, 99.0, 100.0, None, None, None, None),
+    (10019, 95.0, 96.0, None, None, None, None),
+    (10020, 90.0, 91.0, None, None, None, None)
+]
+
 
 
 

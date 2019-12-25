@@ -8,6 +8,7 @@ from log.qvalue import Q_INVALID_ACTION
 
 from test.log.qvalue_testdata import TEST_PRICE_DATA
 from test.log.qvalue_testdata import TEST_PRICE_DATA_BUY_SELL_ONLY
+from test.log.qvalue_testdata import TEST_PRICE_DATA_BUY_SELL_ONLY_2
 
 
 class MyTestCase(unittest.TestCase):
@@ -47,6 +48,7 @@ class MyTestCase(unittest.TestCase):
         for i in range(number_of_records):
             print(q_seq.q_values[i])
 
+
     def test_q_sequence_sell_only(self):
         q_seq = QSequence(sell_price=TEST_PRICE_DATA_BUY_SELL_ONLY[0][1], hold_time_min=7, hold_time_max=10)
         q_seq.set_records(TEST_PRICE_DATA_BUY_SELL_ONLY)
@@ -58,7 +60,7 @@ class MyTestCase(unittest.TestCase):
             print(q_seq.q_values[i])
 
     def test_q_sequence_buy_only(self):
-        q_seq = QSequence(buy_price=TEST_PRICE_DATA_BUY_SELL_ONLY[0][1], hold_time_min=7, hold_time_max=10)
+        q_seq = QSequence(buy_price=TEST_PRICE_DATA_BUY_SELL_ONLY[0][2], hold_time_min=7, hold_time_max=10)
         q_seq.set_records(TEST_PRICE_DATA_BUY_SELL_ONLY)
         q_seq.update_q()
 
@@ -67,6 +69,25 @@ class MyTestCase(unittest.TestCase):
         for i in range(number_of_records):
             print(q_seq.q_values[i])
 
+    def test_q_sequence_sell_only_2(self):
+        q_seq = QSequence(sell_price=TEST_PRICE_DATA_BUY_SELL_ONLY_2[0][1], hold_time_min=7, hold_time_max=10)
+        q_seq.set_records(TEST_PRICE_DATA_BUY_SELL_ONLY_2)
+        q_seq.update_q()
+
+        number_of_records = len(q_seq.q_values)
+
+        for i in range(number_of_records):
+            print(q_seq.q_values[i])
+
+    def test_q_sequence_buy_only_2(self):
+        q_seq = QSequence(buy_price=TEST_PRICE_DATA_BUY_SELL_ONLY_2[0][2], hold_time_min=7, hold_time_max=10)
+        q_seq.set_records(TEST_PRICE_DATA_BUY_SELL_ONLY_2)
+        q_seq.update_q()
+
+        number_of_records = len(q_seq.q_values)
+
+        for i in range(number_of_records):
+            print(q_seq.q_values[i])
 
 
 if __name__ == '__main__':
