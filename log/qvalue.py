@@ -5,7 +5,7 @@ from log.constant import ACTION
 Q_INVALID_ACTION = -0.1
 Q_FAILED_ACTION = -0.0001
 Q_DISCOUNT_RATE = 0.995
-Q_FIRST_DISCOUNT_RATE = 0.7
+Q_FIRST_DISCOUNT_RATE = 0.9
 
 HOLD_TIME_MAX = 3600
 HOLD_TIME_MIN = 120
@@ -178,5 +178,5 @@ class QSequence:
 
     def dump_q(self):
         for q in self.q_values:
-            print(q)
+            print(self.start_time, q.order_prices.time, self.action, q)
 

@@ -151,7 +151,7 @@ class MyTestCase(unittest.TestCase):
         price = db.list_price(start_time=start, end_time=start + 150)
         print(len(price))
 
-        q_seq = db.create_q_sequence(start_time=start, action=ACTION.BUY_NOW, start_price=7000)
+        q_seq = db.create_q_sequence(start_time=start, action=ACTION.SELL, start_price=7245)
         q_seq.dump_q()
 
 if __name__ == '__main__':

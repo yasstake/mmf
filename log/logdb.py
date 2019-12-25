@@ -7,6 +7,7 @@ from log.loader import LogLoader
 from log.qvalue import HOLD_TIME_MAX
 from log.qvalue import QValue
 from log.qvalue import QSequence
+from log.qvalue import OrderPrices
 
 
 DB_NAME = ":memory:"
@@ -871,25 +872,26 @@ class LogDb:
         update q values according to the list of prices
         :return:
         '''
-        for price in self.list_price():
-            time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time, fix_order_buy, fix_order_buy_time = price
+        for line in self.list_price():
+            price = OrderPrices()
+            price.set_price_record(line)
 
             # update
-            if market_order_sell:
-                q_sequence = self.create_q_sequence(start_time=time, action=ACTION.SELL_NOW,
-                                                    start_price=market_order_sell, skip_time=60)
+            if price.market_order_sell:
+                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL_NOW,
+                                                    start_price=price.market_order_sell, skip_time=60)
 
-            if market_order_buy:
-                q_sequence = self.create_q_sequence(start_time=time, action=ACTION.BUY_NOW,
-                                                    start_price=market_order_buy, skip_time=60)
+            if price.market_order_buy:
+                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY_NOW,
+                                                    start_price=price.market_order_buy, skip_time=60)
 
-            if fix_order_sell:
-                q_sequence = self.create_q_sequence(start_time=time, action=ACTION.SELL,
-                                                    start_price=fix_order_sell, skip_time=60)
+            if price.fix_order_sell:
+                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL,
+                                                    start_price=price.fix_order_sell, skip_time=60)
 
-            if fix_order_buy:
-                q_sequence = self.create_q_sequence(start_time=time, action=ACTION.BUY,
-                                                    start_price=fix_order_buy, skip_time=60)
+            if price.fix_order_buy:
+                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY,
+                                                    start_price=price.fix_order_buy, skip_time=60)
 
         return q_sequence
 
@@ -902,7 +904,7 @@ class LogDb:
         :param skip_time: skip time for the transaction.
         :return: None(written to the DB)
         '''
-        prices = self.list_price(start_time=start_time + skip_time, end_time=start_time + HOLD_TIME_MAX)
+        prices = self.list_price(start_time=start_time + skip_time, end_time=start_time + skip_time + HOLD_TIME_MAX)
 
         q_sequence = QSequence()
         q_sequence.calc_q_sequence(start_time=start_time, action=action, start_price=start_price, records=prices)

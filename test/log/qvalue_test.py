@@ -87,7 +87,7 @@ class MyTestCase(unittest.TestCase):
         number_of_records = len(q_seq.q_values)
 
         for i in range(number_of_records):
-            print(q_seq.q_values[i])
+            print(q_seq.start_time, q_seq.action, q_seq.q_values[i], q_seq.q_values[i].order_prices.time)
 
 
 if __name__ == '__main__':
