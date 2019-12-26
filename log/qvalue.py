@@ -113,7 +113,6 @@ class QSequence:
             q_value.sell_price = self.sell_price
             q_value.update_q()
 
-            print(q_value)
             self.q_values.append(q_value)
 
     def set_records(self, records):
@@ -128,19 +127,15 @@ class QSequence:
             q_value.sell_price = self.sell_price
             q_value.update_q()
 
-            print(q_value.order_prices.time)
-
             # todo add max draw down
 
             if self.max_q < q_value.get_max_q():
                 self.max_q = q_value.get_max_q()
                 q_sequence.append(q_value)
-                print('append1', q_value.order_prices.time)
                 self.q_values.extend(q_sequence)
                 q_sequence = []
             elif len(self.q_values) < self.hold_time_min:
                 q_sequence.append(q_value)
-                print('append2', q_value.order_prices.time)
             else:
                 self.q_values.extend(q_sequence)
                 break
@@ -150,6 +145,7 @@ class QSequence:
             seq_position += 1
 
     def update_q(self):
+        print('updateq', len(self.q_values))
         next_q_value = 0
 
         for r in reversed(self.q_values):
@@ -162,7 +158,6 @@ class QSequence:
                 next_q_value = max_q * Q_FIRST_DISCOUNT_RATE
 
     def calc_q_sequence(self, *, start_time, action, start_price, records):
-        print('calc_q_sequence', start_time, action, start_price, len(records))
         self.start_time = start_time
         self.action = action
 

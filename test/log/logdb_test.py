@@ -140,7 +140,7 @@ class MyTestCase(unittest.TestCase):
 
 
     def test_create_q_values(self):
-        db = LogDb('/bitlog/bitlog.db')  # create on memory
+        db = LogDb('/bitlog/bitlog.db')
         db.connect()
         db.create_cursor()
         db.create()
@@ -153,6 +153,19 @@ class MyTestCase(unittest.TestCase):
 
         q_seq = db.create_q_sequence(start_time=start, action=ACTION.SELL, start_price=7245)
         q_seq.dump_q()
+
+
+    def test_create_q_and_insert(self):
+        db = LogDb('/bitlog/bitlog.db')
+        db.connect()
+        db.create_cursor()
+        db.create()
+
+        start, end = db.get_db_info()
+        print('start/end', start, end)
+
+        db.insert_updated_q()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -282,7 +282,7 @@ class LogDb:
         return self.cursor.fetchone()
 
     @lru_cache(maxsize=2048)
-    def select_order_book_price_with_retry(self, time, retry = 30):
+    def select_order_book_price_with_retry(self, time, retry=30):
         rec = None
 
         while retry != 0 and rec is None:
@@ -842,11 +842,12 @@ class LogDb:
 
         return rec
 
-    def insert_q(self, time, start_time, start_action, q_value: QValue):
+    def insert_q(self, *, time, start_time, start_action, q_value: QValue):
         sql = '''INSERT or REPLACE into q
                       (time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q)
                       values(?, ?, ?, ?, ?, ?, ?, ?)
         '''
+        print('insert q', time, start_time, start_action)
         self.cursor.execute(sql, [time, start_time, start_action,
                                   q_value.q[ACTION.NOP], q_value.q[ACTION.BUY], q_value.q[ACTION.BUY_NOW],
                                   q_value.q[ACTION.BUY_NOW], q_value.q[ACTION.SELL_NOW]])
@@ -867,6 +868,14 @@ class LogDb:
 
         return rec
 
+    def insert_q_sequence(self, q_sequence):
+        print('--insert q sequence--', len(q_sequence.q_values))
+        for q in q_sequence.q_values:
+            self.insert_q(start_time=q_sequence.start_time, time=q.order_prices.time,
+                          start_action=q_sequence.action, q_value=q)
+
+        self.commit()
+
     def insert_updated_q(self):
         '''
         update q values according to the list of prices
@@ -878,21 +887,28 @@ class LogDb:
 
             # update
             if price.market_order_sell:
+                print('mos')
                 q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL_NOW,
                                                     start_price=price.market_order_sell, skip_time=60)
+                self.insert_q_sequence(q_sequence)
 
             if price.market_order_buy:
+                print('mob')
                 q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY_NOW,
                                                     start_price=price.market_order_buy, skip_time=60)
+                self.insert_q_sequence(q_sequence)
 
             if price.fix_order_sell:
+                print('fos')
                 q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL,
                                                     start_price=price.fix_order_sell, skip_time=60)
+                self.insert_q_sequence(q_sequence)
 
             if price.fix_order_buy:
+                print('fob')
                 q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY,
                                                     start_price=price.fix_order_buy, skip_time=60)
-        self.insert_q_sequence(q_sequence)
+                self.insert_q_sequence(q_sequence)
 
     def create_q_sequence(self, *, start_time, action, start_price, skip_time=0):
         '''
@@ -905,13 +921,10 @@ class LogDb:
         '''
         prices = self.list_price(start_time=start_time + skip_time, end_time=start_time + skip_time + HOLD_TIME_MAX)
 
+        print('create sequence', len(prices))
+
         q_sequence = QSequence()
         q_sequence.calc_q_sequence(start_time=start_time, action=action, start_price=start_price, records=prices)
 
         return q_sequence
-
-    def insert_q_sequence(self, q_sequence):
-        for q in q_sequence:
-            self.insert_q(q.star_ttime, q.q.order_prices.time, q.action, q.q)
-
 

@@ -7,6 +7,7 @@ from matplotlib import pylab as plt
 import log.logdb as logdb
 from log.constant import *
 from random import random
+from log.qvalue import QValue
 
 MAX_PRICE = 100000
 
@@ -203,6 +204,8 @@ class PriceBoard:
         self.funding_ttl = 0
         self.funding = 0
 
+        self.q_value = QValue()
+
     def next_tick(self, copy_last_data=False):
         self.buy_trade.roll(copy_last_data)
         self.sell_trade.roll(copy_last_data)
@@ -343,7 +346,7 @@ class Generator:
         self.db_end_time = None
         self.time = None
 
-    def create(self, *, time=None, db_name = "/tmp/bitlog.db"):
+    def create(self, *, time=None, db_name = "/tmp/bitlog.db", with_q_values=False):
         '''
         create board data generator from db.
         :param time: target time(if not specified, random time is selected)
@@ -365,14 +368,14 @@ class Generator:
 
         # fill data
         while time_len:
-            Generator.load_from_db(self.db, board, self.time)
+            Generator.load_from_db(self.db, board, self.time, with_q_values)
             self.time += 1
             board.next_tick()
             time_len -= 1
         retry = 10
 
         while True:
-            result = Generator.load_from_db(self.db, board, self.time)
+            result = Generator.load_from_db(self.db, board, self.time, with_q_values)
             self.time += 1
             if result:
                 yield board
@@ -409,7 +412,7 @@ class Generator:
         return start_time, end_time
 
     @staticmethod
-    def load_from_db(db, board, time):
+    def load_from_db(db, board, time, with_q_values=False):
         '''
         set values at time into board object
         :param db: connected db
