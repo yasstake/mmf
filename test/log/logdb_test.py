@@ -166,6 +166,22 @@ class MyTestCase(unittest.TestCase):
 
         db.insert_updated_q()
 
+    def test_select_q(self):
+        db = LogDb('/bitlog/bitlog.db')
+        db.connect()
+        db.create_cursor()
+        db.create()
+
+        start, end = db.get_db_info()
+
+        #q = db.select_q_values(start, ACTION.NOP)
+        #q = db.select_q_values(start, ACTION.BUY)
+        #q = db.select_q_values(start, ACTION.BUY_NOW)
+        q = db.select_q_values(start, ACTION.SELL)
+        q = db.select_q_values(start, ACTION.SELL_NOW)
+        print(q)
+
+
 
 if __name__ == '__main__':
     unittest.main()

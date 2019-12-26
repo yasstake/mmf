@@ -847,10 +847,9 @@ class LogDb:
                       (time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q)
                       values(?, ?, ?, ?, ?, ?, ?, ?)
         '''
-        print('insert q', time, start_time, start_action)
         self.cursor.execute(sql, [time, start_time, start_action,
                                   q_value.q[ACTION.NOP], q_value.q[ACTION.BUY], q_value.q[ACTION.BUY_NOW],
-                                  q_value.q[ACTION.BUY_NOW], q_value.q[ACTION.SELL_NOW]])
+                                  q_value.q[ACTION.SELL], q_value.q[ACTION.SELL_NOW]])
 
     def list_q(self, start_time, start_action):
         '''
@@ -867,6 +866,24 @@ class LogDb:
         print(rec)
 
         return rec
+
+    def select_q_values(self, time, action):
+        '''
+        :param time time to select
+        :return: q values for NOP, buy, sell, BUY, SELL
+        '''
+        select_q_sql = """select time, start_time, start_action, time,  nop_q, buy_q, buy_now_q, sell_q, sell_now_q
+                                from q where start_time = ? and start_action= ? order by start_time, time
+            """
+        self.cursor.execute(select_q_sql, (time,action, ))
+        rec = self.cursor.fetchone()
+
+        print(rec)
+
+        q = QValue()
+        q.set_q_records(rec)
+
+        return q
 
     def insert_q_sequence(self, q_sequence):
         print('--insert q sequence--', len(q_sequence.q_values))
@@ -885,30 +902,54 @@ class LogDb:
             price = OrderPrices()
             price.set_price_record(line)
 
+            print('prices----', price)
+
+            q_value = QValue()
+
             # update
             if price.market_order_sell:
                 print('mos')
                 q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL_NOW,
                                                     start_price=price.market_order_sell, skip_time=60)
-                self.insert_q_sequence(q_sequence)
+                if q_sequence:
+                    q_value.q[ACTION.SELL_NOW] = q_sequence.q
+                    self.insert_q_sequence(q_sequence)
 
             if price.market_order_buy:
                 print('mob')
                 q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY_NOW,
                                                     start_price=price.market_order_buy, skip_time=60)
-                self.insert_q_sequence(q_sequence)
+                if q_sequence:
+                    q_value.q[ACTION.BUY_NOW] = q_sequence.q
+                    self.insert_q_sequence(q_sequence)
 
             if price.fix_order_sell:
                 print('fos')
                 q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL,
                                                     start_price=price.fix_order_sell, skip_time=60)
-                self.insert_q_sequence(q_sequence)
+                if q_sequence:
+                    q_value.q[ACTION.SELL] = q_sequence.q
+                    self.insert_q_sequence(q_sequence)
 
             if price.fix_order_buy:
                 print('fob')
                 q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY,
                                                     start_price=price.fix_order_buy, skip_time=60)
-                self.insert_q_sequence(q_sequence)
+
+                if q_sequence:
+                    q_value.q[ACTION.BUY] = q_sequence.q
+                    self.insert_q_sequence(q_sequence)
+
+            print('--- QVAL--', price.time, q_value)
+
+    def update_all_q(self):
+        '''
+        update all q values according to existing q values
+        :return:
+        '''
+
+        pass
+
 
     def create_q_sequence(self, *, start_time, action, start_price, skip_time=0):
         '''
@@ -926,5 +967,9 @@ class LogDb:
         q_sequence = QSequence()
         q_sequence.calc_q_sequence(start_time=start_time, action=action, start_price=start_price, records=prices)
 
-        return q_sequence
+        if len(q_sequence.q_values):
+            return q_sequence
+
+        print('--NOP--')
+        return None
 

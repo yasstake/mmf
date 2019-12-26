@@ -47,6 +47,14 @@ class QValue:
         self.sell_price = None
         self.buy_price = None
 
+    def set_q_records(self, record):
+        # nop_q, buy_q, buy_now_q, sell_q, sell_now_q
+        self.q[ACTION.NOP] = record[4]
+        self.q[ACTION.BUY] = record[5]
+        self.q[ACTION.SELL] = record[6]
+        self.q[ACTION.BUY_NOW] = record[7]
+        self.q[ACTION.SELL_NOW] = record[8]
+
     def set_price_record(self, record):
         self.order_prices = OrderPrices()
         self.order_prices.set_price_record(record)
@@ -96,11 +104,12 @@ class QSequence:
         self.sell_price = sell_price
         self.buy_price = buy_price
 
-        self.max_q = 0
         self.hold_time_max = hold_time_max
         self.hold_time_min = hold_time_min
 
         self.start_time = 0
+
+        self.q = 0
 
     def _set_records(self, records):
         for r in records:
@@ -119,6 +128,8 @@ class QSequence:
         q_sequence = []
         seq_position = 0
 
+        max_q = -9999
+
         for r in records:
             q_value = QValue()
             q_value.set_price_record(r)
@@ -128,9 +139,8 @@ class QSequence:
             q_value.update_q()
 
             # todo add max draw down
-
-            if self.max_q < q_value.get_max_q():
-                self.max_q = q_value.get_max_q()
+            if max_q < q_value.get_max_q():
+                max_q = q_value.get_max_q()
                 q_sequence.append(q_value)
                 self.q_values.extend(q_sequence)
                 q_sequence = []
@@ -144,27 +154,26 @@ class QSequence:
                 break
             seq_position += 1
 
+
     def update_q(self):
-        print('updateq', len(self.q_values))
         next_q_value = 0
 
         for r in reversed(self.q_values):
             r.q[ACTION.NOP] = next_q_value
             max_q = r.get_max_q()
+            next_q_value == max_q * Q_DISCOUNT_RATE
 
-            if next_q_value == max_q:
-                next_q_value = max_q * Q_DISCOUNT_RATE
-            else:
-                next_q_value = max_q * Q_FIRST_DISCOUNT_RATE
+        if 0 < len(self.q_values):
+            self.q = self.q_values[0].get_max_q()
 
     def calc_q_sequence(self, *, start_time, action, start_price, records):
         self.start_time = start_time
         self.action = action
 
-        if action == ACTION.SELL or action == ACTION.SELL_NOW:
+        if (action == ACTION.SELL) or (action == ACTION.SELL_NOW):
             self.sell_price = start_price
             self.buy_price = 0
-        elif action == ACTION.BUY or action == ACTION.BUY_NOW:
+        elif (action == ACTION.BUY) or (action == ACTION.BUY_NOW):
             self.sell_price = 0
             self.buy_price = start_price
 
