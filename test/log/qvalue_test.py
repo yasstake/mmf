@@ -89,6 +89,19 @@ class MyTestCase(unittest.TestCase):
         for i in range(number_of_records):
             print(q_seq.start_time, q_seq.action, q_seq.q_values[i], q_seq.q_values[i].order_prices.time)
 
+    def test_accessor(self):
+        q = QValue()
+
+        q[ACTION.NOP] = 1
+        self.assertEqual(q[ACTION.NOP], 1)
+
+        q[ACTION.BUY] = 2
+        self.assertEqual(q[ACTION.BUY], 2)
+
+        q[ACTION.SELL] = 3
+        self.assertEqual(q[ACTION.SELL], 3)
+
+
 
 if __name__ == '__main__':
     unittest.main()

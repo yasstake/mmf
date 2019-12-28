@@ -23,4 +23,10 @@ if __name__ == "__main__":
     print('skip rec->', skip_number)
 
     db.commit()
+
+    db.update_all_q()
+    db.commit()
+
     db.close()
+
+

@@ -178,8 +178,27 @@ class MyTestCase(unittest.TestCase):
         #q = db.select_q_values(start, ACTION.BUY)
         #q = db.select_q_values(start, ACTION.BUY_NOW)
         q = db.select_q_values(start, ACTION.SELL)
+        print(q)
         q = db.select_q_values(start, ACTION.SELL_NOW)
         print(q)
+
+
+    def test_update_q_on_nop(self):
+        db = LogDb('/bitlog/bitlog.db')
+        db.connect()
+        db.create_cursor()
+
+        db.update_q_on_nop()
+
+
+    def test_update_all_q_values(self):
+        db = LogDb('/bitlog/bitlog.db')
+        db.connect()
+        db.create_cursor()
+
+        db.update_all_q()
+
+        db.commit()
 
 
 
