@@ -163,7 +163,6 @@ class QSequence:
                 break
             seq_position += 1
 
-
     def update_q(self):
         next_q_value = 0
 
