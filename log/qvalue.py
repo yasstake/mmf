@@ -43,6 +43,15 @@ class OrderPrices:
             self.fix_order_buy_time
         )
 
+    def is_equal_prices(self, price):
+        if ((self.market_order_sell != price.market_order_sell) or
+            (self.market_order_buy != price.market_order_buy) or
+            (self.fix_order_sell != self.fix_order_sell) or
+            (self.fix_order_sell_time != self.fix_order_sell_time) or
+            (self.fix_order_buy != self.fix_order_buy) or
+            (self.fix_order_buy_time != self.fix_order_buy_time)):
+            return False
+        return True
 
 class QValue:
     def __init__(self, *, time=None, start_time=None, start_action=None, start_price=None):
