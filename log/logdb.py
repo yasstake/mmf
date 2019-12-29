@@ -953,9 +953,6 @@ class LogDb:
                                            start_price=old_price.fix_order_buy, skip_time=60)
                     q_val[ACTION.BUY] = q
 
-                    self.insert_q(time=old_price.time, start_time=old_price.time,
-                                  start_action=ACTION.NOP, q_value=q_val)
-
                 self.insert_q(time=old_price.time, start_action=ACTION.NOP, start_time=0, q_value=q_val)
 
             old_price = price
@@ -993,7 +990,6 @@ class LogDb:
         nop_q = 0
         old_q = QValue(start_time=start_time, start_action=action, start_price=start_price)
 
-
         for price_rec in prices:
             q = QValue(start_time=start_time, start_action=action, start_price=start_price)
             q.set_price_record(price_rec)
@@ -1007,7 +1003,8 @@ class LogDb:
                 nop_q = new_q
             q[ACTION.NOP] = nop_q
 
-            self.insert_q(time=q.time, start_time=start_time, start_action=action, q_value=q)
+            if q.time != start_time:
+                self.insert_q(time=q.time, start_time=start_time, start_action=action, q_value=q)
 
             old_q = q
 
