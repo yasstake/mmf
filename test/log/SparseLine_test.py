@@ -266,7 +266,7 @@ class TestSparseLine(TestCase):
         print(mat.get(200, 203))
 
         mat.roll(True)
-        print(mat.get_board(200, 3))
+        print(mat.get_board(200))
 
 
 

@@ -991,6 +991,7 @@ class LogDb:
             if nop_q < new_q:
                 nop_q = new_q
             q[ACTION.NOP] = nop_q
+            # print('insertq', q)
             self.insert_q(time=q.time, start_time=start_time, start_action=action, q_value=q)
 
             old_q = q

@@ -72,10 +72,10 @@ class QValue:
         self.q[key] = value
 
     def is_same_q_exept_nop(self, q):
-        if ((q[ACTION.BUY] != self.q[ACTION.BUY]) or
-            (q[ACTION.BUY_NOW] != self.q[ACTION.BUY_NOW]) or
-            (q[ACTION.SELL] != self.q[ACTION.SELL]) or
-            (q[ACTION.SELL_NOW] != self.q[ACTION.SELL_NOW])):
+        if ((q.q[ACTION.BUY] != self.q[ACTION.BUY]) or
+            (q.q[ACTION.SELL] != self.q[ACTION.SELL]) or
+            (q.q[ACTION.BUY_NOW] != self.q[ACTION.BUY_NOW]) or
+            (q.q[ACTION.SELL_NOW] != self.q[ACTION.SELL_NOW])):
             return False
         else:
             return True
@@ -91,11 +91,11 @@ class QValue:
         self.q[ACTION.BUY_NOW] = record[6]
         self.q[ACTION.SELL_NOW] = record[7]
 
-
     def set_price_record(self, record):
         # time, market_order_sell,market_order_buy,fix_order_sell,fix_order_sell_time,fix_order_buy, fix_order_buy_time
         self.time = record[0]
-        self.order_prices = OrderPrices()
+        if not self.order_prices:
+            self.order_prices = OrderPrices()
         self.order_prices.set_price_record(record)
         self.update_q()
 
