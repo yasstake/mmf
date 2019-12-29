@@ -46,9 +46,9 @@ class OrderPrices:
     def is_equal_prices(self, price):
         if ((self.market_order_sell != price.market_order_sell) or
             (self.market_order_buy != price.market_order_buy) or
-            (self.fix_order_sell != self.fix_order_sell) or
-            (self.fix_order_sell_time != self.fix_order_sell_time) or
-            (self.fix_order_buy != self.fix_order_buy) or
+            (self.fix_order_sell != price.fix_order_sell) or
+            (self.fix_order_sell_time != price.fix_order_sell_time) or
+            (self.fix_order_buy != price.fix_order_buy) or
             (self.fix_order_buy_time != self.fix_order_buy_time)):
             return False
         return True
@@ -143,7 +143,7 @@ class QValue:
         return '[{}] NOP[{}] sell[{}] buy[{}] SELL[{}] BUY[{}]'.format(
             self.time, self.q[ACTION.NOP], self.q[ACTION.SELL], self.q[ACTION.BUY], self.q[ACTION.SELL_NOW], self.q[ACTION.BUY_NOW])
 
-
+'''
 class QSequence:
     def __init__(self, *, sell_price=None, buy_price=None, hold_time_max=HOLD_TIME_MAX, hold_time_min=HOLD_TIME_MIN):
         self.q_values = []
@@ -231,4 +231,4 @@ class QSequence:
     def dump_q(self):
         for q in self.q_values:
             print(self.start_time, q.order_prices.time, self.action, q)
-
+'''

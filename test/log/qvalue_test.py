@@ -2,7 +2,7 @@ import unittest
 from log.constant import ACTION
 from log.qvalue import OrderPrices
 from log.qvalue import QValue
-from log.qvalue import QSequence
+#from log.qvalue import QSequence
 from log.qvalue import Q_FAILED_ACTION
 from log.qvalue import Q_INVALID_ACTION
 
@@ -17,77 +17,29 @@ class MyTestCase(unittest.TestCase):
 
         self.assertIsNotNone(order_price)
 
-    def _test_list_data(self):
-        for data in TEST_PRICE_DATA:
-            print(data)
-
     def test_set_one_rec(self):
         price = OrderPrices()
 
         price.set_price_record(TEST_PRICE_DATA[1])
-
         print(price)
 
-    def test_q_sequence_buy(self):
-        q_seq = QSequence(buy_price=TEST_PRICE_DATA[0][1])
-        q_seq.set_records(TEST_PRICE_DATA)
-        q_seq.update_q()
+    def test_is_equal_price_value(self):
+        price1 = OrderPrices()
+        price2 = OrderPrices()
 
-        number_of_records = len(q_seq.q_values)
+        self.assertEqual(price1.time, price2.time)
 
-        for i in range(number_of_records):
-            print(q_seq.q_values[i])
+        self.assertTrue(price1.is_equal_prices(price2))
 
-    def test_q_sequence_sell(self):
-        q_seq = QSequence(sell_price=TEST_PRICE_DATA[0][1])
-        q_seq.set_records(TEST_PRICE_DATA)
-        q_seq.update_q()
+        price2.fix_order_buy = 1
+        self.assertFalse(price1.is_equal_prices(price2))
 
-        number_of_records = len(q_seq.q_values)
+    def test_price_constructor(self):
+        price_rec = (1, 2, 3, 4, 5, 6, 7)
+        price = OrderPrices(price_rec)
 
-        for i in range(number_of_records):
-            print(q_seq.q_values[i])
+        self.assertEqual(price.time, 1)
 
-
-    def test_q_sequence_sell_only(self):
-        q_seq = QSequence(sell_price=TEST_PRICE_DATA_BUY_SELL_ONLY[0][1], hold_time_min=7, hold_time_max=10)
-        q_seq.set_records(TEST_PRICE_DATA_BUY_SELL_ONLY)
-        q_seq.update_q()
-
-        number_of_records = len(q_seq.q_values)
-
-        for i in range(number_of_records):
-            print(q_seq.q_values[i])
-
-    def test_q_sequence_buy_only(self):
-        q_seq = QSequence(buy_price=TEST_PRICE_DATA_BUY_SELL_ONLY[0][2], hold_time_min=7, hold_time_max=10)
-        q_seq.set_records(TEST_PRICE_DATA_BUY_SELL_ONLY)
-        q_seq.update_q()
-
-        number_of_records = len(q_seq.q_values)
-
-        for i in range(number_of_records):
-            print(q_seq.q_values[i])
-
-    def test_q_sequence_sell_only_2(self):
-        q_seq = QSequence(sell_price=TEST_PRICE_DATA_BUY_SELL_ONLY_2[0][1], hold_time_min=7, hold_time_max=10)
-        q_seq.set_records(TEST_PRICE_DATA_BUY_SELL_ONLY_2)
-        q_seq.update_q()
-
-        number_of_records = len(q_seq.q_values)
-
-        for i in range(number_of_records):
-            print(q_seq.q_values[i])
-
-    def test_q_sequence_buy_only_2(self):
-        q_seq = QSequence(buy_price=TEST_PRICE_DATA_BUY_SELL_ONLY_2[0][2], hold_time_min=7, hold_time_max=10)
-        q_seq.set_records(TEST_PRICE_DATA_BUY_SELL_ONLY_2)
-        q_seq.update_q()
-
-        number_of_records = len(q_seq.q_values)
-
-        for i in range(number_of_records):
-            print(q_seq.start_time, q_seq.action, q_seq.q_values[i], q_seq.q_values[i].order_prices.time)
 
     def test_accessor(self):
         q = QValue()
@@ -141,9 +93,6 @@ class MyTestCase(unittest.TestCase):
         q1[4] = 2
         q2[4] = 4
         self.assertFalse(q1.is_same_q_exept_nop(q2))
-
-
-
 
 
 if __name__ == '__main__':
