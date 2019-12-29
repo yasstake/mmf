@@ -928,88 +928,22 @@ class LogDb:
 
             print(price.time)
 
-            q_value = QValue()
-
             # update
             if price.market_order_sell:
-                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL_NOW,
-                                                    start_price=price.market_order_sell, skip_time=60)
-                if q_sequence:
-                    q_value.q[ACTION.SELL_NOW] = q_sequence.q
-                    self.insert_q_sequence(q_sequence)
+                self.create_q_sequence(start_time=price.time, action=ACTION.SELL_NOW,
+                                       start_price=price.market_order_sell, skip_time=60)
 
             if price.market_order_buy:
-                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY_NOW,
-                                                    start_price=price.market_order_buy, skip_time=60)
-                if q_sequence:
-                    q_value.q[ACTION.BUY_NOW] = q_sequence.q
-                    self.insert_q_sequence(q_sequence)
+                self.create_q_sequence(start_time=price.time, action=ACTION.BUY_NOW,
+                                       start_price=price.market_order_buy, skip_time=60)
 
             if price.fix_order_sell:
-                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL,
-                                                    start_price=price.fix_order_sell, skip_time=60)
-                if q_sequence:
-                    q_value.q[ACTION.SELL] = q_sequence.q
-                    self.insert_q_sequence(q_sequence)
+                self.create_q_sequence(start_time=price.time, action=ACTION.SELL,
+                                       start_price=price.fix_order_sell, skip_time=60)
 
             if price.fix_order_buy:
-                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY,
-                                                    start_price=price.fix_order_buy, skip_time=60)
-
-                if q_sequence:
-                    q_value.q[ACTION.BUY] = q_sequence.q
-                    self.insert_q_sequence(q_sequence)
-
-            self.insert_q(time=price.time, start_time=0, start_action=ACTION.NOP, q_value=q_value)
-
-        self.commit()
-
-    def _insert_updated_q(self):
-        '''
-        update q values according to the list of prices
-        :return: None
-        '''
-        for line in self.list_price():
-            price = OrderPrices()
-            price.set_price_record(line)
-
-            print(price.time)
-
-            q_value = QValue()
-
-            # update
-            if price.market_order_sell:
-                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL_NOW,
-                                                    start_price=price.market_order_sell, skip_time=60)
-                if q_sequence:
-                    q_value.q[ACTION.SELL_NOW] = q_sequence.q
-                    self.insert_q_sequence(q_sequence)
-
-            if price.market_order_buy:
-                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY_NOW,
-                                                    start_price=price.market_order_buy, skip_time=60)
-                if q_sequence:
-                    q_value.q[ACTION.BUY_NOW] = q_sequence.q
-                    self.insert_q_sequence(q_sequence)
-
-            if price.fix_order_sell:
-                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL,
-                                                    start_price=price.fix_order_sell, skip_time=60)
-                if q_sequence:
-                    q_value.q[ACTION.SELL] = q_sequence.q
-                    self.insert_q_sequence(q_sequence)
-
-            if price.fix_order_buy:
-                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY,
-                                                    start_price=price.fix_order_buy, skip_time=60)
-
-                if q_sequence:
-                    q_value.q[ACTION.BUY] = q_sequence.q
-                    self.insert_q_sequence(q_sequence)
-
-            self.insert_q(time=price.time, start_time=0, start_action=ACTION.NOP, q_value=q_value)
-
-        self.commit()
+                self.create_q_sequence(start_time=price.time, action=ACTION.BUY,
+                                       start_price=price.fix_order_buy, skip_time=60)
 
     def select_highest_price_time(self, time):
         sql = """select time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time,  
@@ -1057,44 +991,11 @@ class LogDb:
             if nop_q < new_q:
                 nop_q = new_q
             q[ACTION.NOP] = nop_q
-
-            print('insert', q)
             self.insert_q(time=q.time, start_time=start_time, start_action=action, q_value=q)
 
             old_q = q
 
-
-
-
-    def create_low_q_sequence(self, *, start_time, action, start_price, skip_time=0):
-        prices = self.list_price(start_time=start_time + skip_time, end_time=start_time + skip_time + HOLD_TIME_MAX)
-
-        q_sequence = QSequence()
-        q_sequence.calc_q_sequence(start_time=start_time, action=action, start_price=start_price, records=prices)
-
-        if len(q_sequence.q_values):
-            return q_sequence
-
-        return None
-
-    def _create_q_sequence(self, *, start_time, action, start_price, skip_time=0):
-        '''
-
-        :param start_time: the execution beginning time(origing time). Some ticks may skipped for transaction.
-        :param action: in action
-        :param start_price: price in action
-        :param skip_time: skip time for the transaction.
-        :return: None(written to the DB)
-        '''
-        prices = self.list_price(start_time=start_time + skip_time, end_time=start_time + skip_time + HOLD_TIME_MAX)
-
-        q_sequence = QSequence()
-        q_sequence.calc_q_sequence(start_time=start_time, action=action, start_price=start_price, records=prices)
-
-        if len(q_sequence.q_values):
-            return q_sequence
-
-        return None
+        self.commit()
 
     def update_all_q(self):
         '''
