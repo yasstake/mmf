@@ -101,6 +101,49 @@ class MyTestCase(unittest.TestCase):
         q[ACTION.SELL] = 3
         self.assertEqual(q[ACTION.SELL], 3)
 
+    def test_is_same_q(self):
+        q1 = QValue()
+        q2 = QValue()
+        self.assertTrue(q1.is_same_q_exept_nop(q2))
+
+        q1[1] = 1
+        q2[1] = 1
+        self.assertTrue(q1.is_same_q_exept_nop(q2))
+
+        q1[3] = 4
+        q2[3] = 4
+        self.assertTrue(q1.is_same_q_exept_nop(q2))
+
+        q1[ACTION.NOP] = 4
+        q2[ACTION.NOP] = 1
+        self.assertTrue(q1.is_same_q_exept_nop(q2))
+
+        q1 = QValue()
+        q2 = QValue()
+        q1[1] = 2
+        q2[1] = 4
+        self.assertFalse(q1.is_same_q_exept_nop(q2))
+
+        q1 = QValue()
+        q2 = QValue()
+        q1[2] = 2
+        q2[2] = 4
+        self.assertFalse(q1.is_same_q_exept_nop(q2))
+
+        q1 = QValue()
+        q2 = QValue()
+        q1[3] = 2
+        q2[3] = 4
+        self.assertFalse(q1.is_same_q_exept_nop(q2))
+
+        q1 = QValue()
+        q2 = QValue()
+        q1[4] = 2
+        q2[4] = 4
+        self.assertFalse(q1.is_same_q_exept_nop(q2))
+
+
+
 
 
 if __name__ == '__main__':

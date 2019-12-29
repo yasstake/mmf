@@ -200,6 +200,74 @@ class MyTestCase(unittest.TestCase):
 
         db.commit()
 
+    def test_select_hi_price(self):
+        db = LogDb('/bitlog/bitlog.db')
+        db.connect()
+        db.create_cursor()
+
+        start, _ = db.get_db_info()
+        p = db.select_center_price(start)
+        r = db.select_highest_price_time(start)
+        print(start, p, r)
+
+        start += 500
+        p = db.select_center_price(start)
+        r = db.select_highest_price_time(start)
+        print(start, p, r)
+
+        start += 500
+        p = db.select_center_price(start)
+        r = db.select_highest_price_time(start)
+        print(start, p, r)
+
+        start += 500
+        p = db.select_center_price(start)
+        r = db.select_highest_price_time(start)
+        print(start, p, r)
+
+        start += 5000
+        p = db.select_center_price(start)
+        r = db.select_highest_price_time(start)
+        print(start, p, r)
+
+
+    def test_create_high_q_sequcen(self):
+        db = LogDb('/bitlog/bitlog.db')
+        db.connect()
+        db.create_cursor()
+
+        start, _ = db.get_db_info()
+
+        start_price = 7000
+        action = ACTION.BUY
+
+        db.create_q_sequence(start_time=start, action=action, start_price=start_price)
+
+
+    def test_create_low_q_sequcen(self):
+        db = LogDb('/bitlog/bitlog.db')
+        db.connect()
+        db.create_cursor()
+
+        start, _ = db.get_db_info()
+
+        start_price = 7220
+        action = ACTION.SELL
+
+        db.create_q_sequence(start_time=start, action=action, start_price=start_price)
+
+
+
+
+    def test_select_low_price(self):
+        db = LogDb('/bitlog/bitlog.db')
+        db.connect()
+        db.create_cursor()
+
+        start, _ = db.get_db_info()
+        r = db.select_lowest_price_time(start)
+
+        print(start, r)
 
 
 if __name__ == '__main__':

@@ -9,6 +9,8 @@ from log.qvalue import QValue
 from log.qvalue import QSequence
 from log.qvalue import OrderPrices
 from log.qvalue import Q_DISCOUNT_RATE
+from log.qvalue import HOLD_TIME_MAX
+from log.qvalue import EXECUTE_TIME_MIN
 
 
 DB_NAME = ":memory:"
@@ -730,7 +732,6 @@ class LogDb:
 
         return records[0]
 
-
     def copy_db(self, source, destination, start_time=None, end_time=None):
         self.copy_table('order_book', source, destination, start_time, end_time)
         self.copy_table('sell_trade', source, destination, start_time, end_time)
@@ -770,10 +771,7 @@ class LogDb:
 
         self.commit()
 
-
-
     def import_table(self, table_name, source, start_time=None, end_time=None):
-
         self.cursor.execute("attach database '" + source + "'as source_db")
 
         where_statement = ""
@@ -792,7 +790,6 @@ class LogDb:
         self.cursor.execute("detach database source_db")
 
         print('import table', table_name, source)
-
 
     def import_dump_file(self, file='/tmp/bitlog.dump'):
         with open(file) as f:
@@ -813,18 +810,21 @@ class LogDb:
 
         return start_time, end_time
 
-    def list_price(self, *, start_time=None, end_time=None):
+    def list_price(self, *, start_time=None, end_time=None, desc=False):
         if start_time and end_time:
             sql = """select time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time,  
                    fix_order_buy, fix_order_buy_time from order_book where ? <= time and time <= ? order by time"""
-            cur = self.connection.execute(sql, (start_time, end_time))
+            if desc:
+                sql += ' desc'
+            cur = self.connection.execute(sql, (start_time, end_time,))
         else:
             sql = """select time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time,  
                    fix_order_buy, fix_order_buy_time from order_book order by time"""
+            if desc:
+                sql += ' desc'
             cur = self.connection.execute(sql)
 
         return cur.fetchall()
-
 
     def select_q(self, time, start_time, start_action):
         '''
@@ -835,7 +835,7 @@ class LogDb:
         :return:
         '''
         select_q_sql = """select time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q
-                            from q where time = ? and start_time = ? and start_action = ? order by time 
+                            from q where ? <= time and start_time = ? and start_action = ? order by time 
         """
         self.cursor.execute(select_q_sql, (time, start_time, start_action,))
         rec = self.cursor.fetchone()
@@ -964,8 +964,120 @@ class LogDb:
 
         self.commit()
 
+    def _insert_updated_q(self):
+        '''
+        update q values according to the list of prices
+        :return: None
+        '''
+        for line in self.list_price():
+            price = OrderPrices()
+            price.set_price_record(line)
+
+            print(price.time)
+
+            q_value = QValue()
+
+            # update
+            if price.market_order_sell:
+                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL_NOW,
+                                                    start_price=price.market_order_sell, skip_time=60)
+                if q_sequence:
+                    q_value.q[ACTION.SELL_NOW] = q_sequence.q
+                    self.insert_q_sequence(q_sequence)
+
+            if price.market_order_buy:
+                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY_NOW,
+                                                    start_price=price.market_order_buy, skip_time=60)
+                if q_sequence:
+                    q_value.q[ACTION.BUY_NOW] = q_sequence.q
+                    self.insert_q_sequence(q_sequence)
+
+            if price.fix_order_sell:
+                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.SELL,
+                                                    start_price=price.fix_order_sell, skip_time=60)
+                if q_sequence:
+                    q_value.q[ACTION.SELL] = q_sequence.q
+                    self.insert_q_sequence(q_sequence)
+
+            if price.fix_order_buy:
+                q_sequence = self.create_q_sequence(start_time=price.time, action=ACTION.BUY,
+                                                    start_price=price.fix_order_buy, skip_time=60)
+
+                if q_sequence:
+                    q_value.q[ACTION.BUY] = q_sequence.q
+                    self.insert_q_sequence(q_sequence)
+
+            self.insert_q(time=price.time, start_time=0, start_action=ACTION.NOP, q_value=q_value)
+
+        self.commit()
+
+    def select_highest_price_time(self, time):
+        sql = """select time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time,  
+               fix_order_buy, fix_order_buy_time from order_book where ? <= time and time < ? 
+               order by market_order_buy desc, time"""
+
+        self.cursor.execute(sql, (time, time + HOLD_TIME_MAX))
+        rec = self.cursor.fetchone()
+        price = OrderPrices(rec)
+
+        return price
+
+    def select_lowest_price_time(self, time):
+        sql = """select time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time,  
+               fix_order_buy, fix_order_buy_time from order_book where ? <= time and time < ? 
+               order by market_order_sell, time"""
+
+        self.cursor.execute(sql, (time, time + HOLD_TIME_MAX))
+        rec = self.cursor.fetchone()
+        price = OrderPrices(rec)
+
+        return price
 
     def create_q_sequence(self, *, start_time, action, start_price, skip_time=0):
+        if (action == ACTION.BUY) or (action == ACTION.BUY_NOW):
+            peak_price = self.select_highest_price_time(start_time + EXECUTE_TIME_MIN)
+        elif (action == ACTION.SELL) or (action == ACTION.SELL_NOW):
+            peak_price = self.select_lowest_price_time(start_time + EXECUTE_TIME_MIN)
+
+        prices = self.list_price(start_time=start_time+skip_time, end_time=peak_price.time, desc=True)
+
+        nop_q = 0
+        old_q = QValue(start_time=start_time, start_action=action, start_price=start_price)
+
+        for price_rec in prices:
+            q = QValue(start_time=start_time, start_action=action, start_price=start_price)
+            q.set_price_record(price_rec)
+
+            nop_q *= Q_DISCOUNT_RATE
+
+            if q.is_same_q_exept_nop(old_q):
+                continue
+
+            new_q = old_q.max_q() * Q_DISCOUNT_RATE
+            if nop_q < new_q:
+                nop_q = new_q
+            q[ACTION.NOP] = nop_q
+
+            print('insert', q)
+            self.insert_q(time=q.time, start_time=start_time, start_action=action, q_value=q)
+
+            old_q = q
+
+
+
+
+    def create_low_q_sequence(self, *, start_time, action, start_price, skip_time=0):
+        prices = self.list_price(start_time=start_time + skip_time, end_time=start_time + skip_time + HOLD_TIME_MAX)
+
+        q_sequence = QSequence()
+        q_sequence.calc_q_sequence(start_time=start_time, action=action, start_price=start_price, records=prices)
+
+        if len(q_sequence.q_values):
+            return q_sequence
+
+        return None
+
+    def _create_q_sequence(self, *, start_time, action, start_price, skip_time=0):
         '''
 
         :param start_time: the execution beginning time(origing time). Some ticks may skipped for transaction.

@@ -10,9 +10,11 @@ Q_FIRST_DISCOUNT_RATE = 0.9
 HOLD_TIME_MAX = 3600
 HOLD_TIME_MIN = 120
 
+EXECUTE_TIME_MIN = 30
+
 
 class OrderPrices:
-    def __init__(self):
+    def __init__(self, rec=None):
         self.time = None  # 0
         self.market_order_sell = None  # 1
         self.market_order_buy = None  # 2
@@ -21,7 +23,11 @@ class OrderPrices:
         self.fix_order_buy = None  # 5
         self.fix_order_buy_time = None  # 6
 
+        if rec:
+            self.set_price_record(rec)
+
     def set_price_record(self, record):
+        # time, market_order_sell,market_order_buy,fix_order_sell,fix_order_sell_time,fix_order_buy, fix_order_buy_time
         self.time = record[0]
         self.market_order_sell = record[1]
         self.market_order_buy = record[2]
@@ -39,15 +45,25 @@ class OrderPrices:
 
 
 class QValue:
-    def __init__(self):
+    def __init__(self, *, time=None, start_time=None, start_action=None, start_price=None):
         self.q = np.zeros((5,))
         self.q[:] = Q_INVALID_ACTION
 
-        self.order_prices = None
-        self.sell_price = None
-        self.buy_price = None
+        # (time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q)
+        self.time = time
+        self.start_time = start_time
+        self.start_action = start_action
 
-        self.time = None
+        self.order_prices = None
+
+        self.buy_price = None
+        self.sell_price = None
+
+        if (start_action == ACTION.BUY) or (start_action == ACTION.BUY_NOW):
+            self.buy_price = start_price
+
+        if (start_action == ACTION.SELL) or (start_action == ACTION.SELL_NOW):
+            self.sell_price = start_price
 
     def __getitem__(self, item):
         return self.q[item]
@@ -55,18 +71,33 @@ class QValue:
     def __setitem__(self, key, value):
         self.q[key] = value
 
+    def is_same_q_exept_nop(self, q):
+        if ((q[ACTION.BUY] != self.q[ACTION.BUY]) or
+            (q[ACTION.BUY_NOW] != self.q[ACTION.BUY_NOW]) or
+            (q[ACTION.SELL] != self.q[ACTION.SELL]) or
+            (q[ACTION.SELL_NOW] != self.q[ACTION.SELL_NOW])):
+            return False
+        else:
+            return True
+
     def set_q_records(self, record):
         # (time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q)
         self.time = record[0]
+        self.start_time = record[1]
+        self.start_action = record[2]
         self.q[ACTION.NOP] = record[3]
         self.q[ACTION.BUY] = record[4]
         self.q[ACTION.SELL] = record[5]
         self.q[ACTION.BUY_NOW] = record[6]
         self.q[ACTION.SELL_NOW] = record[7]
 
+
     def set_price_record(self, record):
+        # time, market_order_sell,market_order_buy,fix_order_sell,fix_order_sell_time,fix_order_buy, fix_order_buy_time
+        self.time = record[0]
         self.order_prices = OrderPrices()
         self.order_prices.set_price_record(record)
+        self.update_q()
 
     def update_q(self):
         if self.sell_price:
@@ -100,8 +131,8 @@ class QValue:
         return np.min(self.q)
 
     def __str__(self):
-        return 'NOP[{}] sell[{}] buy[{}] SELL[{}] BUY[{}]'.format(
-            self.q[ACTION.NOP], self.q[ACTION.SELL], self.q[ACTION.BUY], self.q[ACTION.SELL_NOW], self.q[ACTION.BUY_NOW])
+        return '[{}] NOP[{}] sell[{}] buy[{}] SELL[{}] BUY[{}]'.format(
+            self.time, self.q[ACTION.NOP], self.q[ACTION.SELL], self.q[ACTION.BUY], self.q[ACTION.SELL_NOW], self.q[ACTION.BUY_NOW])
 
 
 class QSequence:
