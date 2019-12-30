@@ -127,12 +127,12 @@ class TradeEnv(gym.Env):
             self.start_action = action
             self.start_time = self.board.current_time
 
-        if self.start_time:
-            print('start_time', self.start_time, self.start_action)
-            self.q_value = self.generator.select_q(self.board.current_time, self.start_time, self.start_action)
-        else:
+        if self.start_action == ACTION.NOP:
             print('start_time(noaction)', self.start_time, self.start_action)
             self.q_value = self.generator.select_q(self.board.current_time, self.board.current_time, ACTION.NOP)
+        else:
+            print('start_time', self.board.current_time, self.start_time, self.start_action)
+            self.q_value = self.generator.select_q(self.board.current_time, self.start_time, self.start_action)
 
         if self.episode_done:
             reward = self.margin

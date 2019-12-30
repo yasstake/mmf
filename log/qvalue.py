@@ -139,6 +139,9 @@ class QValue:
     def draw_down(self):
         return np.min(self.q)
 
+    def get_best_action(self):
+        return np.argmax(self.q)
+
     def __str__(self):
         return '[{}] NOP[{}] sell[{}] buy[{}] SELL[{}] BUY[{}]'.format(
             self.time, self.q[ACTION.NOP], self.q[ACTION.SELL], self.q[ACTION.BUY], self.q[ACTION.SELL_NOW], self.q[ACTION.BUY_NOW])

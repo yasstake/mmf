@@ -270,5 +270,32 @@ class MyTestCase(unittest.TestCase):
         print(start, r)
 
 
+    def test_select_q(self):
+        db = LogDb('/bitlog/bitlog.db')
+        db.connect()
+        db.create_cursor()
+
+        q = db.select_q(0, 0, 0)
+        print(q)
+
+        q = db.select_q(0, 0, 1)
+        print(q)
+
+        q = db.select_q(1575501187, 1575501187, 2)
+        print(q)
+
+        q = db.select_q(1575542888, 1575542888, 1)
+        print(q)
+        q = db.select_q(1575542888, 1575542888, 2)
+        print(q)
+        q = db.select_q(1575542888, 1575542888, 3)
+        print(q)
+        q = db.select_q(1575542888, 1575542888, 4)
+        print(q)
+
+
+
+
+
 if __name__ == '__main__':
     unittest.main()

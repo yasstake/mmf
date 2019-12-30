@@ -94,6 +94,14 @@ class MyTestCase(unittest.TestCase):
         q2[4] = 4
         self.assertFalse(q1.is_same_q_exept_nop(q2))
 
+    def test_best_action(self):
+        q = QValue()
+        self.assertEqual(q.get_best_action(), 0)
+
+        q[ACTION.BUY] = 1
+        self.assertEqual(q.get_best_action(), ACTION.BUY)
+
+        print(q)
 
 if __name__ == '__main__':
     unittest.main()

@@ -822,6 +822,7 @@ class LogDb:
             cur = self.connection.execute(sql)
         return cur.fetchall()
 
+    @lru_cache(maxsize=2048)
     def select_q_val(self, time, start_time, start_action):
         rec = self.select_q(time, start_time, start_action)
 
@@ -842,13 +843,31 @@ class LogDb:
         :return:
         '''
         select_q_sql = """select time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q
-                            from q where ? <= time and ? <= start_time and start_action = ? order by time 
+                            from q where ? <= time and ? <= start_time and start_action = ? order by start_time, time limit 10 
         """
         if start_action == ACTION.NOP:
             start_time = 0
 
-        self.cursor.execute(select_q_sql, (time, start_time, start_action,))
-        rec = self.cursor.fetchone()
+        cur = self.connection.cursor()
+        cur.execute(select_q_sql, (time, start_time, start_action))
+        rec = cur.fetchone()
+
+        #self.cursor.execute(select_q_sql, (time, start_time, start_action))
+        #rec = self.cursor.fetchone()
+
+
+
+        select_q_sql_s = """select time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q
+                            from q where {} <= time and {} <= start_time and start_action = {} order by start_time, time limit 10 
+        """.format(time, start_time, start_action)
+
+        print(select_q_sql_s)
+
+        cur = self.connection.cursor()
+        cur.execute(select_q_sql_s)
+        rec = cur.fetchone()
+
+        print('selectq', time, start_time, start_action, rec)
 
         return rec
 
