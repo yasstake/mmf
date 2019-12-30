@@ -2,8 +2,8 @@ import numpy as np
 
 from log.constant import ACTION
 
-Q_INVALID_ACTION = -0.1
-Q_FAILED_ACTION = -0.0001
+Q_INVALID_ACTION = -10
+Q_FAILED_ACTION = -0.1
 Q_DISCOUNT_RATE = 0.995
 Q_FIRST_DISCOUNT_RATE = 0.9
 
@@ -96,8 +96,8 @@ class QValue:
         self.start_action = record[2]
         self.q[ACTION.NOP] = record[3]
         self.q[ACTION.BUY] = record[4]
-        self.q[ACTION.SELL] = record[5]
-        self.q[ACTION.BUY_NOW] = record[6]
+        self.q[ACTION.BUY_NOW] = record[5]
+        self.q[ACTION.SELL] = record[6]
         self.q[ACTION.SELL_NOW] = record[7]
 
     def set_price_record(self, record):
