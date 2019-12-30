@@ -6,6 +6,7 @@ from log.constant import ACTION
 from log.constant import TIME_WIDTH
 from log.constant import BOARD_WIDTH
 from log.dbgen import Generator
+from log.qvalue import QValue
 
 ONE_ORDER_SIZE = 1.0
 MAX_DRAW_DOWN = 50
@@ -49,10 +50,13 @@ class TradeEnv(gym.Env):
         self.board_generator = None
         self.board = None
         self.margin = 0
+        self.q_value = QValue()
 
         self.episode_text = ''
 
         self.action = ACTION.NOP
+        self.start_action = ACTION.NOP
+        self.start_time = None
 
         self.sell_order_price = None
         self.buy_order_price = None
@@ -69,7 +73,6 @@ class TradeEnv(gym.Env):
             dtype=np.uint8
         )
         # self.reward_range = [-255., 255.]
-
 
         self.reset()
 
@@ -120,6 +123,17 @@ class TradeEnv(gym.Env):
 
         self.evaluate()
         self.action = action
+        if self.start_action == ACTION.NOP and action != ACTION.NOP:
+            self.start_action = action
+            self.start_time = self.board.current_time
+
+        if self.start_time:
+            print('start_time', self.start_time, self.start_action)
+            self.q_value = self.generator.select_q(self.board.current_time, self.start_time, self.start_action)
+        else:
+            print('start_time(noaction)', self.start_time, self.start_action)
+            self.q_value = self.generator.select_q(self.board.current_time, self.board.current_time, ACTION.NOP)
+
         if self.episode_done:
             reward = self.margin
 
@@ -157,8 +171,6 @@ class TradeEnv(gym.Env):
             print("ERROR in _observe")
             return np.zeros((TIME_WIDTH, BOARD_WIDTH, 6))
 
-
-
     def new_episode(self):
         '''
         reset environment with new episode
@@ -178,6 +190,7 @@ class TradeEnv(gym.Env):
 
     def new_sec(self):
         self.board = next(self.board_generator, None)
+
         if self.board is None:
             self.episode_done = True
 

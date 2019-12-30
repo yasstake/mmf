@@ -37,16 +37,29 @@ class MyTestCase(unittest.TestCase):
         env = TradeEnv()
         board = env.new_sec()
         print(board.current_time)
+        print(board.q_value)
         board = env.new_sec()
+        print(board.q_value)
         print(board.current_time)
         board = env.new_sec()
+        print(board.q_value)
         print(board.current_time)
 
     def test_action1(self):
         env = TradeEnv()
+        print(env.board.current_time)
+        print(env.q_value)
         env.step(ACTION.NOP)
+
+        print(env.board.current_time)
+        print(env.q_value)
         env.step(ACTION.SELL_NOW)
+
+        print(env.board.current_time)
+        print(env.q_value)
         env.step(ACTION.BUY_NOW)
+
+
 
     def test_action2(self):
         env = TradeEnv()

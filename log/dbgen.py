@@ -399,6 +399,10 @@ class Generator:
         if self.db:
             self.db.close()
 
+    def select_q(self, time, start_time, action):
+        q = self.db.select_q_val(time, start_time, action)
+        return q
+
     @staticmethod
     def start_time(db=None):
         if db is None:

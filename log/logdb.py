@@ -6,7 +6,6 @@ from log.constant import *
 from log.loader import LogLoader
 from log.qvalue import HOLD_TIME_MAX
 from log.qvalue import QValue
-from log.qvalue import QSequence
 from log.qvalue import OrderPrices
 from log.qvalue import Q_DISCOUNT_RATE
 from log.qvalue import HOLD_TIME_MAX
@@ -722,7 +721,6 @@ class LogDb:
 
         return records
 
-
     def calc_latest_time(self):
         time_sql = """select time from order_book order by time desc"""
 
@@ -759,7 +757,6 @@ class LogDb:
 
         cu.execute("detach database source_db")
         conn.commit()
-
 
     def import_db(self, file='/tmp/bitlog.db', start_time=None, end_time=None):
         self._create_table(self.cursor)
@@ -825,6 +822,17 @@ class LogDb:
             cur = self.connection.execute(sql)
         return cur.fetchall()
 
+    def select_q_val(self, time, start_time, start_action):
+        rec = self.select_q(time, start_time, start_action)
+
+        if rec:
+            q = QValue()
+            q.set_q_records(rec)
+
+            return q
+        else:
+            return None
+
     def select_q(self, time, start_time, start_action):
         '''
         select and return q values
@@ -836,6 +844,9 @@ class LogDb:
         select_q_sql = """select time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q
                             from q where ? <= time and ? <= start_time and start_action = ? order by time 
         """
+        if start_action == ACTION.NOP:
+            start_time = 0
+
         self.cursor.execute(select_q_sql, (time, start_time, start_action,))
         rec = self.cursor.fetchone()
 
