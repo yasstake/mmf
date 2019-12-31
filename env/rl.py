@@ -54,7 +54,6 @@ class TradeEnv(gym.Env):
 
         self.episode_text = ''
 
-        self.action = ACTION.NOP
         self.start_action = ACTION.NOP
         self.start_time = None
 
@@ -122,17 +121,16 @@ class TradeEnv(gym.Env):
             print('Unknown action no->', action)
 
         self.evaluate()
-        self.action = action
-        if self.start_action == ACTION.NOP and action != ACTION.NOP:
-            self.start_action = action
-            self.start_time = self.board.current_time
+
 
         if self.start_action == ACTION.NOP:
-            print('start_time(noaction)', self.start_time, self.start_action)
             self.q_value = self.generator.select_q(self.board.current_time, self.board.current_time, ACTION.NOP)
         else:
-            print('start_time', self.board.current_time, self.start_time, self.start_action)
             self.q_value = self.generator.select_q(self.board.current_time, self.start_time, self.start_action)
+
+        if self.q_value is None:
+            print('no q value at time =', self.board.current_time)
+            self.episode_done = True
 
         if self.episode_done:
             reward = self.margin
@@ -179,6 +177,9 @@ class TradeEnv(gym.Env):
         self.sell_order_price = None
         self.buy_order_price = None
         self.margin = 0
+
+        self.start_action = ACTION.NOP
+        self.start_time = None
 
         self.episode_text = ''
 
@@ -228,6 +229,9 @@ class TradeEnv(gym.Env):
             self.sell_order_price = price
             self.episode_text += 'sell {}　[{}]  '.format(self.sell_order_price, self.board.current_time)
             print('ACTION:sell', self.sell_order_price, '(', self.board.current_time, ')')
+            if self.start_action == ACTION.NOP:
+                self.start_action = ACTION.SELL
+                self.start_time = self.board.current_time
             return self.board.fix_sell_price_time - self.board.current_time + 30
 
         print('ACTION:sell skip 300 sec')
@@ -243,6 +247,10 @@ class TradeEnv(gym.Env):
             self.buy_order_price = price
             self.episode_text += 'buy {}　[{}]  '.format(self.buy_order_price, self.board.current_time)
             print('ACTION:buy', self.buy_order_price, '(', self.board.current_time, ')')
+            if self.start_action == ACTION.NOP:
+                self.start_action = ACTION.BUY
+                self.start_time = self.board.current_time
+
             return self.board.fix_buy_price_time - self.board.current_time + 30
 
         print('ACTION:buy skip 300 sec')
@@ -258,6 +266,10 @@ class TradeEnv(gym.Env):
             self.sell_order_price = price
             self.episode_text += 'SELL {}　[{}]  '.format(self.sell_order_price, self.board.current_time)
             print('ACTION:sell now', self.sell_order_price, '(', self.board.current_time, ')')
+            if self.start_action == ACTION.NOP:
+                self.start_action = ACTION.SELL_NOW
+                self.start_time = self.board.current_time
+
             return 60
         return 60
 
@@ -271,6 +283,10 @@ class TradeEnv(gym.Env):
             self.buy_order_price = price
             self.episode_text += 'BUY {}　[{}]  '.format(self.buy_order_price, self.board.current_time)
             print('ACTION:buy now', self.buy_order_price, '(', self.board.current_time, ')')
+            if self.start_action == ACTION.NOP:
+                self.start_action = ACTION.BUY_NOW
+                self.start_time = self.board.current_time
+
             return 60
         return 60
 

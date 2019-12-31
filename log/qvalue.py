@@ -4,10 +4,10 @@ from log.constant import ACTION
 
 Q_INVALID_ACTION = -10
 Q_FAILED_ACTION = -0.1
-Q_DISCOUNT_RATE = 0.995
+Q_DISCOUNT_RATE = 0.98
 Q_FIRST_DISCOUNT_RATE = 0.9
 
-HOLD_TIME_MAX = 3600
+HOLD_TIME_MAX = 1800
 HOLD_TIME_MIN = 120
 
 EXECUTE_TIME_MIN = 30
@@ -143,7 +143,7 @@ class QValue:
         return np.argmax(self.q)
 
     def __str__(self):
-        return '[{}] NOP[{}] sell[{}] buy[{}] SELL[{}] BUY[{}]'.format(
+        return '[{}] NOP[{:+03.5f}] sell[{:+03.5f}] buy[{:+03.5f}] SELL[{:+03.5f}] BUY[{:+03.5f}]'.format(
             self.time, self.q[ACTION.NOP], self.q[ACTION.SELL], self.q[ACTION.BUY], self.q[ACTION.SELL_NOW], self.q[ACTION.BUY_NOW])
 
 '''

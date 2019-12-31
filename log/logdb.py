@@ -825,14 +825,15 @@ class LogDb:
     @lru_cache(maxsize=2048)
     def select_q_val(self, time, start_time, start_action):
         rec = self.select_q(time, start_time, start_action)
+        q = None
 
         if rec:
             q = QValue()
             q.set_q_records(rec)
 
-            return q
-        else:
-            return None
+        print('selectq', time, start_time, start_action, q)
+
+        return q
 
     def select_q(self, time, start_time, start_action):
         '''
@@ -848,26 +849,19 @@ class LogDb:
         if start_action == ACTION.NOP:
             start_time = 0
 
-        cur = self.connection.cursor()
-        cur.execute(select_q_sql, (time, start_time, start_action))
-        rec = cur.fetchone()
+#        cur = self.connection.cursor()
+#        cur.execute(select_q_sql, (time, start_time, start_action))
+#        rec = cur.fetchone()
 
         #self.cursor.execute(select_q_sql, (time, start_time, start_action))
         #rec = self.cursor.fetchone()
-
-
 
         select_q_sql_s = """select time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q
                             from q where {} <= time and {} <= start_time and start_action = {} order by start_time, time limit 10 
         """.format(time, start_time, start_action)
 
-        print(select_q_sql_s)
-
-        cur = self.connection.cursor()
-        cur.execute(select_q_sql_s)
-        rec = cur.fetchone()
-
-        print('selectq', time, start_time, start_action, rec)
+        self.cursor.execute(select_q_sql_s)
+        rec = self.cursor.fetchone()
 
         return rec
 

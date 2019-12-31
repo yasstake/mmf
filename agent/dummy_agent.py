@@ -30,6 +30,9 @@ class Trainer():
             n_state, reward, done, info = self.env.step(ACTION.NOP)
             s = n_state
             while True:
+                if not self.env.q_value:
+                    break
+
                 a = self.env.q_value.get_best_action()
                 n_state, reward, done, info = self.env.step(a)
                 self.reward += reward
@@ -40,8 +43,6 @@ class Trainer():
                 s = n_state
 
                 if done:
-                    if s:
-                        self.end_time = s.time
                     break
 
             self.episode_end(i, s)
