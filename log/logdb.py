@@ -8,6 +8,7 @@ from log.qvalue import HOLD_TIME_MAX
 from log.qvalue import QValue
 from log.qvalue import OrderPrices
 from log.qvalue import Q_DISCOUNT_RATE
+from log.qvalue import Q_FIRST_DISCOUNT_RATE
 from log.qvalue import HOLD_TIME_MAX
 from log.qvalue import EXECUTE_TIME_MIN
 
@@ -120,6 +121,13 @@ class LogDb:
                   )
             '''
         )
+
+        cursor.execute(
+            '''
+            create index if not exists q_start_time_index on q (start_time) 
+            '''
+        )
+
 
     def list_to_zip_string(self, message_list):
         return self.list_to_bin(message_list)
@@ -831,7 +839,7 @@ class LogDb:
             q = QValue()
             q.set_q_records(rec)
 
-        print('selectq', time, start_time, start_action, q)
+        # print('selectq', time, start_time, start_action, q)
 
         return q
 
@@ -907,7 +915,7 @@ class LogDb:
 
             if last_q:
                 t = last_q.time - q.time
-                last_max_q = last_q.max_q() * (Q_DISCOUNT_RATE ** t)
+                last_max_q = last_q.max_q() * Q_FIRST_DISCOUNT_RATE * (Q_DISCOUNT_RATE ** t)
 
                 q[ACTION.NOP] = last_max_q
                 self.insert_q(time=q.time, start_time=0, start_action=ACTION.NOP, q_value=q)
@@ -1014,15 +1022,24 @@ class LogDb:
         nop_q = 0
         old_q = QValue(start_time=start_time, start_action=action, start_price=start_price)
 
+        skip_count = 0
         for price_rec in prices:
             q = QValue(start_time=start_time, start_action=action, start_price=start_price)
             q.set_price_record(price_rec)
             nop_q *= Q_DISCOUNT_RATE
 
             if q.is_same_q_exept_nop(old_q):
+                skip_count += 1
                 continue
 
-            new_q = old_q.max_q() * Q_DISCOUNT_RATE
+            action = old_q.get_best_action()
+
+            if(action == ACTION.BUY or action == ACTION.SELL):
+                new_q = old_q.max_q() * Q_FIRST_DISCOUNT_RATE * (Q_DISCOUNT_RATE ** skip_count)
+            else:
+                new_q = old_q.max_q() * (Q_DISCOUNT_RATE ** skip_count)
+            skip_count = 0
+
             if nop_q < new_q:
                 nop_q = new_q
             q[ACTION.NOP] = nop_q

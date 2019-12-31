@@ -345,6 +345,7 @@ class Generator:
         self.db_start_time = None
         self.db_end_time = None
         self.time = None
+        self.last_select_q = None
 
     def create(self, *, time=None, db_name = "/tmp/bitlog.db", with_q_values=False):
         '''
@@ -400,7 +401,18 @@ class Generator:
             self.db.close()
 
     def select_q(self, time, start_time, action):
+        # return from cache
+        if (self.last_select_q and
+              (time <= self.last_select_q.time) and
+              (start_time <= self.last_select_q.start_time) and
+              (action == self.last_select_q.start_action)):
+
+            return self.last_select_q
+
         q = self.db.select_q_val(time, start_time, action)
+
+        self.last_select_q = q
+
         return q
 
     @staticmethod

@@ -22,18 +22,25 @@ class Trainer():
         self.episode_no = 0
         self.env = TradeEnv()
 
-
     def train(self, episode=NUM_OF_EPISODE):
         for i in range(episode):
+            last_q_time = 0
+
             self.episode_begin(i, None)
             self.env.reset()
             n_state, reward, done, info = self.env.step(ACTION.NOP)
             s = n_state
+
             while True:
                 if not self.env.q_value:
                     break
 
+                if last_q_time != self.env.q_value.time:
+                    print(self.env.q_value)
+                    last_q_time = self.env.q_value.time
+
                 a = self.env.q_value.get_best_action()
+
                 n_state, reward, done, info = self.env.step(a)
                 self.reward += reward
 

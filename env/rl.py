@@ -122,7 +122,6 @@ class TradeEnv(gym.Env):
 
         self.evaluate()
 
-
         if self.start_action == ACTION.NOP:
             self.q_value = self.generator.select_q(self.board.current_time, self.board.current_time, ACTION.NOP)
         else:
