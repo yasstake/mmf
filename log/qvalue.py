@@ -49,9 +49,10 @@ class OrderPrices:
             (self.fix_order_sell != price.fix_order_sell) or
             (self.fix_order_sell_time != price.fix_order_sell_time) or
             (self.fix_order_buy != price.fix_order_buy) or
-            (self.fix_order_buy_time != self.fix_order_buy_time)):
+            (self.fix_order_buy_time != price.fix_order_buy_time)):
             return False
         return True
+
 
 class QValue:
     def __init__(self, *, time=None, start_time=None, start_action=None, start_price=None):
@@ -109,6 +110,10 @@ class QValue:
         self.update_q()
 
     def update_q(self):
+        '''
+        TODO: add time discount
+        :return:
+        '''
         if self.sell_price:
             if self.order_prices.fix_order_buy:
                 q = self.sell_price - self.order_prices.fix_order_buy

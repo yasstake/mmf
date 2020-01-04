@@ -128,7 +128,6 @@ class LogDb:
             '''
         )
 
-
     def list_to_zip_string(self, message_list):
         return self.list_to_bin(message_list)
 
@@ -316,7 +315,6 @@ class LogDb:
 
         self.cursor.execute(sql, (time,))
         return self.cursor.fetchone()
-
 
     def select_best_action(self, time):
         sql = """select ba from order_book where time = ?"""
@@ -719,7 +717,6 @@ class LogDb:
 
         return skip_number
 
-
     def action_stat(self):
         sql = '''select ba, count(*) from order_book group by ba'''
 
@@ -871,6 +868,9 @@ class LogDb:
         self.cursor.execute(select_q_sql_s)
         rec = self.cursor.fetchone()
 
+        print(select_q_sql_s)
+        print(rec)
+
         return rec
 
     def insert_q(self, *, time, start_time, start_action, q_value: QValue):
@@ -878,6 +878,8 @@ class LogDb:
                       (time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q)
                       values(?, ?, ?, ?, ?, ?, ?, ?)
         '''
+        print('insertq', time, start_time, start_action, q_value)
+
         self.cursor.execute(sql, [time, start_time, start_action,
                                   q_value.q[ACTION.NOP], q_value.q[ACTION.BUY], q_value.q[ACTION.BUY_NOW],
                                   q_value.q[ACTION.SELL], q_value.q[ACTION.SELL_NOW]])
@@ -933,7 +935,7 @@ class LogDb:
         select_q_sql = """select time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q
                                 from q where start_time = ? and start_action= ? order by start_time, time
             """
-        self.cursor.execute(select_q_sql, (time,action, ))
+        self.cursor.execute(select_q_sql, (time, action, ))
         rec = self.cursor.fetchone()
 
         q = QValue()
@@ -1023,18 +1025,22 @@ class LogDb:
         old_q = QValue(start_time=start_time, start_action=action, start_price=start_price)
 
         skip_count = 0
+
+        print('creawteq_seq', start_time, action)
+
         for price_rec in prices:
             q = QValue(start_time=start_time, start_action=action, start_price=start_price)
             q.set_price_record(price_rec)
             nop_q *= Q_DISCOUNT_RATE
 
             if q.is_same_q_exept_nop(old_q):
+                print('skip', q, old_q)
                 skip_count += 1
                 continue
 
             action = old_q.get_best_action()
 
-            if(action == ACTION.BUY or action == ACTION.SELL):
+            if action == ACTION.BUY or action == ACTION.SELL:
                 new_q = old_q.max_q() * Q_FIRST_DISCOUNT_RATE * (Q_DISCOUNT_RATE ** skip_count)
             else:
                 new_q = old_q.max_q() * (Q_DISCOUNT_RATE ** skip_count)
@@ -1044,8 +1050,8 @@ class LogDb:
                 nop_q = new_q
             q[ACTION.NOP] = nop_q
 
-            if q.time != start_time:
-                self.insert_q(time=q.time, start_time=start_time, start_action=action, q_value=q)
+            #if q.time != start_time:
+            self.insert_q(time=q.time, start_time=start_time, start_action=action, q_value=q)
 
             old_q = q
 
@@ -1060,4 +1066,3 @@ class LogDb:
         '''
         self.insert_updated_q()
         self.update_q_on_nop()
-
