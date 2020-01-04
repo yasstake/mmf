@@ -103,5 +103,40 @@ class MyTestCase(unittest.TestCase):
 
         print(q)
 
+    # (time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q)
+    def test_q_set_rec(self):
+        r = (100, 101, 1, 2, 3, 4, 5, 6)
+
+        q = QValue()
+        q.set_q_records(r)
+
+        self.assertEqual(q.time, 100)
+        self.assertEqual(q.start_time, 101)
+        self.assertEqual(q.start_action, 1)
+        self.assertEqual(q[ACTION.NOP], 2)
+        self.assertEqual(q[ACTION.BUY], 3)
+        self.assertEqual(q[ACTION.BUY_NOW], 4)
+        self.assertEqual(q[ACTION.SELL], 5)
+        self.assertEqual(q[ACTION.SELL_NOW], 6)
+
+    # time, market_order_sell,market_order_buy,fix_order_sell,fix_order_sell_time,fix_order_buy, fix_order_buy_time
+    def test_market_prices(self):
+        r = (100, 101, 99, 100, 101, 102, 103)
+
+        q = QValue()
+        q.set_price_record(r)
+
+        price = q.order_prices
+
+        self.assertEqual(price.time, 100)
+        self.assertEqual(price.market_order_sell, 101)
+        self.assertEqual(price.market_order_buy, 99)
+        self.assertEqual(price.fix_order_sell, 100)
+        self.assertEqual(price.fix_order_sell_time, 101)
+        self.assertEqual(price.fix_order_buy, 102)
+        self.assertEqual(price.fix_order_buy_time, 103)
+
+
+
 if __name__ == '__main__':
     unittest.main()
