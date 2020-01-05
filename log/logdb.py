@@ -875,7 +875,7 @@ class LogDb:
                       (time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q)
                       values(?, ?, ?, ?, ?, ?, ?, ?)
         '''
-        print('insertq', time, start_time, start_action, q_value)
+        # print('insert_q', time, start_time, start_action, q_value)
 
         self.cursor.execute(sql, [time, start_time, start_action,
                                   q_value.q[ACTION.NOP], q_value.q[ACTION.BUY], q_value.q[ACTION.BUY_NOW],
@@ -1012,7 +1012,7 @@ class LogDb:
 
         skip_count = 1
 
-        print('creawteq_seq', start_time, action)
+        # print('creawteq_seq', start_time, action)
 
         for price_rec in prices:
             q = QValue(start_time=start_time, start_action=action, start_price=start_price)
