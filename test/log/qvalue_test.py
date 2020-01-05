@@ -2,7 +2,6 @@ import unittest
 from log.constant import ACTION
 from log.qvalue import OrderPrices
 from log.qvalue import QValue
-#from log.qvalue import QSequence
 from log.qvalue import Q_FAILED_ACTION
 from log.qvalue import Q_INVALID_ACTION
 
@@ -56,43 +55,43 @@ class MyTestCase(unittest.TestCase):
     def test_is_same_q(self):
         q1 = QValue()
         q2 = QValue()
-        self.assertTrue(q1.is_same_q_exept_nop(q2))
+        self.assertTrue(q1.is_same_q_except_nop(q2))
 
         q1[1] = 1
         q2[1] = 1
-        self.assertTrue(q1.is_same_q_exept_nop(q2))
+        self.assertTrue(q1.is_same_q_except_nop(q2))
 
         q1[3] = 4
         q2[3] = 4
-        self.assertTrue(q1.is_same_q_exept_nop(q2))
+        self.assertTrue(q1.is_same_q_except_nop(q2))
 
         q1[ACTION.NOP] = 4
         q2[ACTION.NOP] = 1
-        self.assertTrue(q1.is_same_q_exept_nop(q2))
+        self.assertTrue(q1.is_same_q_except_nop(q2))
 
         q1 = QValue()
         q2 = QValue()
         q1[1] = 2
         q2[1] = 4
-        self.assertFalse(q1.is_same_q_exept_nop(q2))
+        self.assertFalse(q1.is_same_q_except_nop(q2))
 
         q1 = QValue()
         q2 = QValue()
         q1[2] = 2
         q2[2] = 4
-        self.assertFalse(q1.is_same_q_exept_nop(q2))
+        self.assertFalse(q1.is_same_q_except_nop(q2))
 
         q1 = QValue()
         q2 = QValue()
         q1[3] = 2
         q2[3] = 4
-        self.assertFalse(q1.is_same_q_exept_nop(q2))
+        self.assertFalse(q1.is_same_q_except_nop(q2))
 
         q1 = QValue()
         q2 = QValue()
         q1[4] = 2
         q2[4] = 4
-        self.assertFalse(q1.is_same_q_exept_nop(q2))
+        self.assertFalse(q1.is_same_q_except_nop(q2))
 
     def test_best_action(self):
         q = QValue()
@@ -136,6 +135,28 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(price.fix_order_buy, 102)
         self.assertEqual(price.fix_order_buy_time, 103)
 
+    def test_calc_q_values(self):
+        r = (100, 101, 99, 100, 101, 102, 103)
+
+        q = QValue()
+        q.set_price_record(r)
+
+        q.update_q(sell_price=1)
+
+        self.assertEqual(q[ACTION.SELL_NOW], -10)
+        self.assertEqual(q[ACTION.SELL], -10)
+
+        self.assertNotEqual(q[ACTION.BUY], -10)
+        self.assertNotEqual(q[ACTION.BUY_NOW], -10)
+
+        price = q.order_prices
+        self.assertEqual(price.time, 100)
+        self.assertEqual(price.market_order_sell, 101)
+        self.assertEqual(price.market_order_buy, 99)
+        self.assertEqual(price.fix_order_sell, 100)
+        self.assertEqual(price.fix_order_sell_time, 101)
+        self.assertEqual(price.fix_order_buy, 102)
+        self.assertEqual(price.fix_order_buy_time, 103)
 
 
 if __name__ == '__main__':

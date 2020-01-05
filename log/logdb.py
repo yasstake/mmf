@@ -620,10 +620,8 @@ class LogDb:
 
             self.cursor.execute(update_sql, (best_action, time))
 
-
     def best_action(self, market_order_sell, market_order_buy, fix_order_sell, fix_order_buy, market_order_sell_f,
-                        market_order_buy_f, fix_order_sell_f, fix_order_buy_f):
-
+                    market_order_buy_f, fix_order_sell_f, fix_order_buy_f):
 
         if market_order_sell:
             market_order_sell = market_order_sell * TAKER_SELL
@@ -684,7 +682,6 @@ class LogDb:
                     action = ACTION.BUY
 
         return action
-
 
     def skip_nop_close_to_action(self):
         clear_sql = """update order_book set ba = NULL where time = ?"""
@@ -891,7 +888,6 @@ class LogDb:
         :param start_time:
         :return:
         '''
-
         if asc:
             select_q_sql = """select time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q
                             from q where start_time = ? and start_action = ? order by time 
@@ -943,15 +939,6 @@ class LogDb:
 
         return q
 
-    '''
-    def insert_q_sequence(self, q_sequence):
-        for q in q_sequence.q_values:
-            self.insert_q(start_time=q_sequence.start_time, time=q.order_prices.time,
-                          start_action=q_sequence.action, q_value=q)
-
-        self.commit()
-    '''
-
     def insert_updated_q(self):
         '''
         update q values according to the list of prices
@@ -964,32 +951,31 @@ class LogDb:
             price.set_price_record(line)
             q_val = QValue()
 
-            if old_price and (not old_price.is_equal_prices(price)):
-                print(old_price.time)
+            if not price.is_equal_prices(old_price):
+                print(price.time)
                 # update
-                if old_price.market_order_sell:
-                    q = self.create_q_sequence(start_time=old_price.time, action=ACTION.SELL_NOW,
-                                           start_price=old_price.market_order_sell, skip_time=60)
+                if price.market_order_sell:
+                    q = self.create_q_sequence(start_time=price.time, action=ACTION.SELL_NOW,
+                                           start_price=price.market_order_sell, skip_time=60)
                     q_val[ACTION.SELL_NOW] = q
 
-                if old_price.market_order_buy:
-                    q = self.create_q_sequence(start_time=old_price.time, action=ACTION.BUY_NOW,
-                                           start_price=old_price.market_order_buy, skip_time=60)
+                if price.market_order_buy:
+                    q = self.create_q_sequence(start_time=price.time, action=ACTION.BUY_NOW,
+                                           start_price=price.market_order_buy, skip_time=60)
                     q_val[ACTION.BUY_NOW] = q
 
-                if old_price.fix_order_sell:
-                    q = self.create_q_sequence(start_time=old_price.time, action=ACTION.SELL,
-                                           start_price=old_price.fix_order_sell, skip_time=60)
+                if price.fix_order_sell:
+                    q = self.create_q_sequence(start_time=price.time, action=ACTION.SELL,
+                                           start_price=price.fix_order_sell, skip_time=60)
                     q_val[ACTION.SELL] = q
 
-                if old_price.fix_order_buy:
-                    q = self.create_q_sequence(start_time=old_price.time, action=ACTION.BUY,
-                                           start_price=old_price.fix_order_buy, skip_time=60)
+                if price.fix_order_buy:
+                    q = self.create_q_sequence(start_time=price.time, action=ACTION.BUY,
+                                           start_price=price.fix_order_buy, skip_time=60)
                     q_val[ACTION.BUY] = q
 
-                self.insert_q(time=old_price.time, start_action=ACTION.NOP, start_time=0, q_value=q_val)
-
-            old_price = price
+                self.insert_q(time=price.time, start_action=ACTION.NOP, start_time=0, q_value=q_val)
+                old_price = price
 
     def select_highest_price_time(self, time):
         sql = """select time, market_order_sell, market_order_buy, fix_order_sell, fix_order_sell_time,  
@@ -1024,7 +1010,7 @@ class LogDb:
         nop_q = 0
         old_q = QValue(start_time=start_time, start_action=action, start_price=start_price)
 
-        skip_count = 0
+        skip_count = 1
 
         print('creawteq_seq', start_time, action)
 
@@ -1033,18 +1019,16 @@ class LogDb:
             q.set_price_record(price_rec)
             nop_q *= Q_DISCOUNT_RATE
 
-            if q.is_same_q_exept_nop(old_q):
-                print('skip', q, old_q)
+            if q.is_same_q_except_nop(old_q):
                 skip_count += 1
                 continue
 
-            action = old_q.get_best_action()
+            best_action = old_q.get_best_action()
 
-            if action == ACTION.BUY or action == ACTION.SELL:
+            if best_action == ACTION.BUY or action == ACTION.SELL:
                 new_q = old_q.max_q() * Q_FIRST_DISCOUNT_RATE * (Q_DISCOUNT_RATE ** skip_count)
             else:
                 new_q = old_q.max_q() * (Q_DISCOUNT_RATE ** skip_count)
-            skip_count = 0
 
             if nop_q < new_q:
                 nop_q = new_q
@@ -1054,6 +1038,7 @@ class LogDb:
             self.insert_q(time=q.time, start_time=start_time, start_action=action, q_value=q)
 
             old_q = q
+            skip_count = 1
 
         self.commit()
 

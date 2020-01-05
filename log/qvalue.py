@@ -4,8 +4,8 @@ from log.constant import ACTION
 
 Q_INVALID_ACTION = -10
 Q_FAILED_ACTION = -1
-Q_DISCOUNT_RATE = 0.98
-Q_FIRST_DISCOUNT_RATE = 0.85
+Q_DISCOUNT_RATE = 0.99
+Q_FIRST_DISCOUNT_RATE = 0.95
 
 HOLD_TIME_MAX = 1800
 HOLD_TIME_MIN = 120
@@ -44,6 +44,9 @@ class OrderPrices:
         )
 
     def is_equal_prices(self, price):
+        if price is None:
+            return False
+
         if ((self.market_order_sell != price.market_order_sell) or
             (self.market_order_buy != price.market_order_buy) or
             (self.fix_order_sell != price.fix_order_sell) or
@@ -81,7 +84,10 @@ class QValue:
     def __setitem__(self, key, value):
         self.q[key] = value
 
-    def is_same_q_exept_nop(self, q):
+    def is_same_q_except_nop(self, q):
+        if q is None:
+            return False
+
         if ((q.q[ACTION.BUY] != self.q[ACTION.BUY]) or
             (q.q[ACTION.SELL] != self.q[ACTION.SELL]) or
             (q.q[ACTION.BUY_NOW] != self.q[ACTION.BUY_NOW]) or
@@ -109,11 +115,17 @@ class QValue:
         self.order_prices.set_price_record(record)
         self.update_q()
 
-    def update_q(self):
+    def update_q(self, *, sell_price=0, buy_price=0):
         '''
         TODO: add time discount
         :return:
         '''
+        if sell_price:
+            self.sell_price = sell_price
+
+        if buy_price:
+            self.buy_price = buy_price
+
         if self.sell_price:
             if self.order_prices.fix_order_buy:
                 q = self.sell_price - self.order_prices.fix_order_buy
