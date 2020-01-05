@@ -865,8 +865,8 @@ class LogDb:
         self.cursor.execute(select_q_sql_s)
         rec = self.cursor.fetchone()
 
-        print(select_q_sql_s)
-        print(rec)
+        # print(select_q_sql_s)
+        # print(rec)
 
         return rec
 
@@ -1025,6 +1025,7 @@ class LogDb:
 
             best_action = old_q.get_best_action()
 
+            # todo Ajudst Q values for negative values
             if best_action == ACTION.BUY or action == ACTION.SELL:
                 new_q = old_q.max_q() * Q_FIRST_DISCOUNT_RATE * (Q_DISCOUNT_RATE ** skip_count)
             else:

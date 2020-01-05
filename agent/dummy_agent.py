@@ -9,6 +9,7 @@ NUM_OF_EPISODE = 10000
 
 Experience = namedtuple('Experience', ['s', 'a', 'r', 'n_s', 'd'])
 
+
 class Trainer():
     def __init__(self, buffer_size=BUFFER_SIZE):
         self.buffer_size = buffer_size
