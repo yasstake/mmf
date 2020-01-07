@@ -911,14 +911,15 @@ class LogDb:
             q = QValue()
             q.set_q_records(q_rec)
 
-            if last_q:
+            # todo check if redundunt q values is not produced.
+            if last_q and not q.is_same_q_except_nop(last_q):
                 t = last_q.time - q.time
                 last_max_q = last_q.max_q() * Q_FIRST_DISCOUNT_RATE * (Q_DISCOUNT_RATE ** t)
 
                 q[ACTION.NOP] = last_max_q
                 self.insert_q(time=q.time, start_time=0, start_action=ACTION.NOP, q_value=q)
 
-            last_q = q
+                last_q = q
 
         self.commit()
 

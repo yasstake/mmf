@@ -1,3 +1,5 @@
+import numpy as np
+from autokeras import ImageRegressor
 from random import sample
 from collections import deque
 from collections import namedtuple
@@ -5,15 +7,17 @@ from log.constant import ACTION
 from env.rl import TradeEnv
 
 BUFFER_SIZE = 20000
-NUM_OF_EPISODE = 10000
+NUM_OF_EPISODE = 3
 
 Experience = namedtuple('Experience', ['s', 'a', 'r', 'n_s', 'd'])
+QState = namedtuple('QState', ['s', 'q'])
 
 
-class Trainer():
+class Trainer:
     def __init__(self, buffer_size=BUFFER_SIZE):
         self.buffer_size = buffer_size
         self.experiences = deque(maxlen=self.buffer_size)
+        self.q_values = deque(maxlen=self.buffer_size)
         self.reward = 0
         self.start_time = 0
         self.end_time = 0
@@ -37,7 +41,6 @@ class Trainer():
                     break
 
                 if last_q_time != self.env.q_value.time:
-                    print(self.env.q_value)
                     last_q_time = self.env.q_value.time
 
                 a = self.env.q_value.get_best_action()
@@ -45,8 +48,11 @@ class Trainer():
                 n_state, reward, done, info = self.env.step(a)
                 self.reward += reward
 
-                e = Experience(s, a, reward, n_state, done)
-                self.experiences.append(e)
+                # e = Experience(s, a, reward, n_state, done)
+                #self.experiences.append(e)
+
+                q = QState(n_state, self.env.q_value)
+                self.q_values.append(q)
 
                 s = n_state
 
@@ -55,6 +61,20 @@ class Trainer():
 
             self.episode_end(i, s)
 
+    def learning(self):
+        states = np.array([q.s for q in self.q_values])
+        q_values = np.array([q.q.np_array() for q in self.q_values])
+
+        states = states.reshape(states.shape + (1, ))
+        q_values = q_values.reshape(q_values.shape + (1, ))
+
+        print('stateshape', states.shape)
+        print('qvalueshape', q_values.shape)
+
+        reg = ImageRegressor(verbose=True)
+
+        reg.fit(states, q_values, time_limit=60*10)
+
     def episode_begin(self, i: int, s):
         pass
 
@@ -62,10 +82,11 @@ class Trainer():
         self.duration = float(self.end_time) - float(self.start_time)
         self.total_reward += self.reward
 
-        s = '<- EPISODE END ({:5d}) '.format(i)
+        s = '<- EPISODE END ({:5d}) TOTAL{:5.2f}'.format(i, self.total_reward)
         self.episode_no += 1
 
 
 if __name__ == '__main__':
     trainer = Trainer()
     trainer.train()
+    trainer.learning()
