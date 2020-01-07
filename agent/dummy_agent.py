@@ -7,7 +7,7 @@ from log.constant import ACTION
 from env.rl import TradeEnv
 
 BUFFER_SIZE = 20000
-NUM_OF_EPISODE = 3
+NUM_OF_EPISODE = 20000
 
 Experience = namedtuple('Experience', ['s', 'a', 'r', 'n_s', 'd'])
 QState = namedtuple('QState', ['s', 'q'])
@@ -63,7 +63,7 @@ class Trainer:
 
     def learning(self):
         states = np.array([q.s for q in self.q_values])
-        q_values = np.array([q.q.np_array() for q in self.q_values])
+        q_values = np.array([q.q[ACTION.NOP] for q in self.q_values])
 
         states = states.reshape(states.shape + (1, ))
         q_values = q_values.reshape(q_values.shape + (1, ))
@@ -73,7 +73,7 @@ class Trainer:
 
         reg = ImageRegressor(verbose=True)
 
-        reg.fit(states, q_values, time_limit=60*10)
+        reg.fit(states, q_values, time_limit=60*60*3)
 
     def episode_begin(self, i: int, s):
         pass
