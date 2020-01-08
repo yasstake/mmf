@@ -6,8 +6,8 @@ from collections import namedtuple
 from log.constant import ACTION
 from env.rl import TradeEnv
 
-BUFFER_SIZE = 20000
-NUM_OF_EPISODE = 20000
+BUFFER_SIZE = 200000
+NUM_OF_EPISODE = 10
 
 Experience = namedtuple('Experience', ['s', 'a', 'r', 'n_s', 'd'])
 QState = namedtuple('QState', ['s', 'q'])
@@ -51,8 +51,9 @@ class Trainer:
                 # e = Experience(s, a, reward, n_state, done)
                 #self.experiences.append(e)
 
-                q = QState(n_state, self.env.q_value)
-                self.q_values.append(q)
+                if (n_state is not None) and (self.env.q_value is not None):
+                    q = QState(n_state, self.env.q_value)
+                    self.q_values.append(q)
 
                 s = n_state
 
@@ -63,17 +64,17 @@ class Trainer:
 
     def learning(self):
         states = np.array([q.s for q in self.q_values])
-        q_values = np.array([q.q[ACTION.NOP] for q in self.q_values])
+        q_values = np.array([q.q.to_array() for q in self.q_values])
 
-        states = states.reshape(states.shape + (1, ))
-        q_values = q_values.reshape(q_values.shape + (1, ))
+        states = states.reshape(states.shape)
+        q_values = q_values.reshape(q_values.shape)
 
         print('stateshape', states.shape)
         print('qvalueshape', q_values.shape)
 
-        reg = ImageRegressor(verbose=True)
+        reg = ImageRegressor(output_dim=5, seed=12314)
 
-        reg.fit(states, q_values, time_limit=60*60*3)
+        reg.fit(states, q_values, validation_split=0.1)
 
     def episode_begin(self, i: int, s):
         pass

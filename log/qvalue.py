@@ -84,8 +84,8 @@ class QValue:
     def __setitem__(self, key, value):
         self.q[key] = value
 
-    def np_array(self):
-        return np.array((self.q[0], self.q[1], self.q[2], self.q[3], self.q[4]))
+    def to_array(self):
+        return [self.q[0], self.q[1], self.q[2], self.q[3], self.q[4]]
 
     def is_same_q_except_nop(self, q):
         if q is None:
