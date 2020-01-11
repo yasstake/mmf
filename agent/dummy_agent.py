@@ -45,11 +45,11 @@ class Trainer:
 
                 a = self.env.q_value.get_best_action()
 
+                if a != ACTION.NOP:
+                    print(self.env.q_value)
+
                 n_state, reward, done, info = self.env.step(a)
                 self.reward += reward
-
-                # e = Experience(s, a, reward, n_state, done)
-                #self.experiences.append(e)
 
                 if (n_state is not None) and (self.env.q_value is not None):
                     q = QState(n_state, self.env.q_value)
@@ -61,6 +61,7 @@ class Trainer:
                     break
 
             self.episode_end(i, s)
+            np.savez_compressed('/tmp/q_values.npz', self.q_values)
 
     def learning(self):
         states = np.array([q.s for q in self.q_values])

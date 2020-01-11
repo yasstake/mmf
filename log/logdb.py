@@ -845,18 +845,15 @@ class LogDb:
         :param start_action: action executed at original time(NOP is for action is not executed yet)
         :return:
         '''
+
+        # add execution time
+        time += 1
+
         select_q_sql = """select time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q
                             from q where ? <= time and ? <= start_time and start_action = ? order by start_time, time limit 10 
         """
         if start_action == ACTION.NOP:
             start_time = 0
-
-#        cur = self.connection.cursor()
-#        cur.execute(select_q_sql, (time, start_time, start_action))
-#        rec = cur.fetchone()
-
-        #self.cursor.execute(select_q_sql, (time, start_time, start_action))
-        #rec = self.cursor.fetchone()
 
         select_q_sql_s = """select time, start_time, start_action, nop_q, buy_q, buy_now_q, sell_q, sell_now_q
                             from q where {} <= time and {} <= start_time and start_action = {} order by start_time, time limit 10 
