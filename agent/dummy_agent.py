@@ -63,12 +63,19 @@ class Trainer:
             self.episode_end(i, s)
             np.savez_compressed('/tmp/q_values.npz', self.q_values)
 
-    def learning(self):
-        states = np.array([q.s for q in self.q_values])
-        q_values = np.array([q.q.to_array() for q in self.q_values])
+            states = np.array([q.s for q in self.q_values])
+            q_values = np.array([q.q.to_array() for q in self.q_values])
 
-        states = states.reshape(states.shape)
-        q_values = q_values.reshape(q_values.shape)
+            states = states.reshape(states.shape)
+            q_values = q_values.reshape(q_values.shape)
+
+            np.savez_compressed('/tmp/q_stats.npz', s=states, q=q_values)
+
+    def learning(self):
+        npz = np.load('/tmp/q_stats.npz')
+
+        states = npz['s']
+        q_values = npz['q']
 
         print('stateshape', states.shape)
         print('qvalueshape', q_values.shape)
