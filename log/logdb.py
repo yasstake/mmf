@@ -997,7 +997,7 @@ class LogDb:
 
         return price
 
-    def create_q_sequence(self, *, start_time, action, start_price, skip_time=0):
+    def create_q_sequence(self, *, start_time, action, start_price, skip_time=1):
         if (action == ACTION.BUY) or (action == ACTION.BUY_NOW):
             peak_price = self.select_highest_price_time(start_time + EXECUTE_TIME_MIN)
         elif (action == ACTION.SELL) or (action == ACTION.SELL_NOW):

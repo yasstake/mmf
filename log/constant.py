@@ -2,9 +2,8 @@
 
 PRICE_UNIT = 0.5
 
-TIME_WIDTH = 90
+TIME_WIDTH = 180
 BOARD_WIDTH = 60
-
 
 # width of order book width(both side)
 BOOK_DEPTH = int(BOARD_WIDTH * 1.5)
