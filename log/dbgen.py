@@ -221,11 +221,11 @@ class PriceBoard:
         order_mean, order_stddev = self.calc_static(sell_order + buy_order)
         trade_mean, trade_stddev = self.calc_static(sell_trade + buy_trade)
 
-        buy_order = self.normalize_array(buy_order, order_mean + order_stddev)
-        sell_order = self.normalize_array(sell_order, order_mean + order_stddev)
+        buy_order = self.normalize_array(buy_order, order_mean + order_stddev * 2)
+        sell_order = self.normalize_array(sell_order, order_mean + order_stddev * 2)
 
-        buy_trade = self.normalize_array(buy_trade, trade_mean + trade_stddev)
-        sell_trade = self.normalize_array(sell_trade, trade_mean + trade_stddev)
+        buy_trade = self.normalize_array(buy_trade, trade_mean + trade_stddev * 2)
+        sell_trade = self.normalize_array(sell_trade, trade_mean + trade_stddev * 2)
 
         boards = buy_order, sell_order, buy_trade, sell_trade
 
@@ -298,10 +298,9 @@ class PriceBoard:
         return non_zero_sum/item_no, variant ** 0.5
 
     def normalize_array(self, array, max_value):
-        float_array = array * (256 / max_value)
-        uint8_array = np.ceil(np.clip(float_array, 0, 255)).astype('uint8')
+        float_array = array / max_value
 
-        return uint8_array
+        return float_array
 
     def save_to_img(self, img_dir, frame_no=None):
         fig = plt.figure()

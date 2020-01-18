@@ -80,9 +80,9 @@ class Trainer:
         print('stateshape', states.shape)
         print('qvalueshape', q_values.shape)
 
-        reg = ImageRegressor(output_dim=5, seed=12314, max_trials=2)
+        reg = ImageRegressor(output_dim=5, seed=12314, max_trials=3)
 
-        reg.fit(states, q_values, validation_split=0.1, epochs=1)
+        reg.fit(states, q_values, validation_split=0.2, epochs=2)
 
 
 
@@ -100,5 +100,5 @@ class Trainer:
 
 if __name__ == '__main__':
     trainer = Trainer()
-    # trainer.train()
+    trainer.train()
     trainer.learning()
