@@ -23,6 +23,11 @@ class MyTestCase(unittest.TestCase):
         clf = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
         clf.fit(x_train, y_train)
 
+        model = clf.export_model()
+        print(type(model))
+        model.save('./auto_model.hd5')
+
+
 
 if __name__ == '__main__':
     unittest.main()

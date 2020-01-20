@@ -1,4 +1,5 @@
 import numpy as np
+import autokeras as ak
 from autokeras import ImageRegressor
 from random import sample
 from collections import deque
@@ -80,13 +81,25 @@ class Trainer:
         print('stateshape', states.shape)
         print('qvalueshape', q_values.shape)
 
-        reg = ImageRegressor(output_dim=5, seed=12314, max_trials=3)
+        #reg = ImageRegressor(output_dim=5, seed=12314, max_trials=3)
+        reg = self.create_image_regressor()
 
         reg.fit(states, q_values, validation_split=0.2, epochs=2)
 
-    def create_image_regressor(self):
-        pass
+        model = reg.export_model()
+        print(type(model))
+        model.save('./auto_model.hd5')
 
+
+    def create_image_regressor(self):
+        input_node = ak.ImageInput()
+        output_node = ak.ConvBlock()(input_node)
+        output_node = ak.DenseBlock()(output_node)
+        output_node = ak.RegressionHead()(output_node)
+
+        reg = ak.AutoModel(inputs=input_node, outputs=output_node, max_trials=10)
+
+        return reg
 
     def episode_begin(self, i: int, s):
         pass
