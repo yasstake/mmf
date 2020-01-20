@@ -84,7 +84,8 @@ class Trainer:
 
         reg.fit(states, q_values, validation_split=0.2, epochs=2)
 
-
+    def create_image_regressor(self):
+        pass
 
 
     def episode_begin(self, i: int, s):
@@ -100,5 +101,5 @@ class Trainer:
 
 if __name__ == '__main__':
     trainer = Trainer()
-    trainer.train()
+    #trainer.train()
     trainer.learning()
